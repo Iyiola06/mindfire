@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { PropertyCard } from '@/components/shared/PropertyCard';
 import { MOCK_PROPERTIES } from '@/constants';
