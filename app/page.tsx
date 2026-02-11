@@ -27,9 +27,6 @@ export default function HomePage() {
                 </div>
 
                 <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col items-center text-center">
-                    <span className="inline-block py-1.5 px-4 rounded-full bg-primary/30 backdrop-blur-md border border-primary/50 text-white text-xs font-bold tracking-widest uppercase mb-6">
-                        Redefining Modern Living
-                    </span>
                     <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-display font-bold text-white mb-6 leading-tight drop-shadow-xl">
                         Invest Smart. <br className="hidden sm:block" />
                         <span className="text-secondary italic">Live Better.</span> Own Proudly.
