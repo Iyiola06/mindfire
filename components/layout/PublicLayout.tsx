@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -30,8 +32,8 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const navClass = `fixed w-full z-50 transition-all duration-300 ${isScrolled || !isHome || mobileMenuOpen
-      ? 'bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-3 shadow-sm'
-      : 'bg-transparent py-5'
+    ? 'bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-3 shadow-sm'
+    : 'bg-transparent py-5'
     }`;
 
   const textClass = isScrolled || !isHome || mobileMenuOpen ? 'text-text-main-light dark:text-white' : 'text-white drop-shadow-md';
