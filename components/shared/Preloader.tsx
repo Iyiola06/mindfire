@@ -7,20 +7,31 @@ export default function Preloader() {
     const [fadeOut, setFadeOut] = useState(false)
 
     useEffect(() => {
-        // Wait for page to fully load
         const handleLoad = () => {
             setFadeOut(true)
             setTimeout(() => {
                 setIsLoading(false)
-            }, 500) // Match animation duration
+            }, 500)
         }
 
-        if (document.readyState === 'complete') {
-            handleLoad()
-        } else {
-            window.addEventListener('load', handleLoad)
-            return () => window.removeEventListener('load', handleLoad)
+        const waitForResources = async () => {
+            // Wait for fonts to load
+            try {
+                await document.fonts.ready
+            } catch (e) {
+                console.error('Font loading check failed:', e)
+            }
+
+            // Check if page is already loaded
+            if (document.readyState === 'complete') {
+                handleLoad()
+            } else {
+                window.addEventListener('load', handleLoad)
+                return () => window.removeEventListener('load', handleLoad)
+            }
         }
+
+        waitForResources()
     }, [])
 
     if (!isLoading) return null
