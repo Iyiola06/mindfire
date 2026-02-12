@@ -45,13 +45,11 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
           <div className="flex justify-between items-center h-12">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 relative z-50">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white shadow-md">
-                <span className="material-icons-outlined text-2xl" aria-hidden="true">home_work</span>
-              </div>
-              <div>
-                <h1 className={`font-display font-bold text-xl tracking-tight leading-none ${textClass}`}>MINDFIRE</h1>
-                <span className={`text-[0.65rem] uppercase tracking-widest leading-none block ${isScrolled || !isHome || mobileMenuOpen ? 'text-text-muted-light dark:text-text-muted-dark' : 'text-white/80'}`}>Homes</span>
-              </div>
+              <img
+                src="/logo.svg"
+                alt="Mindfire Homes"
+                className="h-10 w-auto"
+              />
             </Link>
 
             {/* Desktop Nav */}

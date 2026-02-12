@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <!-- M Icon -->
+  <path d="M10 45 L10 15 L25 30 L40 15 L40 45" stroke="#00897B" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- MINDFIRE Text -->
+  <text x="55" y="28" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#00897B" letter-spacing="0.5">MINDFIRE</text>
+  
+  <!-- HOMES Text -->
+  <text x="55" y="43" font-family="Inter, sans-serif" font-size="12" font-weight="500" fill="#00897B" letter-spacing="1">HOMES</text>
+  
+  <!-- Tagline -->
+  <text x="55" y="53" font-family="Inter, sans-serif" font-size="6" font-weight="300" fill="#00897B" letter-spacing="0.8">redefining modern living</text>
+</svg>
