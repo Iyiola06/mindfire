@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase"
 import { compare } from "bcryptjs"
 
 const handler = NextAuth({
+    secret: process.env.NEXTAUTH_SECRET,
     session: {
         strategy: "jwt",
     },
@@ -18,31 +19,43 @@ const handler = NextAuth({
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) {
+                try {
+                    if (!credentials?.email || !credentials?.password) {
+                        return null
+                    }
+
+                    const { data: user, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('email', credentials.email)
+                        .single()
+
+                    if (error) {
+                        console.error('NextAuth Supabase Error:', error)
+                        return null
+                    }
+
+                    if (!user) {
+                        console.warn('NextAuth Login Failed: User not found', credentials.email)
+                        return null
+                    }
+
+                    const isPasswordValid = await compare(credentials.password, user.passwordHash)
+
+                    if (!isPasswordValid) {
+                        console.warn('NextAuth Login Failed: Invalid password', credentials.email)
+                        return null
+                    }
+
+                    return {
+                        id: user.id,
+                        email: user.email,
+                        name: user.name,
+                        role: user.role,
+                    }
+                } catch (err) {
+                    console.error('NextAuth Internal Error:', err)
                     return null
-                }
-
-                const { data: user, error } = await supabase
-                    .from('users')
-                    .select('*')
-                    .eq('email', credentials.email)
-                    .single()
-
-                if (error || !user) {
-                    return null
-                }
-
-                const isPasswordValid = await compare(credentials.password, user.passwordHash)
-
-                if (!isPasswordValid) {
-                    return null
-                }
-
-                return {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role,
                 }
             }
         })
@@ -53,8 +66,8 @@ const handler = NextAuth({
                 ...session,
                 user: {
                     ...session.user,
-                    id: token.id,
-                    role: token.role,
+                    id: token.id as string,
+                    role: token.role as string,
                 }
             }
         },

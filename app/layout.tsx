@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import Preloader from '@/components/shared/Preloader'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
 
 export const metadata: Metadata = {
     title: 'Mindfire Homes - Premium Real Estate',
@@ -22,8 +23,10 @@ export default function RootLayout({
                 <link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined&display=swap" rel="stylesheet" />
             </head>
             <body>
-                <Preloader />
-                {children}
+                <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                    <Preloader />
+                    {children}
+                </ThemeProvider>
             </body>
         </html>
     )

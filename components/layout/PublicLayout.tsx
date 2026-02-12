@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTheme } from 'next-themes';
 
 export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -27,8 +28,10 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [mobileMenuOpen]);
 
+  const { theme, setTheme } = useTheme();
+
   const toggleDarkMode = () => {
-    document.documentElement.classList.toggle('dark');
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   const navClass = `fixed w-full z-50 transition-all duration-300 ${isScrolled || !isHome || mobileMenuOpen

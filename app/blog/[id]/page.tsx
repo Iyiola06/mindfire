@@ -82,7 +82,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                             {post.excerpt}
                         </p>
 
-                        <div dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br/>') }} />
+                        <div className="text-gray-900 dark:text-gray-100" dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br/>') }} />
 
                         <h3>Understanding the Market Value</h3>
                         <p>Donec id elit non mi porta gravida at eget metus. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum.</p>
