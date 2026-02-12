@@ -7,6 +7,9 @@ export const metadata: Metadata = {
     title: 'Mindfire Homes - Premium Real Estate',
     description: 'Find your dream home with Mindfire Homes. Explore luxury properties, apartments, and houses for sale and rent.',
     keywords: ['real estate', 'property', 'homes', 'apartments', 'houses', 'buy', 'rent'],
+    icons: {
+        icon: '/logo.svg',
+    },
 }
 
 export default function RootLayout({

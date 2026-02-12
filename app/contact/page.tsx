@@ -1,9 +1,52 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { PublicLayout } from '@/components/layout/PublicLayout';
+import { createLead } from '@/lib/actions';
 
 export default function ContactPage() {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        subject: 'General Inquiry',
+        message: ''
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        const data = {
+            name: `${formData.firstName} ${formData.lastName}`.trim(),
+            email: formData.email,
+            phone: formData.phone,
+            budget: '$0 - $1M+', // Placeholder/Default
+            propertyInterest: formData.subject,
+            message: formData.message
+        };
+
+        const res = await createLead(data);
+        setIsSubmitting(false);
+
+        if (res.success) {
+            setIsSuccess(true);
+            setFormData({
+                firstName: '',
+                lastName: '',
+                email: '',
+                phone: '',
+                subject: 'General Inquiry',
+                message: ''
+            });
+        } else {
+            alert('Error sending message: ' + res.error);
+        }
+    };
+
     return (
         <PublicLayout>
             <div className="bg-background-light dark:bg-background-dark min-h-screen pt-24 pb-20">
@@ -49,7 +92,6 @@ export default function ContactPage() {
                                         <div>
                                             <p className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider mb-1">Call Us</p>
                                             <p className="text-gray-600 dark:text-gray-400 text-sm">Main: +1 (555) 123-4567</p>
-                                            <p className="text-gray-600 dark:text-gray-400 text-sm">Sales: +1 (555) 987-6543</p>
                                         </div>
                                     </div>
 
@@ -60,26 +102,7 @@ export default function ContactPage() {
                                         <div>
                                             <p className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider mb-1">Email</p>
                                             <p className="text-gray-600 dark:text-gray-400 text-sm">hello@mindfirehomes.com</p>
-                                            <p className="text-gray-600 dark:text-gray-400 text-sm">invest@mindfirehomes.com</p>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-primary rounded-2xl p-8 shadow-lg text-white">
-                                <h3 className="font-display text-2xl font-bold mb-4">Business Hours</h3>
-                                <div className="space-y-3 text-sm">
-                                    <div className="flex justify-between border-b border-white/20 pb-2">
-                                        <span className="font-medium">Monday - Friday</span>
-                                        <span className="opacity-90">9:00 AM - 6:00 PM</span>
-                                    </div>
-                                    <div className="flex justify-between border-b border-white/20 pb-2">
-                                        <span className="font-medium">Saturday</span>
-                                        <span className="opacity-90">10:00 AM - 4:00 PM</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="font-medium">Sunday</span>
-                                        <span className="opacity-90">Closed (By Appt Only)</span>
                                     </div>
                                 </div>
                             </div>
@@ -88,77 +111,119 @@ export default function ContactPage() {
                         {/* Contact Form (Right) */}
                         <div className="lg:w-2/3">
                             <div className="bg-surface-light dark:bg-surface-dark rounded-2xl p-8 md:p-12 shadow-xl border border-gray-200 dark:border-gray-800 h-full">
-                                <h3 className="font-display text-3xl font-bold text-gray-900 dark:text-white mb-2">Send a Message</h3>
-                                <p className="text-gray-500 dark:text-gray-400 mb-8">Fill out the form below and one of our agents will get back to you shortly.</p>
-
-                                <form className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="firstName">First Name</label>
-                                            <input
-                                                type="text"
-                                                id="firstName"
-                                                placeholder="John"
-                                                className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors"
-                                            />
+                                {isSuccess ? (
+                                    <div className="text-center py-20">
+                                        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-6 scale-110">
+                                            <span className="material-icons-outlined text-4xl">check_circle</span>
                                         </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="lastName">Last Name</label>
-                                            <input
-                                                type="text"
-                                                id="lastName"
-                                                placeholder="Doe"
-                                                className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors"
-                                            />
-                                        </div>
+                                        <h3 className="text-3xl font-display font-bold text-gray-900 dark:text-white mb-4">Message Sent!</h3>
+                                        <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-8">Thank you for reaching out. One of our elite agents will contact you within 24 hours.</p>
+                                        <button
+                                            onClick={() => setIsSuccess(false)}
+                                            className="text-primary font-bold hover:underline"
+                                        >
+                                            Send another message
+                                        </button>
                                     </div>
+                                ) : (
+                                    <>
+                                        <h3 className="font-display text-3xl font-bold text-gray-900 dark:text-white mb-2">Send a Message</h3>
+                                        <p className="text-gray-500 dark:text-gray-400 mb-8">Fill out the form below and one of our agents will get back to you shortly.</p>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="email">Email Address</label>
-                                            <input
-                                                type="email"
-                                                id="email"
-                                                placeholder="john@example.com"
-                                                className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="phone">Phone Number</label>
-                                            <input
-                                                type="tel"
-                                                id="phone"
-                                                placeholder="+1 (555) 000-0000"
-                                                className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors"
-                                            />
-                                        </div>
-                                    </div>
+                                        <form onSubmit={handleSubmit} className="space-y-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="firstName">First Name</label>
+                                                    <input
+                                                        type="text"
+                                                        id="firstName"
+                                                        required
+                                                        value={formData.firstName}
+                                                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                                        placeholder="John"
+                                                        className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="lastName">Last Name</label>
+                                                    <input
+                                                        type="text"
+                                                        id="lastName"
+                                                        required
+                                                        value={formData.lastName}
+                                                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                                        placeholder="Doe"
+                                                        className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors"
+                                                    />
+                                                </div>
+                                            </div>
 
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="subject">Subject</label>
-                                        <select id="subject" className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors cursor-pointer">
-                                            <option>I want to buy a property</option>
-                                            <option>I want to sell my property</option>
-                                            <option>I'm looking for an investment</option>
-                                            <option>General Inquiry</option>
-                                        </select>
-                                    </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="email">Email Address</label>
+                                                    <input
+                                                        type="email"
+                                                        id="email"
+                                                        required
+                                                        value={formData.email}
+                                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                        placeholder="john@example.com"
+                                                        className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="phone">Phone Number</label>
+                                                    <input
+                                                        type="tel"
+                                                        id="phone"
+                                                        required
+                                                        value={formData.phone}
+                                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                        placeholder="+1 (555) 000-0000"
+                                                        className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors"
+                                                    />
+                                                </div>
+                                            </div>
 
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="message">Your Message</label>
-                                        <textarea
-                                            id="message"
-                                            rows={5}
-                                            placeholder="How can we help you?"
-                                            className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors resize-none"
-                                        ></textarea>
-                                    </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="subject">Subject</label>
+                                                <select
+                                                    id="subject"
+                                                    value={formData.subject}
+                                                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                                    className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors cursor-pointer"
+                                                >
+                                                    <option>I want to buy a property</option>
+                                                    <option>I want to sell my property</option>
+                                                    <option>I'm looking for an investment</option>
+                                                    <option>General Inquiry</option>
+                                                </select>
+                                            </div>
 
-                                    <button type="button" className="bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-primary/30 transition-transform active:scale-95 flex items-center justify-center gap-2 w-full md:w-auto min-w-[200px]">
-                                        Send Message
-                                        <span className="material-icons-outlined text-sm" aria-hidden="true">send</span>
-                                    </button>
-                                </form>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="message">Your Message</label>
+                                                <textarea
+                                                    id="message"
+                                                    rows={5}
+                                                    required
+                                                    value={formData.message}
+                                                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                                                    placeholder="How can we help you?"
+                                                    className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors resize-none"
+                                                ></textarea>
+                                            </div>
+
+                                            <button
+                                                type="submit"
+                                                disabled={isSubmitting}
+                                                className="bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-primary/30 transition-transform active:scale-95 flex items-center justify-center gap-2 w-full md:w-auto min-w-[200px] disabled:opacity-50"
+                                            >
+                                                {isSubmitting ? 'Sending...' : 'Send Message'}
+                                                <span className="material-icons-outlined text-sm" aria-hidden="true">send</span>
+                                            </button>
+                                        </form>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>

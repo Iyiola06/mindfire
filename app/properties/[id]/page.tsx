@@ -1,17 +1,23 @@
-'use client';
-
 import React from 'react';
-import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { MOCK_PROPERTIES } from '@/constants';
+import { notFound } from 'next/navigation';
 
-export default function PropertyDetailsPage() {
-    const params = useParams();
-    const id = params?.id as string;
+export const dynamic = 'force-dynamic';
 
-    // For demo, just use the first featured property if not found
-    const property = MOCK_PROPERTIES.find(p => p.id === id) || MOCK_PROPERTIES[0];
+export default async function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+
+    const { data: property, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error || !property) {
+        return notFound();
+    }
 
     return (
         <PublicLayout>
@@ -38,7 +44,7 @@ export default function PropertyDetailsPage() {
                             </div>
                             <div className="flex flex-col items-start md:items-end border-t border-gray-200 dark:border-gray-800 md:border-t-0 pt-4 md:pt-0">
                                 <p className="text-3xl font-bold text-primary dark:text-primary">
-                                    ${property.price.toLocaleString()}{property.priceLabel}
+                                    ${property.price.toLocaleString()}
                                 </p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold mt-1">Status: {property.status}</p>
                             </div>
@@ -62,12 +68,12 @@ export default function PropertyDetailsPage() {
                         </div>
                         <div className="relative group cursor-pointer overflow-hidden hidden md:block">
                             <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Bathroom view" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                            <button aria-label="View all photos" className="absolute inset-0 w-full bg-black/50 flex items-center justify-center transition-opacity hover:bg-black/40 backdrop-blur-sm cursor-pointer border-none">
+                            <div className="absolute inset-0 w-full bg-black/50 flex items-center justify-center transition-opacity hover:bg-black/40 backdrop-blur-sm cursor-pointer border-none">
                                 <span className="text-white font-bold flex items-center gap-2 border-2 border-white px-4 py-2 rounded-lg">
                                     <span className="material-icons-outlined" aria-hidden="true">grid_view</span>
                                     View All Photos (24)
                                 </span>
-                            </button>
+                            </div>
                         </div>
                     </div>
 
@@ -113,8 +119,8 @@ export default function PropertyDetailsPage() {
                                     <span className="w-8 h-1 bg-secondary rounded-full" aria-hidden="true"></span> About This Property
                                 </h2>
                                 <div className="prose prose-base sm:prose-lg dark:prose-invert text-gray-600 dark:text-gray-300 max-w-none leading-relaxed">
-                                    <p>Experience the pinnacle of luxury living with "{property.name}". Designed for those who appreciate the finer things, this architectural masterpiece redefines modern living. Invest smart in a property that offers not just a home, but a legacy.</p>
-                                    <p>Featuring expansive open-plan living areas, floor-to-ceiling windows that flood the space with natural light, and premium finishes throughout. The property is situated in a secure, high-end neighborhood, ensuring peace of mind for you and your family. Own proudly.</p>
+                                    <p>Experience the pinnacle of luxury living with "{property.name}". Designed for those who appreciate the finer things, this architectural masterpiece redefines modern living.</p>
+                                    <p>Featuring expansive open-plan living areas, floor-to-ceiling windows that flood the space with natural light, and premium finishes throughout. The property is situated in a secure, high-end neighborhood, ensuring peace of mind for you and your family.</p>
                                 </div>
                             </div>
 
@@ -139,25 +145,6 @@ export default function PropertyDetailsPage() {
                                             <span className="font-bold text-gray-700 dark:text-gray-200 text-xs sm:text-sm">{amenity.text}</span>
                                         </div>
                                     ))}
-                                </div>
-                            </div>
-
-                            {/* Floor Plans */}
-                            <div>
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-                                    <h2 className="font-display text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                                        <span className="w-8 h-1 bg-secondary rounded-full" aria-hidden="true"></span> Floor Plans
-                                    </h2>
-                                    <div className="bg-gray-200 dark:bg-gray-800 p-1 rounded-lg inline-flex shadow-inner w-full sm:w-auto overflow-hidden">
-                                        <button aria-current="true" className="flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-bold bg-white dark:bg-surface-dark shadow text-gray-900 dark:text-white truncate">Ground</button>
-                                        <button className="flex-1 sm:flex-none px-4 py-2 rounded-md text-sm font-bold text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white truncate">Upper</button>
-                                    </div>
-                                </div>
-                                <div className="border border-gray-200 dark:border-gray-800 rounded-2xl p-4 sm:p-8 flex flex-col items-center justify-center bg-surface-light dark:bg-surface-dark shadow-sm min-h-[300px] sm:min-h-[400px]">
-                                    <img src="https://images.unsplash.com/photo-1600607688969-a5bfcd64bd15?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Architectural floor plan" className="max-h-[200px] sm:max-h-[300px] object-contain mix-blend-multiply dark:mix-blend-normal opacity-80" />
-                                    <button className="mt-8 flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-bold shadow-lg hover:bg-primary-dark transition-colors w-full sm:w-auto">
-                                        <span className="material-icons-outlined" aria-hidden="true">download</span> Download Brochure
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -185,51 +172,16 @@ export default function PropertyDetailsPage() {
                                             <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-widest" htmlFor="email">Email Address</label>
                                             <input type="email" id="email" placeholder="you@email.com" className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3" />
                                         </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-widest" htmlFor="date">Preferred Date</label>
-                                            <input type="date" id="date" className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3" />
-                                        </div>
 
                                         <button type="button" className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-lg shadow-xl shadow-primary/30 transition-transform active:scale-95 mt-6 flex justify-center items-center gap-2">
                                             <span className="material-icons-outlined text-lg" aria-hidden="true">calendar_today</span>
                                             Schedule Visit
                                         </button>
                                     </form>
-
-                                    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800 text-center">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-4">Or contact us directly</p>
-                                        <div className="flex justify-center gap-4">
-                                            {['call', 'chat', 'mail'].map((icon, i) => (
-                                                <a key={i} href="#" aria-label={`Contact by ${icon}`} className="h-12 w-12 rounded-full border border-gray-200 dark:border-gray-700 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all flex items-center justify-center text-gray-600 dark:text-gray-300 shadow-sm">
-                                                    <span className="material-icons-outlined" aria-hidden="true">{icon}</span>
-                                                </a>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Agent Profile */}
-                                <div className="bg-surface-light dark:bg-surface-dark rounded-2xl p-5 flex items-center gap-4 border border-gray-200 dark:border-gray-800 shadow-lg">
-                                    <img src="https://i.pravatar.cc/150?u=agent" alt="Leke Johnson, Real Estate Agent" className="w-16 h-16 rounded-full object-cover ring-4 ring-primary/20" />
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-900 dark:text-white">Leke Johnson</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Senior Property Consultant</p>
-                                        <a href="#" className="text-xs text-secondary font-bold hover:underline mt-1 block">View Profile</a>
-                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                {/* Mobile Sticky CTA Bottom Bar */}
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 shadow-[0_-10px_30px_rgba(0,0,0,0.1)] z-40 lg:hidden flex gap-3">
-                    <button className="flex-1 bg-primary text-white py-3.5 rounded-xl font-bold flex justify-center items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 transition-transform">
-                        <span className="material-icons-outlined text-lg" aria-hidden="true">calendar_today</span> Visit
-                    </button>
-                    <a href="tel:+15550000000" className="flex-1 bg-secondary text-white py-3.5 rounded-xl font-bold flex justify-center items-center gap-2 shadow-lg shadow-secondary/20 active:scale-95 transition-transform">
-                        <span className="material-icons-outlined text-lg" aria-hidden="true">phone</span> Call
-                    </a>
                 </div>
             </div>
         </PublicLayout>

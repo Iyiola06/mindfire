@@ -32,10 +32,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <div className="h-full flex flex-col">
                         {/* Logo */}
                         <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-800">
-                            <Link href="/admin" className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
-                                    <span className="material-icons-outlined text-lg">admin_panel_settings</span>
-                                </div>
+                            <Link href="/admin" className="flex items-center gap-3">
+                                <img src="/logo.svg" alt="Mindfire Homes" className="h-8 w-8" />
                                 <span className="font-display font-bold text-lg">MF Admin</span>
                             </Link>
                         </div>

@@ -44,22 +44,7 @@ export default function Preloader() {
             <div className="text-center">
                 {/* Logo Animation */}
                 <div className="mb-6 animate-pulse">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 50 50"
-                        className="w-20 h-20 mx-auto"
-                        fill="none"
-                    >
-                        <path
-                            d="M10 40 L10 10 L25 25 L40 10 L40 40"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="none"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-primary"
-                        />
-                    </svg>
+                    <img src="/logo.svg" alt="Mindfire Homes" className="w-20 h-20 mx-auto" />
                 </div>
 
                 {/* Brand Text */}

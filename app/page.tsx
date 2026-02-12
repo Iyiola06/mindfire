@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { PropertyCard } from '@/components/shared/PropertyCard';
-import { MOCK_PROPERTIES } from '@/constants';
+import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -10,8 +10,14 @@ export const metadata: Metadata = {
     description: 'Discover exclusive properties that combine luxury living with exceptional investment returns. Invest Smart. Live Better. Own Proudly.',
 }
 
-export default function HomePage() {
-    const featuredProperties = MOCK_PROPERTIES.filter(p => p.featured);
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage() {
+    const { data: featuredProperties } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('featured', true)
+        .limit(3);
 
     return (
         <PublicLayout>
@@ -82,7 +88,7 @@ export default function HomePage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {featuredProperties.map(property => (
+                        {featuredProperties?.map((property: any) => (
                             <PropertyCard key={property.id} property={property} />
                         ))}
                     </div>
@@ -94,6 +100,7 @@ export default function HomePage() {
                     </div>
                 </div>
             </section>
+
 
             {/* Value Props */}
             <section className="py-24 bg-surface-light dark:bg-surface-dark border-y border-gray-200 dark:border-gray-800 overflow-hidden relative">
