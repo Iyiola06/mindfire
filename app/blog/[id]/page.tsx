@@ -1,15 +1,30 @@
-'use client';
-
 import React from 'react';
-import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { MOCK_BLOG_POSTS } from '@/constants';
+import { supabase } from '@/lib/supabase';
 
-export default function BlogPostPage() {
-    const params = useParams();
-    const id = params?.id as string;
-    const post = MOCK_BLOG_POSTS.find(p => p.id === id) || MOCK_BLOG_POSTS[0];
+export const revalidate = 60;
+
+interface BlogPostPageProps {
+    params: Promise<{
+        id: string;
+    }>;
+}
+
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+    const { id } = await params;
+
+    // Fetch post from Supabase
+    const { data: post, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error || !post) {
+        notFound();
+    }
 
     return (
         <PublicLayout>

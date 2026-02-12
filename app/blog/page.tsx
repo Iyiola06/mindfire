@@ -1,13 +1,23 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { MOCK_BLOG_POSTS } from '@/constants';
+import { supabase } from '@/lib/supabase';
 
-export default function BlogPage() {
-    const featuredPost = MOCK_BLOG_POSTS[0];
-    const otherPosts = MOCK_BLOG_POSTS.slice(1);
+export const revalidate = 60; // Revalidate every minute
+
+export default async function BlogPage() {
+    const { data: posts, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('published', true)
+        .order('publishedAt', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching blog posts:', error);
+    }
+
+    const featuredPost = posts && posts.length > 0 ? posts[0] : null;
+    const otherPosts = posts && posts.length > 1 ? posts.slice(1) : [];
 
     return (
         <PublicLayout>

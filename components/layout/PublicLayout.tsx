@@ -56,7 +56,6 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
             <div className="hidden md:flex items-center space-x-8">
               <Link href="/properties" className={`text-sm font-medium hover:text-secondary transition-colors ${textClass}`}>Properties</Link>
               <Link href="/blog" className={`text-sm font-medium hover:text-secondary transition-colors ${textClass}`}>Blog</Link>
-              <Link href="/admin" className={`text-sm font-medium hover:text-secondary transition-colors ${textClass}`}>Admin</Link>
 
               <div className="flex items-center gap-4 border-l border-gray-300 dark:border-gray-700 pl-4">
                 <button onClick={toggleDarkMode} aria-label="Toggle dark mode" className={`p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors ${textClass}`}>
@@ -92,7 +91,6 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
             <Link href="/properties" className="text-2xl font-display font-bold text-gray-900 dark:text-white hover:text-primary transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Properties</Link>
             <Link href="/blog" className="text-2xl font-display font-bold text-gray-900 dark:text-white hover:text-primary transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
             <Link href="/about" className="text-2xl font-display font-bold text-gray-900 dark:text-white hover:text-primary transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>About Us</Link>
-            <Link href="/admin" className="text-2xl font-display font-bold text-gray-900 dark:text-white hover:text-primary transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Admin Dashboard</Link>
           </div>
           <div className="mt-auto pt-8">
             <Link href="/contact" className="block w-full text-center bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg" onClick={() => setMobileMenuOpen(false)}>
