@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { notFound } from 'next/navigation';
+import { Property } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,8 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
         return notFound();
     }
 
+    const typedProperty = property as Property;
+
     return (
         <PublicLayout>
             <div className="bg-background-light dark:bg-background-dark min-h-screen pt-24 pb-28 lg:pb-16 relative">
@@ -31,22 +34,22 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
                             <span className="mx-2" aria-hidden="true">/</span>
                             <Link href="/properties" className="hover:text-primary transition-colors">Listings</Link>
                             <span className="mx-2" aria-hidden="true">/</span>
-                            <span className="text-gray-900 dark:text-white" aria-current="page">{property.name}</span>
+                            <span className="text-gray-900 dark:text-white" aria-current="page">{typedProperty.name}</span>
                         </nav>
 
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                             <div>
-                                <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2">{property.name}</h1>
+                                <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2">{typedProperty.name}</h1>
                                 <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 flex items-center gap-2">
                                     <span className="material-icons-outlined text-primary text-xl shrink-0" aria-hidden="true">location_on</span>
-                                    {property.address}
+                                    {typedProperty.address}
                                 </p>
                             </div>
                             <div className="flex flex-col items-start md:items-end border-t border-gray-200 dark:border-gray-800 md:border-t-0 pt-4 md:pt-0">
                                 <p className="text-3xl font-bold text-primary dark:text-primary">
-                                    ${property.price.toLocaleString()}
+                                    ${typedProperty.price.toLocaleString()}
                                 </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold mt-1">Status: {property.status}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold mt-1">Status: {typedProperty.status}</p>
                             </div>
                         </div>
                     </div>
@@ -54,27 +57,37 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
                     {/* Gallery Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-2 sm:gap-4 mb-12 h-[350px] sm:h-[450px] md:h-[600px] rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-800">
                         <div className="md:col-span-2 md:row-span-2 relative group cursor-pointer overflow-hidden">
-                            <img src={property.image} alt={`${property.name} exterior view`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                            {property.featured && <div className="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded uppercase tracking-wider shadow-md">Featured</div>}
+                            <img src={typedProperty.image} alt={`${typedProperty.name} main view`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                            {typedProperty.featured && <div className="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded uppercase tracking-wider shadow-md">Featured</div>}
                         </div>
-                        <div className="relative group cursor-pointer overflow-hidden hidden md:block">
-                            <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Interior living room" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        </div>
-                        <div className="relative group cursor-pointer overflow-hidden hidden md:block">
-                            <img src="https://images.unsplash.com/photo-1600566753086-00f18efc2291?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Kitchen view" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        </div>
-                        <div className="relative group cursor-pointer overflow-hidden hidden md:block">
-                            <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Bedroom view" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        </div>
-                        <div className="relative group cursor-pointer overflow-hidden hidden md:block">
-                            <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Bathroom view" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                            <div className="absolute inset-0 w-full bg-black/50 flex items-center justify-center transition-opacity hover:bg-black/40 backdrop-blur-sm cursor-pointer border-none">
-                                <span className="text-white font-bold flex items-center gap-2 border-2 border-white px-4 py-2 rounded-lg">
-                                    <span className="material-icons-outlined" aria-hidden="true">grid_view</span>
-                                    View All Photos (24)
-                                </span>
+                        {/* Additional images from the gallery */}
+                        {(typedProperty.images || []).slice(0, 4).map((img, i) => (
+                            <div key={i} className={`relative group cursor-pointer overflow-hidden hidden md:block ${i === 3 && (typedProperty.images?.length || 0) > 4 ? 'relative' : ''}`}>
+                                <img src={img} alt={`Gallery view ${i + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                {i === 3 && (typedProperty.images?.length || 0) > 4 && (
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
+                                        <span className="text-white font-bold">+{(typedProperty.images?.length || 0) - 4} More</span>
+                                    </div>
+                                )}
                             </div>
-                        </div>
+                        ))}
+                        {/* Fallback if no gallery images */}
+                        {(!typedProperty.images || typedProperty.images.length === 0) && (
+                            <>
+                                <div className="relative group cursor-pointer overflow-hidden hidden md:block bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                    <span className="material-icons-outlined text-gray-300 text-4xl">image</span>
+                                </div>
+                                <div className="relative group cursor-pointer overflow-hidden hidden md:block bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                    <span className="material-icons-outlined text-gray-300 text-4xl">image</span>
+                                </div>
+                                <div className="relative group cursor-pointer overflow-hidden hidden md:block bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                    <span className="material-icons-outlined text-gray-300 text-4xl">image</span>
+                                </div>
+                                <div className="relative group cursor-pointer overflow-hidden hidden md:block bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                    <span className="material-icons-outlined text-gray-300 text-4xl">image</span>
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -86,21 +99,21 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
                                 <div className="flex items-center gap-3 sm:gap-4">
                                     <span className="material-icons-outlined text-primary text-3xl sm:text-4xl" aria-hidden="true">king_bed</span>
                                     <div>
-                                        <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white font-display">{property.beds}</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white font-display">{typedProperty.beds}</p>
                                         <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">Bedrooms</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 sm:gap-4">
                                     <span className="material-icons-outlined text-primary text-3xl sm:text-4xl" aria-hidden="true">bathtub</span>
                                     <div>
-                                        <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white font-display">{property.baths}</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white font-display">{typedProperty.baths}</p>
                                         <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">Bathrooms</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 sm:gap-4">
                                     <span className="material-icons-outlined text-primary text-3xl sm:text-4xl" aria-hidden="true">square_foot</span>
                                     <div>
-                                        <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white font-display">{property.sqft}</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white font-display">{typedProperty.sqft}</p>
                                         <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">Sq. Ft.</p>
                                     </div>
                                 </div>
@@ -118,35 +131,57 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
                                 <h2 className="font-display text-2xl sm:text-3xl font-bold mb-6 text-gray-900 dark:text-white flex items-center gap-3">
                                     <span className="w-8 h-1 bg-secondary rounded-full" aria-hidden="true"></span> About This Property
                                 </h2>
-                                <div className="prose prose-base sm:prose-lg dark:prose-invert text-gray-600 dark:text-gray-300 max-w-none leading-relaxed">
-                                    <p>Experience the pinnacle of luxury living with "{property.name}". Designed for those who appreciate the finer things, this architectural masterpiece redefines modern living.</p>
-                                    <p>Featuring expansive open-plan living areas, floor-to-ceiling windows that flood the space with natural light, and premium finishes throughout. The property is situated in a secure, high-end neighborhood, ensuring peace of mind for you and your family.</p>
+                                <div className="prose prose-base sm:prose-lg dark:prose-invert text-gray-600 dark:text-gray-300 max-w-none leading-relaxed whitespace-pre-wrap">
+                                    {typedProperty.description || `Experience the pinnacle of luxury living with "${typedProperty.name}". Designed for those who appreciate the finer things, this architectural masterpiece redefines modern living.`}
                                 </div>
                             </div>
 
                             {/* Amenities */}
-                            <div>
-                                <h2 className="font-display text-2xl sm:text-3xl font-bold mb-8 text-gray-900 dark:text-white flex items-center gap-3">
-                                    <span className="w-8 h-1 bg-secondary rounded-full" aria-hidden="true"></span> Premium Amenities
-                                </h2>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                                    {[
-                                        { icon: 'bolt', text: 'Smart Home Ready' },
-                                        { icon: 'security', text: '24/7 Security' },
-                                        { icon: 'fitness_center', text: 'Private Gym' },
-                                        { icon: 'pool', text: 'Infinity Pool' },
-                                        { icon: 'kitchen', text: 'Chef\'s Kitchen' },
-                                        { icon: 'wifi', text: 'Fibre Internet' }
-                                    ].map((amenity, i) => (
-                                        <div key={i} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-800 shadow-sm hover:border-primary transition-colors">
-                                            <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
-                                                <span className="material-icons-outlined" aria-hidden="true">{amenity.icon}</span>
+                            {(typedProperty.amenities || []).length > 0 && (
+                                <div>
+                                    <h2 className="font-display text-2xl sm:text-3xl font-bold mb-8 text-gray-900 dark:text-white flex items-center gap-3">
+                                        <span className="w-8 h-1 bg-secondary rounded-full" aria-hidden="true"></span> Premium Amenities
+                                    </h2>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                                        {typedProperty.amenities?.map((amenity, i) => (
+                                            <div key={i} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-800 shadow-sm hover:border-primary transition-colors">
+                                                <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                                                    <span className="material-icons-outlined" aria-hidden="true">
+                                                        {amenity.toLowerCase().includes('wifi') || amenity.toLowerCase().includes('internet') ? 'wifi' :
+                                                            amenity.toLowerCase().includes('gym') ? 'fitness_center' :
+                                                                amenity.toLowerCase().includes('pool') ? 'pool' :
+                                                                    amenity.toLowerCase().includes('smart') ? 'bolt' :
+                                                                        amenity.toLowerCase().includes('security') ? 'security' :
+                                                                            amenity.toLowerCase().includes('kit') ? 'kitchen' : 'check_circle'}
+                                                    </span>
+                                                </div>
+                                                <span className="font-bold text-gray-700 dark:text-gray-200 text-xs sm:text-sm">{amenity}</span>
                                             </div>
-                                            <span className="font-bold text-gray-700 dark:text-gray-200 text-xs sm:text-sm">{amenity.text}</span>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Floor Plans */}
+                            {(typedProperty.floorPlans || []).length > 0 && (
+                                <div>
+                                    <h2 className="font-display text-2xl sm:text-3xl font-bold mb-8 text-gray-900 dark:text-white flex items-center gap-3">
+                                        <span className="w-8 h-1 bg-secondary rounded-full" aria-hidden="true"></span> Architectural Floor Plans
+                                    </h2>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        {typedProperty.floorPlans?.map((plan, i) => (
+                                            <div key={i} className="bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-md group">
+                                                <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+                                                    <p className="font-bold text-sm text-gray-900 dark:text-white">{plan.label}</p>
+                                                </div>
+                                                <div className="aspect-[4/3] overflow-hidden cursor-zoom-in">
+                                                    <img src={plan.image} alt={plan.label} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Right Sidebar - Sticky Form */}
@@ -162,15 +197,15 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
                                     <form className="space-y-5">
                                         <div>
                                             <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-widest" htmlFor="name">Full Name</label>
-                                            <input type="text" id="name" placeholder="Enter your name" className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3" />
+                                            <input type="text" id="name" placeholder="Enter your name" className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3" />
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-widest" htmlFor="phone">Phone Number</label>
-                                            <input type="tel" id="phone" placeholder="+1 ..." className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3" />
+                                            <input type="tel" id="phone" placeholder="+1 ..." className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3" />
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-widest" htmlFor="email">Email Address</label>
-                                            <input type="email" id="email" placeholder="you@email.com" className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3" />
+                                            <input type="email" id="email" placeholder="you@email.com" className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3" />
                                         </div>
 
                                         <button type="button" className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-lg shadow-xl shadow-primary/30 transition-transform active:scale-95 mt-6 flex justify-center items-center gap-2">

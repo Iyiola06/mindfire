@@ -11,6 +11,12 @@ export interface Property {
   status: 'For Sale' | 'For Rent' | 'Sold' | 'Coming Soon' | 'Maintenance';
   tags: string[];
   featured?: boolean;
+  description?: string;
+  images?: string[];
+  amenities?: string[];
+  floorPlans?: { label: string; image: string }[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Lead {
