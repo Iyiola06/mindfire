@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { createBlogPost, updateBlogPost, deleteBlogPost } from '@/lib/actions';
 import { useRouter } from 'next/navigation';
+import { uploadFile } from '@/lib/storage';
 
 interface BlogPost {
     id: string;
@@ -24,13 +25,15 @@ export default function BlogManagement({ initialPosts }: { initialPosts: BlogPos
     const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
+    const imageRef = React.useRef<HTMLInputElement>(null);
+    const [tempFile, setTempFile] = useState<File | null>(null);
 
     const [formData, setFormData] = useState({
         title: '',
         excerpt: '',
         content: '',
         category: 'Market Trends',
-        image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80',
+        image: '',
         published: false,
         author: 'Mindfire Admin',
         authorAvatar: '/logo.svg'
@@ -38,12 +41,13 @@ export default function BlogManagement({ initialPosts }: { initialPosts: BlogPos
 
     const openAddModal = () => {
         setEditingPost(null);
+        setTempFile(null);
         setFormData({
             title: '',
             excerpt: '',
             content: '',
             category: 'Market Trends',
-            image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80',
+            image: '',
             published: false,
             author: 'Mindfire Admin',
             authorAvatar: '/logo.svg'
@@ -53,12 +57,13 @@ export default function BlogManagement({ initialPosts }: { initialPosts: BlogPos
 
     const openEditModal = (post: BlogPost) => {
         setEditingPost(post);
+        setTempFile(null);
         setFormData({
             title: post.title,
             excerpt: post.excerpt,
             content: post.content,
             category: post.category,
-            image: post.image || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80',
+            image: post.image || '',
             published: post.published,
             author: post.author,
             authorAvatar: post.authorAvatar || '/logo.svg'
@@ -81,27 +86,38 @@ export default function BlogManagement({ initialPosts }: { initialPosts: BlogPos
         e.preventDefault();
         setIsSubmitting(true);
 
-        const slug = formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-        const data = {
-            ...formData,
-            slug,
-            tags: [formData.category],
-            publishedAt: formData.published ? new Date().toISOString() : null
-        };
+        try {
+            let imageUrl = formData.image;
+            if (tempFile) {
+                imageUrl = await uploadFile(tempFile, 'blog');
+            }
 
-        let res;
-        if (editingPost) {
-            res = await updateBlogPost(editingPost.id, data);
-        } else {
-            res = await createBlogPost(data);
-        }
+            const slug = formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            const data = {
+                ...formData,
+                image: imageUrl,
+                slug,
+                tags: [formData.category],
+                publishedAt: formData.published ? new Date().toISOString() : null
+            };
 
-        setIsSubmitting(false);
-        if (res.success) {
-            setIsModalOpen(false);
-            router.refresh();
-        } else {
-            alert('Error saving post: ' + res.error);
+            let res;
+            if (editingPost) {
+                res = await updateBlogPost(editingPost.id, data);
+            } else {
+                res = await createBlogPost(data);
+            }
+
+            if (res.success) {
+                setIsModalOpen(false);
+                router.refresh();
+            } else {
+                alert('Error saving post: ' + res.error);
+            }
+        } catch (error: any) {
+            alert('Error uploading file: ' + error.message);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -247,14 +263,37 @@ export default function BlogManagement({ initialPosts }: { initialPosts: BlogPos
                                         ></textarea>
                                     </div>
                                     <div className="sm:col-span-2">
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Cover Image URL</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.image}
-                                            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                                            className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 font-medium outline-none transition-all"
-                                        />
+                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Cover Image</label>
+                                        <div
+                                            onClick={() => imageRef.current?.click()}
+                                            className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-6 text-center hover:border-primary transition-colors cursor-pointer bg-gray-50 dark:bg-gray-800/50"
+                                        >
+                                            {tempFile || formData.image ? (
+                                                <div className="flex items-center justify-center gap-4">
+                                                    <img
+                                                        src={tempFile ? URL.createObjectURL(tempFile) : formData.image}
+                                                        className="h-16 w-16 object-cover rounded-lg shadow-sm"
+                                                        alt="Preview"
+                                                    />
+                                                    <div className="text-left">
+                                                        <p className="text-sm font-bold text-gray-900 dark:text-white">Image Selected</p>
+                                                        <p className="text-xs text-primary font-bold mt-1">Click to replace</p>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <span className="material-icons-outlined text-3xl text-gray-400 mb-2">add_photo_alternate</span>
+                                                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400">Click to upload cover image</p>
+                                                </>
+                                            )}
+                                            <input
+                                                type="file"
+                                                hidden
+                                                ref={imageRef}
+                                                accept="image/*"
+                                                onChange={(e) => setTempFile(e.target.files?.[0] || null)}
+                                            />
+                                        </div>
                                     </div>
                                     <div className="sm:col-span-2">
                                         <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Main Content</label>

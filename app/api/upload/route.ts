@@ -11,6 +11,7 @@ export async function POST(request: Request) {
         const formData = await request.formData()
         const file = formData.get('file') as File
         const folder = formData.get('folder') as string || 'uploads'
+        const bucketName = formData.get('bucket') as string || 'properties'
 
         if (!file) {
             return NextResponse.json(
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
 
         // Upload to Supabase Storage
         const { error: uploadError } = await supabase.storage
-            .from('properties') // Assuming 'properties' bucket exists
+            .from(bucketName)
             .upload(filePath, file, {
                 cacheControl: '3600',
                 upsert: false
@@ -50,8 +51,10 @@ export async function POST(request: Request) {
 
         // Get public URL
         const { data: { publicUrl } } = supabase.storage
-            .from('properties')
+            .from(bucketName)
             .getPublicUrl(filePath)
+
+        console.log(`Successfully uploaded to ${bucketName}/${filePath}`);
 
         return NextResponse.json({
             url: publicUrl,

@@ -1,30 +1,30 @@
 import { supabase } from './supabase';
 
 /**
- * Uploads a file to a Supabase storage bucket.
+ * Uploads a file to Supabase via our secure API route.
  * @param file The file to upload
- * @param bucket The bucket name
+ * @param bucket The bucket name (will be used by the API)
  * @param folder The folder inside the bucket
  * @returns The public URL of the uploaded file
  */
-export async function uploadFile(file: File, bucket: string, folder: string = ''): Promise<string> {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-    const filePath = folder ? `${folder}/${fileName}` : fileName;
+export async function uploadFile(file: File, bucket: string = 'properties', folder: string = ''): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', folder);
+    formData.append('bucket', bucket); // Pass bucket to API
 
-    const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file);
+    const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+    });
 
-    if (uploadError) {
-        throw new Error(`Error uploading file: ${uploadError.message}`);
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
     }
 
-    const { data } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
-
-    return data.publicUrl;
+    const data = await response.json();
+    return data.url;
 }
 
 /**
