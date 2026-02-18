@@ -1,57 +1,66 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
-// Initialize Supabase client
+// Initialize Supabase client with service role key (bypasses RLS)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabase = createClient(supabaseUrl, supabaseKey)
+
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg', 'bmp', 'tiff']
+
+const MIME_TYPES: Record<string, string> = {
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    avif: 'image/avif',
+    svg: 'image/svg+xml',
+    bmp: 'image/bmp',
+    tiff: 'image/tiff',
+}
 
 export async function POST(request: Request) {
     try {
         const formData = await request.formData()
         const file = formData.get('file') as File
-        const folder = formData.get('folder') as string || 'uploads'
-        const bucketName = formData.get('bucket') as string || 'properties'
+        const folder = (formData.get('folder') as string) || 'uploads'
+        const bucketName = (formData.get('bucket') as string) || 'properties'
 
-        if (!file) {
-            return NextResponse.json(
-                { error: 'No file provided' },
-                { status: 400 }
-            )
+        if (!file || file.size === 0) {
+            return NextResponse.json({ error: 'No file provided' }, { status: 400 })
         }
 
-        // Validate file type — check MIME type OR extension as fallback
-        // (file.type can be empty/wrong when sent via FormData from some clients)
-        const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg', 'bmp', 'ico', 'tiff']
+        // Determine extension from filename — this is always reliable
         const fileExt = file.name.split('.').pop()?.toLowerCase() || ''
-        const isValidMime = file.type.startsWith('image/')
-        const isValidExt = ALLOWED_EXTENSIONS.includes(fileExt)
 
-        if (!isValidMime && !isValidExt) {
-            return NextResponse.json(
-                { error: 'File must be an image' },
-                { status: 400 }
-            )
+        if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
+            return NextResponse.json({ error: 'File must be an image (jpg, png, gif, webp, avif, svg, bmp, tiff)' }, { status: 400 })
         }
 
-        // Generate unique filename (reuse fileExt computed above)
+        // Determine correct content type from extension (don't trust file.type from the browser)
+        const contentType = MIME_TYPES[fileExt] || 'application/octet-stream'
+
+        // Read file as ArrayBuffer for reliable binary upload
+        const arrayBuffer = await file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+
+        // Generate unique filename
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
         const filePath = `${folder}/${fileName}`
 
         // Upload to Supabase Storage
         const { error: uploadError } = await supabase.storage
             .from(bucketName)
-            .upload(filePath, file, {
+            .upload(filePath, buffer, {
+                contentType,
                 cacheControl: '3600',
-                upsert: false
+                upsert: false,
             })
 
         if (uploadError) {
             console.error('Supabase storage upload error:', uploadError)
-            return NextResponse.json(
-                { error: 'Failed to upload image' },
-                { status: 500 }
-            )
+            return NextResponse.json({ error: `Upload failed: ${uploadError.message}` }, { status: 500 })
         }
 
         // Get public URL
@@ -59,18 +68,12 @@ export async function POST(request: Request) {
             .from(bucketName)
             .getPublicUrl(filePath)
 
-        console.log(`Successfully uploaded to ${bucketName}/${filePath}`);
+        console.log(`Uploaded to ${bucketName}/${filePath}`)
 
-        return NextResponse.json({
-            url: publicUrl,
-            path: filePath
-        })
+        return NextResponse.json({ url: publicUrl, path: filePath })
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Upload error:', error)
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        )
+        return NextResponse.json({ error: `Internal server error: ${error?.message || 'Unknown'}` }, { status: 500 })
     }
 }
