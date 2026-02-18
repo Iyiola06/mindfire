@@ -5,10 +5,31 @@ import { revalidatePath } from 'next/cache'
 
 // --- Property Actions ---
 
+// Only pass columns that actually exist in the properties table
+function sanitizeProperty(data: any) {
+    return {
+        name: data.name,
+        address: data.address,
+        price: data.price,
+        currency: data.currency ?? 'USD',
+        image: data.image,
+        beds: data.beds,
+        baths: data.baths,
+        sqft: data.sqft,
+        status: data.status,
+        tags: data.tags ?? [],
+        featured: data.featured ?? false,
+        description: data.description ?? null,
+        amenities: data.amenities ?? [],
+        images: data.images ?? [],
+        floorPlans: data.floorPlans ?? [],
+    }
+}
+
 export async function createProperty(formData: any) {
     const { data, error } = await supabase
         .from('properties')
-        .insert([formData])
+        .insert([sanitizeProperty(formData)])
         .select()
 
     if (error) {
@@ -25,7 +46,7 @@ export async function createProperty(formData: any) {
 export async function updateProperty(id: string, formData: any) {
     const { data, error } = await supabase
         .from('properties')
-        .update(formData)
+        .update(sanitizeProperty(formData))
         .eq('id', id)
         .select()
 
