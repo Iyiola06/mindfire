@@ -20,16 +20,21 @@ export async function POST(request: Request) {
             )
         }
 
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
+        // Validate file type — check MIME type OR extension as fallback
+        // (file.type can be empty/wrong when sent via FormData from some clients)
+        const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'svg', 'bmp', 'ico', 'tiff']
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || ''
+        const isValidMime = file.type.startsWith('image/')
+        const isValidExt = ALLOWED_EXTENSIONS.includes(fileExt)
+
+        if (!isValidMime && !isValidExt) {
             return NextResponse.json(
                 { error: 'File must be an image' },
                 { status: 400 }
             )
         }
 
-        // Generate unique filename
-        const fileExt = file.name.split('.').pop()
+        // Generate unique filename (reuse fileExt computed above)
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
         const filePath = `${folder}/${fileName}`
 

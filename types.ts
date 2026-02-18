@@ -3,6 +3,7 @@ export interface Property {
   name: string;
   address: string;
   price: number;
+  currency?: 'USD' | 'NGN';
   priceLabel?: string;
   image: string;
   beds: number;

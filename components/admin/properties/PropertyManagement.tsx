@@ -19,10 +19,13 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
     const [currentStep, setCurrentStep] = useState(1);
     const router = useRouter();
 
+    const [searchQuery, setSearchQuery] = useState('');
+
     const [formData, setFormData] = useState({
         name: '',
         address: '',
         price: '',
+        currency: 'USD' as 'USD' | 'NGN',
         status: 'For Sale' as Property['status'],
         beds: '',
         baths: '',
@@ -51,6 +54,11 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
         floorPlan: null
     });
 
+    const filteredProperties = initialProperties.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.address.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     const openAddModal = () => {
         setEditingProperty(null);
         setCurrentStep(1);
@@ -58,6 +66,7 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
             name: '',
             address: '',
             price: '',
+            currency: 'USD',
             status: 'For Sale',
             beds: '',
             baths: '',
@@ -81,6 +90,7 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
             name: property.name,
             address: property.address,
             price: property.price.toString(),
+            currency: property.currency || 'USD',
             status: property.status,
             beds: property.beds.toString(),
             baths: property.baths.toString(),
@@ -144,11 +154,11 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
 
             const data = {
                 ...formData,
-                price: parseFloat(formData.price),
-                beds: parseInt(formData.beds),
-                baths: parseFloat(formData.baths),
-                sqft: parseInt(formData.sqft),
-                image: mainImageUrl, // Ensure this is set
+                price: parseFloat(formData.price) || 0,
+                beds: parseInt(formData.beds) || 0,
+                baths: parseFloat(formData.baths) || 0,
+                sqft: parseInt(formData.sqft) || 0,
+                image: mainImageUrl,
                 images: galleryUrls,
                 floorPlans: floorPlans
             };
@@ -226,7 +236,9 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-icons-outlined">search</span>
                         <input
                             type="text"
-                            placeholder="Search properties..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search by name or address..."
                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary dark:text-white outline-none transition-all"
                         />
                     </div>
@@ -244,7 +256,14 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                            {initialProperties.map((property) => (
+                            {filteredProperties.length === 0 && (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-400 font-medium">
+                                        No properties match your search.
+                                    </td>
+                                </tr>
+                            )}
+                            {filteredProperties.map((property) => (
                                 <tr key={property.id} className="group hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="h-16 w-24 rounded-lg overflow-hidden relative shadow-sm">
@@ -258,7 +277,9 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="font-mono text-gray-900 dark:text-gray-200 font-bold">${property.price.toLocaleString()}</span>
+                                        <span className="font-mono text-gray-900 dark:text-gray-200 font-bold">
+                                            {(property.currency === 'NGN' ? '₦' : '$')}{property.price.toLocaleString()}
+                                        </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
@@ -359,15 +380,41 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Price ($)</label>
-                                            <input
-                                                type="number"
-                                                required
-                                                value={formData.price}
-                                                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                                placeholder="0.00"
-                                                className="block w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 font-medium outline-none transition-all"
-                                            />
+                                            <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">
+                                                Price ({formData.currency === 'NGN' ? '₦ NGN' : '$ USD'})
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="number"
+                                                    required
+                                                    value={formData.price}
+                                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                                    placeholder="0.00"
+                                                    className="block flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 font-medium outline-none transition-all"
+                                                />
+                                                <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden text-sm font-bold shrink-0">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, currency: 'USD' })}
+                                                        className={`px-3 py-3 transition-colors ${formData.currency === 'USD'
+                                                            ? 'bg-primary text-white'
+                                                            : 'bg-white dark:bg-gray-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                                            }`}
+                                                    >
+                                                        USD
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, currency: 'NGN' })}
+                                                        className={`px-3 py-3 transition-colors border-l border-gray-200 dark:border-gray-700 ${formData.currency === 'NGN'
+                                                            ? 'bg-primary text-white'
+                                                            : 'bg-white dark:bg-gray-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                                            }`}
+                                                    >
+                                                        NGN
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Listing Status</label>
@@ -406,7 +453,6 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
                                             <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Bedrooms</label>
                                             <input
                                                 type="number"
-                                                required
                                                 value={formData.beds}
                                                 onChange={(e) => setFormData({ ...formData, beds: e.target.value })}
                                                 placeholder="0"
@@ -418,7 +464,6 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
                                             <input
                                                 type="number"
                                                 step="0.5"
-                                                required
                                                 value={formData.baths}
                                                 onChange={(e) => setFormData({ ...formData, baths: e.target.value })}
                                                 placeholder="0"
@@ -429,7 +474,6 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
                                             <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Square Feet</label>
                                             <input
                                                 type="number"
-                                                required
                                                 value={formData.sqft}
                                                 onChange={(e) => setFormData({ ...formData, sqft: e.target.value })}
                                                 placeholder="0"
@@ -439,7 +483,6 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
                                         <div className="sm:col-span-3">
                                             <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Property Description</label>
                                             <textarea
-                                                required
                                                 rows={6}
                                                 value={formData.description}
                                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
