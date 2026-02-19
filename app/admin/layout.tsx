@@ -13,6 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Properties', path: '/admin/properties', icon: 'home_work' },
         { name: 'Leads', path: '/admin/leads', icon: 'people' },
         { name: 'Blog', path: '/admin/blog', icon: 'article' },
+        { name: 'Newsletter', path: '/admin/newsletter', icon: 'mail' },
     ];
 
     const handleLogout = () => {

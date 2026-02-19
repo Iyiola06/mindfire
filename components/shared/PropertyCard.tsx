@@ -42,7 +42,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </button>
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12">
             <p className="text-white font-bold text-xl flex items-baseline gap-1">
-              ${property.price.toLocaleString()}
+              {property.currency === 'NGN' ? '₦' : '$'}{property.price.toLocaleString()}
               {property.priceLabel && <span className="text-sm font-normal opacity-80">{property.priceLabel}</span>}
             </p>
           </div>

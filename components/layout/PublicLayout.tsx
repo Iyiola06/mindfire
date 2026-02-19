@@ -30,6 +30,28 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
 
   const { theme, setTheme } = useTheme();
 
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setNewsletterStatus('submitting');
+
+    // Dynamically import to avoid server components in client bundle issues if easy, 
+    // but easier to just import at top if Next.js handles it (it does for server actions).
+    // actually, let's just use the imported action.
+    const { subscribeToNewsletter } = await import('@/lib/actions');
+    const res = await subscribeToNewsletter(newsletterEmail);
+
+    if (res.success) {
+      setNewsletterStatus('success');
+      setNewsletterEmail('');
+    } else {
+      setNewsletterStatus('error');
+      setTimeout(() => setNewsletterStatus('idle'), 3000);
+    }
+  };
+
   const toggleDarkMode = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
@@ -59,6 +81,7 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
             <div className="hidden md:flex items-center space-x-8">
               <Link href="/properties" className={`text-sm font-medium hover:text-secondary transition-colors ${textClass}`}>Properties</Link>
               <Link href="/blog" className={`text-sm font-medium hover:text-secondary transition-colors ${textClass}`}>Blog</Link>
+              <Link href="/about" className={`text-sm font-medium hover:text-secondary transition-colors ${textClass}`}>About</Link>
 
               <div className="flex items-center gap-4 border-l border-gray-300 dark:border-gray-700 pl-4">
                 <button onClick={toggleDarkMode} aria-label="Toggle dark mode" className={`p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors ${textClass}`}>
@@ -168,17 +191,41 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
             <div>
               <h3 className="text-lg font-bold font-display mb-6">Stay Updated</h3>
               <p className="text-gray-400 text-sm mb-4">Subscribe to our newsletter for the latest property news.</p>
-              <form className="flex">
-                <input type="email" aria-label="Email address for newsletter" placeholder="Your email" className="w-full bg-gray-800 border-none rounded-l-lg p-3 text-sm focus:ring-1 focus:ring-primary text-white" />
-                <button type="button" aria-label="Subscribe to newsletter" className="bg-primary hover:bg-primary-dark text-white px-4 rounded-r-lg transition-colors">
-                  <span className="material-icons-outlined" aria-hidden="true">send</span>
-                </button>
+              <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
+                <div className="flex">
+                  <input
+                    type="email"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    required
+                    aria-label="Email address for newsletter"
+                    placeholder="Your email"
+                    className="w-full bg-gray-800 border-none rounded-l-lg p-3 text-sm focus:ring-1 focus:ring-primary text-white disabled:opacity-50"
+                    disabled={newsletterStatus === 'submitting' || newsletterStatus === 'success'}
+                  />
+                  <button
+                    type="submit"
+                    aria-label="Subscribe to newsletter"
+                    className="bg-primary hover:bg-primary-dark text-white px-4 rounded-r-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={newsletterStatus === 'submitting' || newsletterStatus === 'success'}
+                  >
+                    {newsletterStatus === 'submitting' ? (
+                      <span className="material-icons-outlined animate-spin" aria-hidden="true">refresh</span>
+                    ) : newsletterStatus === 'success' ? (
+                      <span className="material-icons-outlined" aria-hidden="true">check</span>
+                    ) : (
+                      <span className="material-icons-outlined" aria-hidden="true">send</span>
+                    )}
+                  </button>
+                </div>
+                {newsletterStatus === 'success' && <p className="text-green-500 text-xs mt-1">Thanks for subscribing!</p>}
+                {newsletterStatus === 'error' && <p className="text-red-500 text-xs mt-1">Something went wrong. Try again.</p>}
               </form>
             </div>
           </div>
 
           <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
-            <p>© 2023 Mindfire Homes. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Mindfire Homes. All rights reserved.</p>
             <div className="flex gap-6 mt-4 md:mt-0">
               <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-white transition-colors">Terms of Service</a>

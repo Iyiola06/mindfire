@@ -84,27 +84,20 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
                         <div className="text-gray-900 dark:text-gray-100" dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br/>') }} />
 
-                        <h3>Understanding the Market Value</h3>
-                        <p>Donec id elit non mi porta gravida at eget metus. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum.</p>
-
-                        <blockquote>
-                            <p>"Real estate cannot be lost or stolen, nor can it be carried away. Purchased with common sense, paid for in full, and managed with reasonable care, it is about the safest investment in the world."</p>
-                        </blockquote>
-
-                        <h3>Conclusion</h3>
-                        <p>Vestibulum id ligula porta felis euismod semper. Nulla vitae elit libero, a pharetra augue. Aenean lacinia bibendum nulla sed consectetur. Vivamus hendrerit arcu sed erat molestie vehicula.</p>
                     </div>
 
                     {/* Tags & Footer */}
-                    <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div className="flex gap-2">
-                            {['Investment', 'Real Estate', 'Tips'].map(tag => (
-                                <span key={tag} className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg text-sm font-bold">
-                                    #{tag}
-                                </span>
-                            ))}
+                    {post.tags && post.tags.length > 0 && (
+                        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div className="flex gap-2">
+                                {post.tags.map((tag: string) => (
+                                    <span key={tag} className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg text-sm font-bold">
+                                        #{tag}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                 </div>
             </div>

@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { notFound } from 'next/navigation';
 import { Property } from '@/types';
+import { PropertyContactForm } from '@/components/properties/PropertyContactForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +48,7 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
                             </div>
                             <div className="flex flex-col items-start md:items-end border-t border-gray-200 dark:border-gray-800 md:border-t-0 pt-4 md:pt-0">
                                 <p className="text-3xl font-bold text-primary dark:text-primary">
-                                    ${typedProperty.price.toLocaleString()}
+                                    {typedProperty.currency === 'NGN' ? '₦' : '$'}{typedProperty.price.toLocaleString()}
                                 </p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold mt-1">Status: {typedProperty.status}</p>
                             </div>
@@ -187,33 +188,7 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
                         {/* Right Sidebar - Sticky Form */}
                         <div className="lg:col-span-1 hidden lg:block">
                             <div className="sticky top-24 space-y-6">
-                                <div className="bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl p-6 md:p-8">
-                                    <div className="mb-8 border-b border-gray-200 dark:border-gray-800 pb-6">
-                                        <p className="text-secondary font-bold text-[10px] uppercase tracking-widest mb-2">Let's Secure Your Space</p>
-                                        <h3 className="font-display text-2xl font-bold text-gray-900 dark:text-white">Book a Site Visit</h3>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Our elite agents are ready to show you around.</p>
-                                    </div>
-
-                                    <form className="space-y-5">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-widest" htmlFor="name">Full Name</label>
-                                            <input type="text" id="name" placeholder="Enter your name" className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-widest" htmlFor="phone">Phone Number</label>
-                                            <input type="tel" id="phone" placeholder="+1 ..." className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-widest" htmlFor="email">Email Address</label>
-                                            <input type="email" id="email" placeholder="you@email.com" className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3" />
-                                        </div>
-
-                                        <button type="button" className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-lg shadow-xl shadow-primary/30 transition-transform active:scale-95 mt-6 flex justify-center items-center gap-2">
-                                            <span className="material-icons-outlined text-lg" aria-hidden="true">calendar_today</span>
-                                            Schedule Visit
-                                        </button>
-                                    </form>
-                                </div>
+                                <PropertyContactForm propertyName={typedProperty.name} />
                             </div>
                         </div>
                     </div>

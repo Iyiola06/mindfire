@@ -40,11 +40,32 @@ export default async function AdminDashboard() {
         })) || [])
     ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5);
 
+    // Calculate Sales Volume
+    const { data: soldProperties } = await supabase
+        .from('properties')
+        .select('price, currency')
+        .eq('status', 'Sold');
+
+    const volumeUSD = soldProperties?.filter(p => p.currency === 'USD').reduce((sum, p) => sum + p.price, 0) || 0;
+    const volumeNGN = soldProperties?.filter(p => p.currency === 'NGN').reduce((sum, p) => sum + p.price, 0) || 0;
+
+    // Format volume string (e.g. "$1.2M + ₦500M")
+    const formatVolume = (val: number, symbol: string) => {
+        if (val >= 1_000_000) return `${symbol}${(val / 1_000_000).toFixed(1)}M`;
+        if (val >= 1_000) return `${symbol}${(val / 1_000).toFixed(1)}K`;
+        return `${symbol}${val}`;
+    };
+
+    const volumeString = [
+        volumeUSD > 0 ? formatVolume(volumeUSD, '$') : null,
+        volumeNGN > 0 ? formatVolume(volumeNGN, '₦') : null
+    ].filter(Boolean).join(' + ') || '$0';
+
     const stats = [
-        { title: 'Total New Leads', value: (leadsCount || 0).toLocaleString(), change: '+12.5%', icon: 'person_add', color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-        { title: 'Active Listings', value: (propertiesCount || 0).toString(), change: '+5.2%', icon: 'home', color: 'text-primary', bg: 'bg-primary/10' },
-        { title: 'Blog posts', value: (blogCount || 0).toString(), change: '+2.4%', icon: 'article', color: 'text-secondary', bg: 'bg-secondary/10' },
-        { title: 'Sales Volume', value: '$2.4M', change: '+8.1%', icon: 'payments', color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+        { title: 'Total New Leads', value: (leadsCount || 0).toLocaleString(), change: 'All time', icon: 'person_add', color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+        { title: 'Active Listings', value: (propertiesCount || 0).toString(), change: 'Live', icon: 'home', color: 'text-primary', bg: 'bg-primary/10' },
+        { title: 'Blog posts', value: (blogCount || 0).toString(), change: 'Published', icon: 'article', color: 'text-secondary', bg: 'bg-secondary/10' },
+        { title: 'Sales Volume', value: volumeString, change: 'Total', icon: 'payments', color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
     ];
 
     return (
