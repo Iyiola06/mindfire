@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import Preloader from '@/components/shared/Preloader'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import GoogleAnalytics from '@/components/shared/GoogleAnalytics'
 
 export const metadata: Metadata = {
     title: 'Mindfire Homes - Premium Real Estate',
@@ -27,6 +28,7 @@ export default function RootLayout({
             </head>
             <body>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                    <GoogleAnalytics />
                     <Preloader />
                     {children}
                 </ThemeProvider>
