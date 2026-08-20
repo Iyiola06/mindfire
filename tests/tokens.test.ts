@@ -66,8 +66,11 @@ describe('glass materials', () => {
         // The capsule is the one material that is always on screen. If it is
         // missed out of a fallback list it stays transparent exactly where a
         // reduced-transparency user most needs it not to be.
+        // Anchored to the start of a line so the prose in the comment above
+        // the fallbacks — which names `@supports not` in a sentence — is not
+        // mistaken for a fourth block.
         const fallbackBlocks = css
-            .split(/@supports not|@media \(prefers-reduced-transparency|@media \(prefers-contrast/)
+            .split(/^@supports not|^@media \(prefers-reduced-transparency|^@media \(prefers-contrast/m)
             .slice(1)
         expect(fallbackBlocks.length).toBeGreaterThanOrEqual(3)
         for (const block of fallbackBlocks) {
@@ -115,7 +118,14 @@ describe('reveal-on-scroll', () => {
         // Nothing revealed this way carries meaning, so a reduced-motion user
         // must simply see the finished layout — never an element left at
         // opacity 0 because its observer was skipped.
-        const block = css.slice(css.lastIndexOf('prefers-reduced-motion'))
+        // There is more than one reduced-motion block — the global duration
+        // collapse is a separate rule — so find the one that owns `.reveal`
+        // rather than assuming a file order.
+        const block = css
+            .split(/^@media \(prefers-reduced-motion/m)
+            .slice(1)
+            .find((b) => b.includes('.reveal'))
+        expect(block).toBeDefined()
         expect(block).toMatch(/\.reveal\s*\{[^}]*opacity:\s*1/)
     })
 })

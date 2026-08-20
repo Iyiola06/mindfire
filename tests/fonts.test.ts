@@ -9,13 +9,15 @@ describe('typography', () => {
         expect(layout).not.toMatch(/fonts\.gstatic\.com/)
     })
 
-    // The Material Icons stylesheet is the one remaining external font request.
-    // It cannot be self-hosted (no next/font/google export) and 18 files still
-    // depend on it. Sub-project 5 deletes it with the last consumer.
-    it('keeps only the Material Icons stylesheet, pending sub-project 5', () => {
-        const googleLinks = layout.match(/fonts\.googleapis\.com[^"']*/g) ?? []
-        expect(googleLinks).toHaveLength(1)
-        expect(googleLinks[0]).toMatch(/Material\+Icons\+Outlined/)
+    // The Material Icons stylesheet was the last external font request. Its
+    // consumers have all been migrated to the SVG glyphs in components/icons,
+    // so the document now makes no font request off our own origin at all.
+    it('makes no external font request', () => {
+        // Matched inside a quoted attribute value so the sentence in the
+        // comment at the top of layout.tsx, which names the host it no longer
+        // calls, is not counted as a request.
+        expect(layout.match(/["']https:\/\/fonts\.(googleapis|gstatic)\.com[^"']*/g) ?? [])
+            .toHaveLength(0)
     })
 
     it('self-hosts fonts through next/font', () => {

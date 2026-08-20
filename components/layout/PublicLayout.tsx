@@ -225,8 +225,8 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
         aria-modal="true"
         aria-label="Site menu"
         tabIndex={-1}
-        // @ts-expect-error -- `inert` ships in React 19's DOM types as a
-        // boolean; the installed @types/react still declares it as a string.
+        /* React 19 types `inert` as a boolean. `undefined` rather than
+           `false` because an `inert="false"` attribute still activates it. */
         inert={mobileMenuOpen ? undefined : true}
         aria-hidden={mobileMenuOpen ? undefined : true}
         className={`hero-wash fixed inset-0 z-40 transition-transform duration-spatial ease-standard md:hidden ${
