@@ -1,179 +1,340 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { HeroSearch } from '@/components/home/HeroSearch';
+import { HeroStage, type StageFeature } from '@/components/home/HeroStage';
 import { PropertyCard } from '@/components/shared/PropertyCard';
+import { Reveal } from '@/components/motion/Reveal';
+import { Badge } from '@/components/ui/Badge';
+import { ButtonLink } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
+import { Eyebrow } from '@/components/ui/Eyebrow';
 import { supabase } from '@/lib/supabase';
-import { Metadata } from 'next';
+import { FEATURE_ELEVATION, INTERIOR_PORTRAIT } from '@/lib/media';
+import { absoluteUrl, ORGANISATION_JSON_LD, SITE } from '@/lib/seo';
+import type { Property } from '@/types';
+import { IconArrowRight } from '@/components/icons';
 
 export const metadata: Metadata = {
-    title: 'Mindfire Homes | Luxury Real Estate & Investments',
-    description: 'Discover exclusive properties that combine luxury living with exceptional investment returns. Invest Smart. Live Better. Own Proudly.',
-}
+    title: 'Premium property in Abuja, with the title checked first',
+    description:
+        'Mindfire Homes curates legally verified homes and investment opportunities across Abuja — documented titles, inspected construction, and payment terms agreed in writing before you commit.',
+    alternates: { canonical: '/' },
+    openGraph: {
+        type: 'website',
+        url: absoluteUrl('/'),
+        title: `${SITE.name} — premium property in Abuja`,
+        description:
+            'Legally verified homes and investment opportunities in Abuja, with documented titles and payment terms agreed in writing.',
+    },
+};
 
 export const dynamic = 'force-dynamic';
 
+/** Process, not statistics. Each line is something the business does and can be
+    held to, so nothing here needs a number we cannot evidence. */
+const CREDIBILITY = [
+    'Title verified before listing',
+    'Full documentation provided',
+    'Flexible payment plans',
+    'Accompanied site visits',
+];
+
+const INVESTMENT_CASE = [
+    {
+        title: 'Location before everything',
+        body: 'We list in districts with existing road access, power, and water — infrastructure that is already delivered rather than promised in a brochure.',
+    },
+    {
+        title: 'Documentation checked first',
+        body: 'Title type and status are confirmed with the relevant land registry before a property reaches this site, and the search results are shared with you.',
+    },
+    {
+        title: 'Build quality you can inspect',
+        body: 'Every development can be visited during construction. Specifications, finishes, and completion stage are documented rather than described.',
+    },
+    {
+        title: 'Terms that fit the purchase',
+        body: 'Payment plans are set out in writing before commitment — deposit, milestones, and duration, with no charge that appears later.',
+    },
+];
+
+const formatPrice = (p: Pick<Property, 'price' | 'currency'>) =>
+    p.currency === 'USD' ? `$${p.price.toLocaleString('en-US')}` : `₦${p.price.toLocaleString('en-NG')}`;
+
+/** The hero chips read from the featured listing when there is one, so the
+    stage always shows a property the visitor can actually go and look at. */
+const stageFeature = (p?: Property): StageFeature =>
+    p
+        ? {
+              eyebrow: p.address.split(',')[0]?.trim() || 'Featured',
+              price: formatPrice(p),
+              location: p.address,
+              specs: [
+                  { value: p.sqft.toLocaleString('en-NG'), label: 'Sq ft' },
+                  { value: String(p.beds), label: 'Beds' },
+                  { value: String(p.baths), label: 'Baths' },
+              ],
+          }
+        : {
+              eyebrow: 'Abuja',
+              price: 'Verified titles',
+              location: 'Documentation shared before you commit',
+              specs: [
+                  { value: '100%', label: 'Title checked' },
+                  { value: '0', label: 'Hidden fees' },
+              ],
+          };
+
 export default async function HomePage() {
-    const { data: featuredProperties } = await supabase
+    const { data } = await supabase
         .from('properties')
         .select('*')
         .eq('featured', true)
-        .limit(3);
+        .order('createdAt', { ascending: false })
+        .limit(4);
 
-    const { count: propertiesCount } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true });
-
-    const { count: soldCount } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'Sold');
+    const featured = (data ?? []) as Property[];
+    const [headline, ...rest] = featured;
 
     return (
         <PublicLayout>
-            {/* Hero Section */}
-            <div className="relative min-h-[90vh] flex items-center justify-center pt-20 -mt-20">
-                <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
-                    <img
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLbUhfg0e7PqYIfpQlLJMclWwsBwG9CiyOMwcrWJKnx25qTncITTETSO9APKDMbUMl6_nVo2njbubiDnMSkyH4RENd1fqT3UgeS07jAdKneyJigEF6uSraZbIo-FccrxoyCp2qa31L-5estiYHwTy-gmjbqEUfK-W4t5wHLbF12LjGyFr0PuiDTW0PX_pZpYH-FGTM8GTtDkfak7Nbuz_OzrZWF2_8zT0cUqE2L_tIT7nJiwOAq589mNMpHyKzdEz0alfv_0p4QhI"
-                        alt="Luxury Villa"
-                        className="w-full h-full object-cover opacity-60 mix-blend-overlay"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background-light dark:to-background-dark"></div>
-                </div>
+            {/* JSON-LD identifying the business itself. Emitted once, on the
+                home page, which is what search engines treat as the entity's
+                canonical home. */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANISATION_JSON_LD) }}
+            />
 
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col items-center text-center">
-                    <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-display font-bold text-white mb-6 leading-tight drop-shadow-xl">
-                        Invest Smart. <br className="hidden sm:block" />
-                        <span className="text-secondary italic">Live Better.</span> Own Proudly.
+            {/* ── Hero ─────────────────────────────────────────────────────── */}
+            <header className="hero-wash relative -mt-nav overflow-hidden pt-nav">
+                <div
+                    aria-hidden="true"
+                    className="ambient-glow absolute -top-[30%] left-1/2 h-[50rem] w-[75rem] max-w-none -translate-x-1/2 rounded-full"
+                />
+
+                <div className="relative mx-auto max-w-content px-gutter pt-[clamp(2rem,6vh,5rem)] text-center">
+                    <Eyebrow tone="brand">Abuja · Verified titles · Guided purchase</Eyebrow>
+
+                    <h1 className="mx-auto mt-4 max-w-[17ch] text-balance font-display text-[clamp(2.5rem,6.4vw,5.75rem)] font-bold leading-[1.0] tracking-[-0.04em] text-content">
+                        Own exceptional property in Abuja’s most promising locations.
                     </h1>
-                    <p className="mt-4 max-w-2xl text-base sm:text-lg md:text-xl text-gray-200 font-light mb-12 drop-shadow-md">
-                        Discover exclusive properties that combine luxury living with exceptional investment returns. Your future space is secured with Mindfire.
+
+                    <p className="mx-auto mt-6 max-w-[44rem] text-[clamp(1rem,1.6vw,1.25rem)] leading-[1.6] text-content-muted">
+                        Mindfire Homes curates legally verified residences and investment opportunities —
+                        documented titles, inspected construction, and payment terms agreed in writing
+                        before you commit.
                     </p>
 
-                    {/* Search Widget */}
+                    <div className="mt-9 flex flex-col flex-wrap justify-center gap-3.5 sm:flex-row">
+                        <ButtonLink href="/properties" size="lg">
+                            Explore properties
+                        </ButtonLink>
+                        <ButtonLink href="/contact" variant="glass" size="lg">
+                            Book a private viewing
+                        </ButtonLink>
+                    </div>
+                </div>
+
+                <HeroStage feature={stageFeature(headline)} />
+            </header>
+
+            {/* ── Search ───────────────────────────────────────────────────── */}
+            <section aria-labelledby="search-heading" className="bg-bg pb-section-sm pt-section-sm">
+                <div className="mx-auto flex max-w-content flex-col items-center px-gutter">
+                    <h2 id="search-heading" className="sr-only">
+                        Search properties
+                    </h2>
                     <HeroSearch />
                 </div>
-            </div>
-
-            {/* Featured Projects */}
-            <section className="py-24 md:py-32 bg-background-light dark:bg-background-dark relative">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-                        <div className="max-w-2xl">
-                            <span className="text-secondary font-bold text-xs uppercase tracking-widest mb-2 block">Premium Selection</span>
-                            <h2 className="text-3xl md:text-5xl font-display font-bold text-text-main-light dark:text-white mb-4">Featured Projects</h2>
-                            <p className="text-text-muted-light dark:text-text-muted-dark text-lg">Curated selection of premium residences offering the perfect blend of comfort and investment potential.</p>
-                        </div>
-                        <Link href="/properties" className="hidden md:flex items-center text-primary font-bold hover:text-secondary transition-colors group">
-                            View All Projects <span className="material-icons-outlined ml-1 group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                        </Link>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {featuredProperties?.map((property: any) => (
-                            <PropertyCard key={property.id} property={property} />
-                        ))}
-                    </div>
-
-                    <div className="mt-10 text-center md:hidden">
-                        <Link href="/properties" className="inline-flex items-center justify-center w-full bg-primary/10 text-primary font-bold py-3.5 rounded-xl hover:bg-primary hover:text-white transition-colors">
-                            View All Projects <span className="material-icons-outlined ml-1">arrow_forward</span>
-                        </Link>
-                    </div>
-                </div>
             </section>
 
+            {/* ── Credibility ──────────────────────────────────────────────── */}
+            <section aria-label="How we work" className="border-y border-hairline/[0.06] bg-surface">
+                <Reveal as="ul" className="mx-auto grid max-w-content grid-cols-1 gap-5 px-gutter py-section-sm sm:grid-cols-2 lg:grid-cols-4">
+                    {CREDIBILITY.map((label) => (
+                        <li key={label} className="flex items-center gap-3">
+                            {/* A 10px dot, not an icon: at icon size the bronze
+                                is 2.9:1 and fails AA, and four different
+                                pictograms competed with the words. */}
+                            <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-pill bg-accent-500" />
+                            <span className="text-body-sm font-medium text-content">{label}</span>
+                        </li>
+                    ))}
+                </Reveal>
+            </section>
 
-            {/* Value Props */}
-            <section className="py-24 bg-surface-light dark:bg-surface-dark border-y border-gray-200 dark:border-gray-800 overflow-hidden relative">
-                <div className="absolute top-0 right-0 -mr-32 -mt-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 -ml-32 -mb-32 w-96 h-96 bg-secondary/5 rounded-full blur-3xl"></div>
-
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div className="flex flex-col lg:flex-row gap-16 items-center">
-                        <div className="lg:w-1/2">
-                            <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-text-main-light dark:text-white mb-6 leading-tight">
-                                Secure Your Future <br className="hidden sm:block" />With <span className="text-primary italic">Smart Assets.</span>
+            {/* ── Featured ─────────────────────────────────────────────────── */}
+            <section className="bg-bg py-section">
+                <div className="mx-auto max-w-content px-gutter">
+                    <Reveal className="mb-[clamp(2.25rem,5vw,3.5rem)] flex flex-wrap items-end justify-between gap-5">
+                        <div className="max-w-[40rem]">
+                            <Eyebrow>Current selection</Eyebrow>
+                            <h2 className="mt-3 font-display text-[clamp(2rem,4.6vw,3.625rem)] font-bold leading-[1.04] tracking-[-0.03em] text-content">
+                                Featured properties
                             </h2>
-                            <p className="text-text-muted-light dark:text-text-muted-dark text-base sm:text-lg mb-10 leading-relaxed">
-                                At Mindfire Homes, we don't just sell properties; we curate wealth-building opportunities. Our data-driven approach ensures that every square foot you own works as hard as you do.
+                            <p className="mt-4 text-body-lg text-content-muted">
+                                A short list rather than a catalogue. Each of these has been visited, and its
+                                documentation checked, by someone on our team.
                             </p>
-
-                            <div className="space-y-8">
-                                {[
-                                    { icon: 'trending_up', title: 'High ROI Potential', desc: 'Properties located in high-growth zones ensuring capital appreciation year over year.' },
-                                    { icon: 'verified_user', title: 'Legally Verified', desc: '100% due diligence completed. Clean titles and hassle-free ownership transfer.' },
-                                    { icon: 'design_services', title: 'Premium Finish', desc: 'Architectural masterpieces built with high-quality materials and modern aesthetics.' }
-                                ].map((item, i) => (
-                                    <div key={i} className="flex items-start gap-4 sm:gap-5">
-                                        <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                                            <span className="material-icons-outlined text-xl sm:text-2xl" aria-hidden="true">{item.icon}</span>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg sm:text-xl font-bold text-text-main-light dark:text-white mb-2 font-display">{item.title}</h3>
-                                            <p className="text-sm sm:text-base text-text-muted-light dark:text-text-muted-dark leading-relaxed">{item.desc}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="mt-12 text-center sm:text-left">
-                                <Link href="/contact" className="inline-block w-full sm:w-auto bg-text-main-light dark:bg-white text-white dark:text-black hover:bg-primary dark:hover:bg-primary px-8 py-4 rounded-xl font-bold transition-colors shadow-xl">
-                                    Schedule a Consultation
-                                </Link>
-                            </div>
                         </div>
+                        <Link
+                            href="/properties"
+                            className="group inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-brand-600 transition-colors duration-short ease-standard hover:text-brand-700"
+                        >
+                            View all properties
+                            <IconArrowRight size={18} className="transition-transform duration-short ease-standard group-hover:translate-x-0.5" />
+                        </Link>
+                    </Reveal>
 
-                        <div className="lg:w-1/2 w-full">
-                            <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/5] lg:aspect-auto lg:h-[700px]">
-                                <img
-                                    src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                                    alt="Modern Home Interior"
-                                    className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-
-                                <div className="absolute bottom-6 left-6 right-6 bg-white/10 backdrop-blur-md border border-white/20 p-4 sm:p-6 rounded-xl flex justify-between text-center shadow-lg divide-x divide-white/20">
-                                    <div className="px-2 w-1/3">
-                                        <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-secondary font-display drop-shadow-sm">
-                                            {soldCount || 150}+
-                                        </p>
-                                        <p className="text-[9px] sm:text-[10px] lg:text-xs text-white uppercase tracking-widest mt-2 font-medium">Units Sold</p>
-                                    </div>
-                                    <div className="px-2 w-1/3">
-                                        <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-secondary font-display drop-shadow-sm">98%</p>
-                                        <p className="text-[9px] sm:text-[10px] lg:text-xs text-white uppercase tracking-widest mt-2 font-medium">Satisfaction</p>
-                                    </div>
-                                    <div className="px-2 w-1/3">
-                                        <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-secondary font-display drop-shadow-sm">{propertiesCount || 12}</p>
-                                        <p className="text-[9px] sm:text-[10px] lg:text-xs text-white uppercase tracking-widest mt-2 font-medium">Projects</p>
+                    {headline ? (
+                        <>
+                            {/* The lead listing gets the full showcase panel:
+                                photograph on one side, the facts on the other,
+                                inside a single lifted plate. */}
+                            <Reveal className="grid items-center gap-[clamp(1.75rem,4vw,3.5rem)] rounded-showcase border border-hairline/[0.06] bg-surface p-[clamp(1.25rem,3vw,2.25rem)] shadow-ambient lg:grid-cols-2">
+                                <div className="relative aspect-[4/3] overflow-hidden rounded-surface">
+                                    <img
+                                        src={headline.image || FEATURE_ELEVATION.src}
+                                        alt={`${headline.name} — exterior view from the approach`}
+                                        className="h-full w-full object-cover"
+                                        loading="lazy"
+                                    />
+                                    <div className="absolute left-3.5 top-3.5 flex gap-2">
+                                        {headline.status && (
+                                            <Badge color={headline.status === 'Sold' ? 'overlay' : 'primary'}>
+                                                {headline.status}
+                                            </Badge>
+                                        )}
+                                        <Badge color="secondary">Featured</Badge>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
+
+                                <div>
+                                    <Eyebrow tone="brand">{headline.address.split(',')[0]}</Eyebrow>
+                                    <h3 className="mt-2 font-display text-[clamp(1.625rem,3vw,2.5rem)] font-bold tracking-[-0.025em] text-content">
+                                        {headline.name}
+                                    </h3>
+                                    <p className="mt-2.5 font-display text-[clamp(1.25rem,2vw,1.625rem)] font-bold tracking-[-0.02em] text-brand-600">
+                                        {formatPrice(headline)}
+                                    </p>
+                                    {headline.description && (
+                                        <p className="mt-4 max-w-[38rem] text-body text-content-muted">
+                                            {headline.description.slice(0, 220)}
+                                            {headline.description.length > 220 ? '…' : ''}
+                                        </p>
+                                    )}
+
+                                    <div className="mt-6 flex flex-wrap gap-2.5">
+                                        <Chip>{headline.beds} bedrooms</Chip>
+                                        <Chip>{headline.baths} bathrooms</Chip>
+                                        <Chip>{headline.sqft.toLocaleString('en-NG')} sq ft</Chip>
+                                    </div>
+
+                                    <ButtonLink href={`/properties/${headline.id}`} className="mt-7">
+                                        Enquire about this home
+                                    </ButtonLink>
+                                </div>
+                            </Reveal>
+
+                            {rest.length > 0 && (
+                                <div className="mt-10 grid grid-cols-1 gap-7 md:grid-cols-2 lg:grid-cols-3">
+                                    {rest.map((property, i) => (
+                                        <Reveal key={property.id} delay={i * 80}>
+                                            <PropertyCard property={property} />
+                                        </Reveal>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        /* An empty response is a real state, not an error — the
+                           section stays intentional rather than collapsing. */
+                        <Reveal className="rounded-showcase border border-hairline/[0.06] bg-surface p-12 text-center shadow-ambient">
+                            <p className="font-display text-display-sm font-semibold text-content">
+                                No featured properties right now
+                            </p>
+                            <p className="mx-auto mt-2 max-w-md text-body text-content-muted">
+                                Our current listings are still available to browse in full.
+                            </p>
+                            <ButtonLink href="/properties" className="mt-6">
+                                Browse all properties
+                            </ButtonLink>
+                        </Reveal>
+                    )}
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="py-20 md:py-24 bg-primary relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-white/5 skew-x-12 transform origin-top-right"></div>
-                <div className="relative max-w-4xl mx-auto px-4 text-center z-10">
-                    <h2 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-white mb-6">Let's Secure Your Space.</h2>
-                    <p className="text-lg sm:text-xl text-white/80 mb-10 max-w-2xl mx-auto font-light">
-                        Ready to make a move? Join hundreds of smart investors building their portfolio with Mindfire Homes today.
-                    </p>
-                    <div className="flex flex-col sm:flex-row justify-center gap-4">
-                        <Link href="/properties" className="bg-secondary hover:bg-secondary-hover text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-black/20 transition-transform hover:-translate-y-1">
-                            Explore Properties
-                        </Link>
-                        <Link href="/contact" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-primary px-8 py-4 rounded-xl font-bold text-lg transition-all">
-                            Contact an Agent
-                        </Link>
-                    </div>
+            {/* ── Investment case ──────────────────────────────────────────── */}
+            <section id="why" className="border-t border-hairline/[0.06] bg-surface py-section">
+                <div className="mx-auto grid max-w-content items-center gap-[clamp(2.5rem,6vw,5rem)] px-gutter lg:grid-cols-2">
+                    <Reveal>
+                        <Eyebrow>Why these properties</Eyebrow>
+                        <h2 className="mt-3 font-display text-[clamp(1.875rem,4.2vw,3.375rem)] font-bold leading-[1.05] tracking-[-0.03em] text-content">
+                            What we check before a property is listed.
+                        </h2>
+                        <p className="mt-4 max-w-[38rem] text-body-lg text-content-muted">
+                            Property in Abuja rewards diligence over speed. These are the four things we
+                            confirm on your behalf — and the evidence for each is available on request.
+                        </p>
+
+                        <ol className="mt-10 flex flex-col gap-6">
+                            {INVESTMENT_CASE.map(({ title, body }, i) => (
+                                <li key={title} className="flex gap-[1.125rem]">
+                                    <span
+                                        aria-hidden="true"
+                                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-brand-600/[0.09] font-display text-body-sm font-bold text-brand-600"
+                                    >
+                                        {String(i + 1).padStart(2, '0')}
+                                    </span>
+                                    <div>
+                                        <h3 className="font-display text-body-lg font-semibold text-content">{title}</h3>
+                                        <p className="mt-1.5 max-w-[38rem] text-body-sm leading-[1.6] text-content-muted">
+                                            {body}
+                                        </p>
+                                    </div>
+                                </li>
+                            ))}
+                        </ol>
+
+                        <ButtonLink href="/contact" size="lg" className="mt-9">
+                            Speak with an advisor
+                        </ButtonLink>
+                    </Reveal>
+
+                    <Reveal delay={120}>
+                        <div className="aspect-[4/5] overflow-hidden rounded-showcase shadow-elevated">
+                            <img
+                                src={INTERIOR_PORTRAIT.src}
+                                alt={INTERIOR_PORTRAIT.alt}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                            />
+                        </div>
+                    </Reveal>
                 </div>
+            </section>
+
+            {/* ── Advisor CTA. One dominant action, not five. ───────────────── */}
+            <section className="bg-bg py-section">
+                <Reveal className="mx-auto max-w-3xl px-gutter text-center">
+                    <h2 className="text-balance font-display text-[clamp(1.875rem,4.6vw,3.625rem)] font-bold leading-[1.04] tracking-[-0.035em] text-content">
+                        Talk to someone who has visited the property.
+                    </h2>
+                    <p className="mx-auto mt-4 max-w-[38rem] text-body-lg text-content-muted">
+                        Tell us what you are looking for and your budget. We will send the matching
+                        properties with their documentation status, and arrange a viewing when you are ready.
+                    </p>
+                    <ButtonLink href="/contact" size="lg" className="mt-8">
+                        Book a private viewing
+                    </ButtonLink>
+                    <p className="mt-4 text-body-sm text-content-muted">
+                        Your details are used only to answer your enquiry. We never sell them on.
+                    </p>
+                </Reveal>
             </section>
         </PublicLayout>
     );
-};
+}

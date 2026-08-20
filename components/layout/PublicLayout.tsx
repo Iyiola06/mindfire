@@ -1,54 +1,132 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { OFFICE, SOCIAL_LINKS } from '@/lib/contact';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { ButtonLink } from '@/components/ui/Button';
+import {
+  IconCheck,
+  IconClose,
+  IconMenu,
+  IconMoon,
+  IconSend,
+  IconSpinner,
+  IconSun,
+  SOCIAL_ICONS,
+} from '@/components/icons';
+
+const NAV_LINKS = [
+  { href: '/properties', label: 'Properties' },
+  { href: '/blog', label: 'Journal' },
+  { href: '/about', label: 'About' },
+];
+
+/**
+ * The wordmark lockup, used at two scales in two places. `tone` exists because
+ * the footer copy sits on near-black and the nav copy sits on glass — the
+ * subtitle needs a different alpha in each, and hardcoding one produced an
+ * illegible "HOMES" in the footer.
+ */
+const Wordmark: React.FC<{ size: 'sm' | 'lg'; tone: 'default' | 'inverse' }> = ({ size, tone }) => {
+  const small = size === 'sm';
+  return (
+    <>
+      <img
+        src="/logo.svg"
+        alt=""
+        width={small ? 30 : 40}
+        height={small ? 30 : 40}
+        className={`${small ? 'h-[30px] w-[30px] rounded-lg' : 'h-10 w-10 rounded-xl'} shrink-0 object-contain`}
+      />
+      <span className="flex flex-col leading-none">
+        <span
+          className={`font-display font-extrabold tracking-[-0.01em] ${
+            small ? 'text-[0.9375rem]' : 'text-xl'
+          } ${tone === 'inverse' ? 'text-white' : 'text-content'}`}
+        >
+          MINDFIRE
+        </span>
+        <span
+          className={`mt-[3px] font-semibold uppercase leading-none tracking-[0.3em] ${
+            small ? 'text-[0.53rem]' : 'text-[0.625rem]'
+          } ${tone === 'inverse' ? 'text-white/55' : 'text-content-muted'}`}
+        >
+          Homes
+        </span>
+      </span>
+    </>
+  );
+};
 
 export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const isHome = pathname === '/';
+  const drawerRef = useRef<HTMLDivElement>(null);
 
+  // Lock background scroll while the mobile drawer is open. Saving and
+  // restoring the previous value rather than hardcoding 'unset' is what stops
+  // this and PropertiesList — which writes the same property — fighting, and
+  // it restores scroll if the component unmounts with the menu open.
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+    if (!mobileMenuOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Prevent background scrolling when mobile menu is open
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
   }, [mobileMenuOpen]);
 
+  const closeMenu = useCallback(() => setMobileMenuOpen(false), []);
+
+  // Escape closes, Tab cycles inside the panel, and focus returns to the
+  // hamburger on close. A full-screen sheet without this leaves keyboard users
+  // navigating the page hidden behind it.
+  useFocusTrap(drawerRef, mobileMenuOpen, closeMenu);
+
+  // A route change while the sheet is open must dismiss it, or the new page
+  // renders underneath a panel that is still covering the viewport.
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // next-themes resolves `theme` only on the client. Rendering the icon before
+  // then produces a hydration mismatch and a flash of the wrong glyph, so the
+  // control renders inert until the real value is known.
+  useEffect(() => setMounted(true), []);
 
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [newsletterMessage, setNewsletterMessage] = useState('');
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     setNewsletterStatus('submitting');
 
-    // Dynamically import to avoid server components in client bundle issues if easy, 
-    // but easier to just import at top if Next.js handles it (it does for server actions).
-    // actually, let's just use the imported action.
-    const { subscribeToNewsletter } = await import('@/lib/actions');
-    const res = await subscribeToNewsletter(newsletterEmail);
+    try {
+      const { subscribeToNewsletter } = await import('@/lib/actions');
+      const res = await subscribeToNewsletter(newsletterEmail);
 
-    if (res.success) {
-      setNewsletterStatus('success');
-      setNewsletterEmail('');
-    } else {
+      if (res.success) {
+        setNewsletterStatus('success');
+        setNewsletterMessage(
+          res.message === 'Already subscribed'
+            ? 'You are already on the list.'
+            : 'Thanks — check your inbox to confirm.',
+        );
+        setNewsletterEmail('');
+      } else {
+        setNewsletterStatus('error');
+        setNewsletterMessage(res.error ?? 'Something went wrong. Please try again.');
+      }
+    } catch {
       setNewsletterStatus('error');
-      setTimeout(() => setNewsletterStatus('idle'), 3000);
+      setNewsletterMessage('Something went wrong. Please try again.');
     }
   };
 
@@ -56,179 +134,268 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  const navClass = `fixed w-full z-50 transition-all duration-300 ${isScrolled || !isHome || mobileMenuOpen
-    ? 'bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 py-3 shadow-sm'
-    : 'bg-transparent py-5'
-    }`;
-
-  const textClass = isScrolled || !isHome || mobileMenuOpen ? 'text-text-main-light dark:text-white' : 'text-white drop-shadow-md';
+  /**
+   * 40×40 inside the capsule rather than the 44px floor used elsewhere: the
+   * capsule itself is only --nav-cap-h tall, and a 44px control inside it
+   * leaves no room for the material's border. The tap target is extended past
+   * the visible circle by the capsule's own padding, which is generous on
+   * every side.
+   */
+  const iconButton =
+    'flex h-10 w-10 shrink-0 items-center justify-center rounded-pill text-content transition-colors duration-short ease-standard hover:bg-content/10';
 
   return (
-    <div className="min-h-screen flex flex-col relative">
-      <nav className={navClass}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-12">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 relative z-50">
-              <img
-                src="/logo.svg"
-                alt="Mindfire Homes"
-                className="h-10 w-auto"
-              />
-            </Link>
+    <div className="relative flex min-h-screen flex-col">
+      {/* First focusable element in the document. */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
 
-            {/* Desktop Nav */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/properties" className={`text-sm font-medium hover:text-secondary transition-colors ${textClass}`}>Properties</Link>
-              <Link href="/blog" className={`text-sm font-medium hover:text-secondary transition-colors ${textClass}`}>Blog</Link>
-              <Link href="/about" className={`text-sm font-medium hover:text-secondary transition-colors ${textClass}`}>About</Link>
+      {/* The nav is a floating capsule rather than a full-width bar: it is
+          centred, inset from the top by --nav-inset, and never spans the
+          viewport. Pages reserve --nav-h below it, which is the inset plus the
+          capsule height plus the same inset again. */}
+      <nav
+        aria-label="Primary"
+        className="fixed left-1/2 top-nav-inset z-50 flex h-nav-cap max-w-[calc(100vw-1.5rem)] -translate-x-1/2 items-center gap-4 whitespace-nowrap rounded-pill glass-capsule py-0 pl-4 pr-2 md:gap-6 md:pl-[18px] md:pr-3"
+      >
+        <Link href="/" className="flex items-center gap-2.5" aria-label="Mindfire Homes — home">
+          <Wordmark size="sm" tone="default" />
+        </Link>
 
-              <div className="flex items-center gap-4 border-l border-gray-300 dark:border-gray-700 pl-4">
-                <button onClick={toggleDarkMode} aria-label="Toggle dark mode" className={`p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors ${textClass}`}>
-                  <span className="material-icons-outlined text-xl" aria-hidden="true">brightness_4</span>
-                </button>
-                <Link href="/contact" className="bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-all shadow-lg shadow-primary/20">
-                  Contact Us
-                </Link>
-              </div>
-            </div>
+        {/* Desktop links. Hover dims rather than switching to the accent:
+            accent-500 is 2.9:1 on white and fails AA at this size. */}
+        <div className="hidden items-center gap-[22px] md:flex">
+          {NAV_LINKS.map(({ href, label }) => {
+            const current = pathname === href || pathname.startsWith(`${href}/`);
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={current ? 'page' : undefined}
+                className={`text-[0.84rem] font-medium transition-opacity duration-short ease-standard hover:opacity-70 ${
+                  current ? 'text-brand-600 underline decoration-2 underline-offset-[6px]' : 'text-content'
+                }`}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
 
-            {/* Mobile Menu Button */}
-            <div className="md:hidden flex items-center gap-4 relative z-50">
-              <button onClick={toggleDarkMode} aria-label="Toggle dark mode" className={`p-2 ${textClass}`}>
-                <span className="material-icons-outlined" aria-hidden="true">brightness_4</span>
-              </button>
-              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle mobile menu" aria-expanded={mobileMenuOpen} className={`p-2 ${textClass}`}>
-                <span className="material-icons-outlined text-3xl" aria-hidden="true">{mobileMenuOpen ? 'close' : 'menu'}</span>
-              </button>
-            </div>
-          </div>
+        <div className="flex items-center gap-1 md:gap-2">
+          <button
+            type="button"
+            onClick={toggleDarkMode}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className={iconButton}
+          >
+            {mounted ? (
+              theme === 'dark' ? <IconSun size={19} /> : <IconMoon size={19} />
+            ) : (
+              <span className="h-[19px] w-[19px]" />
+            )}
+          </button>
+
+          <ButtonLink href="/contact" size="sm" className="hidden md:inline-flex">
+            Contact us
+          </ButtonLink>
+
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav"
+            className={`${iconButton} md:hidden`}
+          >
+            {mobileMenuOpen ? <IconClose size={24} /> : <IconMenu size={24} />}
+          </button>
         </div>
       </nav>
 
-      {/* Mobile Nav Overlay Drawer */}
+      {/* Mobile nav sheet.
+          `inert` while closed: the panel stays mounted for the slide
+          transition, and without it every link inside remains in the tab order
+          off-screen — a keyboard user tabs into invisible controls. */}
       <div
-        className={`md:hidden fixed inset-0 z-40 bg-surface-light dark:bg-surface-dark transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
+        id="mobile-nav"
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Site menu"
+        tabIndex={-1}
+        // @ts-expect-error -- `inert` ships in React 19's DOM types as a
+        // boolean; the installed @types/react still declares it as a string.
+        inert={mobileMenuOpen ? undefined : true}
+        aria-hidden={mobileMenuOpen ? undefined : true}
+        className={`hero-wash fixed inset-0 z-40 transition-transform duration-spatial ease-standard md:hidden ${
+          mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
       >
-        <div className="flex flex-col h-full pt-24 pb-8 px-6 overflow-y-auto">
-          <div className="flex flex-col space-y-6 text-center flex-1 justify-center">
-            <Link href="/" className="text-2xl font-display font-bold text-gray-900 dark:text-white hover:text-primary transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-            <Link href="/properties" className="text-2xl font-display font-bold text-gray-900 dark:text-white hover:text-primary transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Properties</Link>
-            <Link href="/blog" className="text-2xl font-display font-bold text-gray-900 dark:text-white hover:text-primary transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
-            <Link href="/about" className="text-2xl font-display font-bold text-gray-900 dark:text-white hover:text-primary transition-colors py-2" onClick={() => setMobileMenuOpen(false)}>About Us</Link>
-          </div>
-          <div className="mt-auto pt-8">
-            <Link href="/contact" className="block w-full text-center bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg" onClick={() => setMobileMenuOpen(false)}>
-              Contact Us
-            </Link>
+        <div className="flex h-full flex-col overflow-y-auto px-6 pb-8 pt-nav">
+          <ul className="flex flex-1 flex-col justify-center gap-1 text-center">
+            {[{ href: '/', label: 'Home' }, ...NAV_LINKS].map(({ href, label }) => {
+              const current = pathname === href;
+              return (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    onClick={closeMenu}
+                    aria-current={current ? 'page' : undefined}
+                    className={`flex min-h-[44px] items-center justify-center py-3 font-display text-display-sm font-bold tracking-tight transition-colors duration-short ease-standard hover:text-brand-600 ${
+                      current ? 'text-brand-600' : 'text-content'
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="mt-auto space-y-4 pt-8">
+            <ButtonLink href="/contact" size="lg" fullWidth onClick={closeMenu}>
+              Contact us
+            </ButtonLink>
+            <p className="text-center text-body-sm text-content-muted">
+              <a href={`mailto:${OFFICE.email}`} className="font-semibold text-brand-600">
+                {OFFICE.email}
+              </a>
+              <span className="mt-1 block">{OFFICE.hours}</span>
+            </p>
           </div>
         </div>
       </div>
 
-      <main className="flex-1 flex flex-col w-full overflow-x-hidden">
+      {/* Every route reserves the full capsule clearance. Nothing sits under
+          the nav at rest — the glass is there for what scrolls beneath it. */}
+      <main id="main-content" className="flex w-full flex-1 flex-col overflow-x-hidden pt-nav">
         {children}
       </main>
 
-      <footer className="bg-sidebar-dark text-white pt-20 pb-10 border-t border-gray-800 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+      <footer className="mt-auto bg-sidebar-dark pb-10 pt-section-sm text-white">
+        <div className="mx-auto max-w-content px-gutter">
+          <div className="mb-11 grid grid-cols-1 gap-11 md:grid-cols-2 lg:grid-cols-4">
             <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white shadow-md">
-                  <span className="material-icons-outlined text-2xl" aria-hidden="true">home_work</span>
-                </div>
-                <div>
-                  <h1 className="font-display font-bold text-xl tracking-tight leading-none text-white">MINDFIRE</h1>
-                  <span className="text-[0.65rem] uppercase tracking-widest leading-none block text-gray-400">Homes</span>
-                </div>
+              <div className="mb-5 flex items-center gap-3">
+                <Wordmark size="lg" tone="inverse" />
               </div>
-              <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                Redefining modern living through exceptional real estate developments and smart investment opportunities.
+              <p className="mb-6 max-w-[34ch] text-body-sm leading-relaxed text-white/65">
+                Residential and investment property in Abuja, with the title checked and the
+                documentation in your hands before you commit.
               </p>
-              <div className="flex gap-4">
-                <a href="#" aria-label="Facebook" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors text-white">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
-                  </svg>
-                </a>
-                <a href="#" aria-label="Twitter" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors text-white">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
-                  </svg>
-                </a>
-                <a href="#" aria-label="Instagram" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors text-white">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clipRule="evenodd" />
-                  </svg>
-                </a>
-                <a href="#" aria-label="LinkedIn" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors text-white">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fillRule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clipRule="evenodd" />
-                  </svg>
-                </a>
-              </div>
+
+              {/* Social icons render only for profiles that exist. The previous
+                  version shipped four `href="#"` links — controls that looked
+                  functional and navigated nowhere. See SOCIAL_LINKS. */}
+              {SOCIAL_LINKS.length > 0 && (
+                <ul className="flex gap-3">
+                  {SOCIAL_LINKS.map(({ network, href }) => {
+                    const { Glyph, label } = SOCIAL_ICONS[network];
+                    return (
+                      <li key={network}>
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Mindfire Homes on ${label}`}
+                          className="flex h-11 w-11 items-center justify-center rounded-pill bg-white/10 text-white transition-colors duration-short ease-standard hover:bg-brand-600"
+                        >
+                          <Glyph size={18} />
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
 
             <div>
-              <h3 className="text-lg font-bold font-display mb-6">Discover</h3>
-              <ul className="space-y-4 text-gray-400 text-sm">
-                <li><Link href="/properties" className="hover:text-secondary transition-colors">New Listings</Link></li>
-                <li><Link href="/properties" className="hover:text-secondary transition-colors">Sold Properties</Link></li>
-                <li><Link href="/properties" className="hover:text-secondary transition-colors">Commercial</Link></li>
+              <h2 className="mb-5 font-display text-body-lg font-bold">Discover</h2>
+              <ul className="space-y-3 text-body-sm text-white/70">
+                {/* PropertiesList already reads `status` from the URL. `type`
+                    arrives in sub-project 4; until then Commercial lands on
+                    unfiltered listings rather than a dead `#`. */}
+                <li><Link href="/properties?status=For+Sale" className="transition-colors hover:text-white">New listings</Link></li>
+                <li><Link href="/properties?status=Sold" className="transition-colors hover:text-white">Sold properties</Link></li>
+                <li><Link href="/properties?type=Commercial" className="transition-colors hover:text-white">Commercial</Link></li>
               </ul>
             </div>
 
             <div>
-              <h3 className="text-lg font-bold font-display mb-6">Company</h3>
-              <ul className="space-y-4 text-gray-400 text-sm">
-                <li><Link href="/about" className="hover:text-secondary transition-colors">About Us</Link></li>
-                <li><Link href="/blog" className="hover:text-secondary transition-colors">Our Blog</Link></li>
-                <li><Link href="/contact" className="hover:text-secondary transition-colors">Contact</Link></li>
+              <h2 className="mb-5 font-display text-body-lg font-bold">Company</h2>
+              <ul className="space-y-3 text-body-sm text-white/70">
+                <li><Link href="/about" className="transition-colors hover:text-white">About us</Link></li>
+                <li><Link href="/blog" className="transition-colors hover:text-white">Journal</Link></li>
+                <li><Link href="/contact" className="transition-colors hover:text-white">Contact</Link></li>
+                <li>
+                  <a href={`mailto:${OFFICE.email}`} className="transition-colors hover:text-white">
+                    {OFFICE.email}
+                  </a>
+                </li>
               </ul>
             </div>
 
             <div>
-              <h3 className="text-lg font-bold font-display mb-6">Stay Updated</h3>
-              <p className="text-gray-400 text-sm mb-4">Subscribe to our newsletter for the latest property news.</p>
+              <h2 className="mb-4 font-display text-body-lg font-bold">Stay updated</h2>
+              <p className="mb-4 text-body-sm text-white/65">
+                New Abuja listings and market notes. No more than once a fortnight.
+              </p>
               <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
+                <label htmlFor="newsletter-email" className="sr-only">
+                  Email address
+                </label>
                 <div className="flex">
                   <input
                     type="email"
+                    id="newsletter-email"
                     value={newsletterEmail}
                     onChange={(e) => setNewsletterEmail(e.target.value)}
                     required
-                    aria-label="Email address for newsletter"
-                    placeholder="Your email"
-                    className="w-full bg-gray-800 border-none rounded-l-lg p-3 text-sm focus:ring-1 focus:ring-primary text-white disabled:opacity-50"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    className="h-12 w-full min-w-0 rounded-l-pill border-none bg-white/10 px-5 text-body-sm text-white placeholder:text-white/50 focus:ring-1 focus:ring-brand-500 disabled:opacity-50"
                     disabled={newsletterStatus === 'submitting' || newsletterStatus === 'success'}
                   />
                   <button
                     type="submit"
                     aria-label="Subscribe to newsletter"
-                    className="bg-primary hover:bg-primary-dark text-white px-4 rounded-r-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex h-12 w-14 shrink-0 items-center justify-center rounded-r-pill bg-brand-600 text-white transition-colors duration-short ease-standard hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={newsletterStatus === 'submitting' || newsletterStatus === 'success'}
                   >
                     {newsletterStatus === 'submitting' ? (
-                      <span className="material-icons-outlined animate-spin" aria-hidden="true">refresh</span>
+                      <IconSpinner size={20} className="animate-spin" />
                     ) : newsletterStatus === 'success' ? (
-                      <span className="material-icons-outlined" aria-hidden="true">check</span>
+                      <IconCheck size={20} />
                     ) : (
-                      <span className="material-icons-outlined" aria-hidden="true">send</span>
+                      <IconSend size={20} />
                     )}
                   </button>
                 </div>
-                {newsletterStatus === 'success' && <p className="text-green-500 text-xs mt-1">Thanks for subscribing!</p>}
-                {newsletterStatus === 'error' && <p className="text-red-500 text-xs mt-1">Something went wrong. Try again.</p>}
+                {/* role="status" so the outcome is announced — the icon swap
+                    inside the button is decorative and conveys nothing to AT. */}
+                <p role="status" className="mt-1 min-h-[1.25rem] text-body-sm">
+                  {newsletterStatus === 'success' && <span className="text-brand-500">{newsletterMessage}</span>}
+                  {newsletterStatus === 'error' && <span className="text-red-400">{newsletterMessage}</span>}
+                </p>
+                <p className="text-[0.7rem] leading-relaxed text-white/50">
+                  We store only your email address, and only to send this newsletter. Unsubscribe
+                  from any issue. See our{' '}
+                  <Link href="/privacy" className="underline hover:text-white">
+                    privacy policy
+                  </Link>
+                  .
+                </p>
               </form>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
+          <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-body-sm text-white/50 md:flex-row md:gap-0">
             <p>© {new Date().getFullYear()} Mindfire Homes. All rights reserved.</p>
-            <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+            <div className="flex gap-6">
+              <Link href="/privacy" className="transition-colors hover:text-white">Privacy policy</Link>
+              <Link href="/terms" className="transition-colors hover:text-white">Terms of service</Link>
             </div>
           </div>
         </div>

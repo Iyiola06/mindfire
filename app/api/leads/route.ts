@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { requireAdmin, UnauthorizedError } from '@/lib/auth'
 import { z } from 'zod'
 
 const leadSchema = z.object({
@@ -15,6 +16,10 @@ const leadSchema = z.object({
 // GET /api/leads - List all leads (admin only)
 export async function GET(request: NextRequest) {
     try {
+        // Every row here is a named enquirer with an email address and a
+        // budget. The comment said "admin only"; nothing enforced it.
+        await requireAdmin()
+
         const { searchParams } = new URL(request.url)
         const status = searchParams.get('status')
 
@@ -35,6 +40,9 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({ leads })
     } catch (error) {
+        if (error instanceof UnauthorizedError) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
         console.error('Error fetching leads:', error)
         return NextResponse.json(
             { error: 'Failed to fetch leads' },

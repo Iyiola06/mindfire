@@ -1,74 +1,118 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { supabase } from '@/lib/supabase';
-import DashboardClient from '@/components/admin/DashboardClient';
+import DashboardClient, { type ActivityItem, type StatTile } from '@/components/admin/DashboardClient';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata: Metadata = {
+    title: 'Dashboard | Mindfire Homes Admin',
+    robots: { index: false, follow: false },
+};
+
+const DAYS = 14;
+
+/** Naira and dollar totals are kept apart. Adding them together would invent
+    an exchange rate the business has not stated. */
+const formatVolume = (val: number, symbol: string) => {
+    if (val >= 1_000_000_000) return `${symbol}${(val / 1_000_000_000).toFixed(1)}B`;
+    if (val >= 1_000_000) return `${symbol}${(val / 1_000_000).toFixed(1)}M`;
+    if (val >= 1_000) return `${symbol}${(val / 1_000).toFixed(1)}K`;
+    return `${symbol}${val.toLocaleString('en-NG')}`;
+};
+
 export default async function AdminDashboard() {
-    // Fetch stats
-    const { count: leadsCount } = await supabase.from('leads').select('*', { count: 'exact', head: true });
-    const { count: propertiesCount } = await supabase.from('properties').select('*', { count: 'exact', head: true });
-    const { count: blogCount } = await supabase.from('blog_posts').select('*', { count: 'exact', head: true });
+    const since = new Date();
+    since.setHours(0, 0, 0, 0);
+    since.setDate(since.getDate() - (DAYS - 1));
 
-    // Fetch recent activity (Leads & Blog Posts)
-    const { data: recentLeads } = await supabase
-        .from('leads')
-        .select('*')
-        .order('createdAt', { ascending: false })
-        .limit(3);
+    const [
+        { count: leadsCount },
+        { count: propertiesCount },
+        { count: blogCount },
+        { data: recentLeads },
+        { data: recentPosts },
+        { data: soldProperties },
+        { data: windowLeads },
+    ] = await Promise.all([
+        supabase.from('leads').select('*', { count: 'exact', head: true }),
+        supabase.from('properties').select('*', { count: 'exact', head: true }),
+        supabase.from('blog_posts').select('*', { count: 'exact', head: true }),
+        supabase.from('leads').select('*').order('createdAt', { ascending: false }).limit(5),
+        supabase.from('blog_posts').select('*').order('createdAt', { ascending: false }).limit(5),
+        supabase.from('properties').select('price, currency').eq('status', 'Sold'),
+        supabase.from('leads').select('createdAt').gte('createdAt', since.toISOString()),
+    ]);
 
-    const { data: recentPosts } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .order('createdAt', { ascending: false })
-        .limit(3);
+    /**
+     * Real enquiries per day for the last fortnight.
+     *
+     * The chart previously rendered a hardcoded seven-point array — Mon 12,
+     * Tue 19, and so on — under the heading "Lead Generation Overview". It
+     * looked like reporting and was decoration, which is worse than no chart
+     * at all on a page someone makes decisions from.
+     */
+    const buckets = new Map<string, number>();
+    for (let i = 0; i < DAYS; i += 1) {
+        const d = new Date(since);
+        d.setDate(since.getDate() + i);
+        buckets.set(d.toISOString().slice(0, 10), 0);
+    }
+    for (const lead of windowLeads ?? []) {
+        const key = String(lead.createdAt).slice(0, 10);
+        if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
+    }
+    const series = Array.from(buckets, ([date, leads]) => ({
+        date,
+        label: new Date(`${date}T00:00:00Z`).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' }),
+        leads,
+    }));
 
-    const activity = [
-        ...(recentLeads?.map(l => ({
-            icon: 'person_add',
-            color: 'blue',
-            title: 'New Lead Received',
-            desc: `${l.name} is interested in ${l.propertyInterest}.`,
-            time: new Date(l.createdAt).toLocaleDateString()
-        })) || []),
-        ...(recentPosts?.map(p => ({
-            icon: 'edit_note',
-            color: 'secondary',
-            title: 'Blog Post Created',
-            desc: `"${p.title}" was published.`,
-            time: new Date(p.createdAt || '').toLocaleDateString()
-        })) || [])
-    ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5);
+    // Sorted on the raw timestamp. The previous version sorted on an
+    // already-localised date string, which `new Date()` cannot reliably parse,
+    // so the "recent activity" order was effectively arbitrary.
+    const activity: ActivityItem[] = [
+        ...(recentLeads ?? []).map((l) => ({
+            kind: 'lead' as const,
+            title: 'New enquiry received',
+            body: `${l.name} is interested in ${l.propertyInterest}.`,
+            at: l.createdAt as string,
+        })),
+        ...(recentPosts ?? []).map((p) => ({
+            kind: 'post' as const,
+            title: p.published ? 'Article published' : 'Draft created',
+            body: `“${p.title}”`,
+            at: (p.createdAt ?? p.publishedAt ?? '') as string,
+        })),
+    ]
+        .filter((a) => a.at)
+        .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+        .slice(0, 6);
 
-    // Calculate Sales Volume
-    const { data: soldProperties } = await supabase
-        .from('properties')
-        .select('price, currency')
-        .eq('status', 'Sold');
+    const volumeUSD = (soldProperties ?? [])
+        .filter((p) => p.currency === 'USD')
+        .reduce((sum, p) => sum + (p.price ?? 0), 0);
+    const volumeNGN = (soldProperties ?? [])
+        .filter((p) => p.currency !== 'USD')
+        .reduce((sum, p) => sum + (p.price ?? 0), 0);
 
-    const volumeUSD = soldProperties?.filter(p => p.currency === 'USD').reduce((sum, p) => sum + p.price, 0) || 0;
-    const volumeNGN = soldProperties?.filter(p => p.currency === 'NGN').reduce((sum, p) => sum + p.price, 0) || 0;
+    const volumeString =
+        [
+            volumeNGN > 0 ? formatVolume(volumeNGN, '₦') : null,
+            volumeUSD > 0 ? formatVolume(volumeUSD, '$') : null,
+        ]
+            .filter(Boolean)
+            .join(' + ') || '—';
 
-    // Format volume string (e.g. "$1.2M + ₦500M")
-    const formatVolume = (val: number, symbol: string) => {
-        if (val >= 1_000_000) return `${symbol}${(val / 1_000_000).toFixed(1)}M`;
-        if (val >= 1_000) return `${symbol}${(val / 1_000).toFixed(1)}K`;
-        return `${symbol}${val}`;
-    };
+    const leadsThisWindow = series.reduce((sum, d) => sum + d.leads, 0);
 
-    const volumeString = [
-        volumeUSD > 0 ? formatVolume(volumeUSD, '$') : null,
-        volumeNGN > 0 ? formatVolume(volumeNGN, '₦') : null
-    ].filter(Boolean).join(' + ') || '$0';
-
-    const stats = [
-        { title: 'Total New Leads', value: (leadsCount || 0).toLocaleString(), change: 'All time', icon: 'person_add', color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-        { title: 'Active Listings', value: (propertiesCount || 0).toString(), change: 'Live', icon: 'home', color: 'text-primary', bg: 'bg-primary/10' },
-        { title: 'Blog posts', value: (blogCount || 0).toString(), change: 'Published', icon: 'article', color: 'text-secondary', bg: 'bg-secondary/10' },
-        { title: 'Sales Volume', value: volumeString, change: 'Total', icon: 'payments', color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+    const stats: StatTile[] = [
+        { title: 'Total enquiries', value: (leadsCount ?? 0).toLocaleString('en-NG'), note: 'All time', tone: 'brand' },
+        { title: `Enquiries, ${DAYS} days`, value: leadsThisWindow.toLocaleString('en-NG'), note: 'Rolling window', tone: 'accent' },
+        { title: 'Listings', value: (propertiesCount ?? 0).toLocaleString('en-NG'), note: 'In the database', tone: 'brand' },
+        { title: 'Journal articles', value: (blogCount ?? 0).toLocaleString('en-NG'), note: 'Published and draft', tone: 'neutral' },
+        { title: 'Sold volume', value: volumeString, note: 'Status “Sold”', tone: 'accent' },
     ];
 
-    return (
-        <DashboardClient stats={stats} activity={activity} />
-    );
+    return <DashboardClient stats={stats} activity={activity} series={series} days={DAYS} />;
 }

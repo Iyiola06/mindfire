@@ -1,28 +1,41 @@
-"use client"
-
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import LoginForm from '@/components/admin/LoginForm'
 
+export const metadata: Metadata = {
+    title: 'Sign in | Mindfire Homes Admin',
+    // Belt and braces alongside the robots.txt disallow: a sign-in screen
+    // should never appear in an index, and a stray inbound link is enough to
+    // get one crawled.
+    robots: { index: false, follow: false },
+}
+
 export default function AdminLogin() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-background-dark py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
-                <div>
-                    <img
-                        className="mx-auto h-12 w-auto"
-                        src="/logo.svg"
-                        alt="Mindfire Homes"
-                    />
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white font-display">
-                        Admin Dashboard
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-                        Sign in to manage properties and content
+        <div className="hero-wash relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-16">
+            <div
+                aria-hidden="true"
+                className="ambient-glow pointer-events-none absolute -top-1/3 left-1/2 h-[700px] w-[900px] -translate-x-1/2 rounded-full"
+            />
+
+            <div className="relative w-full max-w-md">
+                <div className="mb-8 text-center">
+                    <img src="/logo.svg" alt="" width={48} height={48} className="mx-auto h-12 w-12 rounded-xl object-contain" />
+                    <h1 className="mt-6 font-display text-display-sm font-bold tracking-tight text-content">
+                        Mindfire Admin
+                    </h1>
+                    <p className="mt-2 text-body-sm text-content-muted">
+                        Sign in to manage listings, leads, and the journal.
                     </p>
                 </div>
-                <Suspense fallback={<div className="text-center p-4">Loading...</div>}>
-                    <LoginForm />
-                </Suspense>
+
+                <div className="rounded-panel border border-hairline/10 bg-surface p-8 shadow-ambient">
+                    <Suspense
+                        fallback={<p className="py-6 text-center text-body-sm text-content-muted">Loading…</p>}
+                    >
+                        <LoginForm />
+                    </Suspense>
+                </div>
             </div>
         </div>
     )

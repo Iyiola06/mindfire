@@ -1,32 +1,87 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { supabase } from '@/lib/supabase';
 import { PublicLayout } from '@/components/layout/PublicLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
 import PropertiesList from '@/components/properties/PropertiesList';
+import { absoluteUrl, breadcrumbJsonLd, SITE } from '@/lib/seo';
+import type { Property } from '@/types';
+
+export const metadata: Metadata = {
+    title: 'Properties for sale in Abuja',
+    description:
+        'Browse verified homes, apartments, and land across Maitama, Asokoro, Guzape, Jabi, and Gwarinpa. Every listing has had its title checked and has been visited by our team.',
+    alternates: { canonical: '/properties' },
+    openGraph: {
+        type: 'website',
+        url: absoluteUrl('/properties'),
+        title: `Properties for sale in Abuja | ${SITE.name}`,
+        description:
+            'Verified homes, apartments, and land across Abuja — titles checked and documentation shared before you commit.',
+    },
+};
 
 export const dynamic = 'force-dynamic';
 
 export default async function PropertiesPage() {
-    const { data: properties } = await supabase
+    const { data } = await supabase
         .from('properties')
         .select('*')
         .order('createdAt', { ascending: false });
 
+    const properties = (data ?? []) as Property[];
+    const count = properties.length;
+
+    /**
+     * `ItemList` for the listing grid. It is what lets a search engine
+     * understand this page as a set of properties rather than as one document
+     * that happens to mention several — and it is capped at the first 20 so
+     * the payload stays proportionate.
+     */
+    const itemListJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: 'Properties for sale in Abuja',
+        numberOfItems: count,
+        itemListElement: properties.slice(0, 20).map((p, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: absoluteUrl(`/properties/${p.id}`),
+            name: p.name,
+        })),
+    };
+
     return (
         <PublicLayout>
-            <div className="bg-background-light dark:bg-background-dark min-h-screen pt-24 pb-12">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify(
+                        breadcrumbJsonLd([
+                            { name: 'Home', path: '/' },
+                            { name: 'Properties', path: '/properties' },
+                        ]),
+                    ),
+                }}
+            />
 
-                    {/* Header */}
-                    <div className="mb-8 md:flex md:justify-between md:items-end border-b border-gray-200 dark:border-gray-800 pb-6">
-                        <div>
-                            <p className="text-secondary font-bold text-xs uppercase tracking-widest mb-2">Redefining Modern Living</p>
-                            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
-                                Find Your <span className="text-primary italic">Dream</span> Space
-                            </h1>
-                        </div>
-                    </div>
+            <PageHeader
+                eyebrow="Abuja · Verified listings"
+                title="Properties"
+                lede={
+                    count > 0
+                        ? `${count} ${count === 1 ? 'property' : 'properties'} currently available. Every listing has had its title checked and has been visited by our team.`
+                        : 'Our listings are updated as new developments are released. Speak with an advisor to hear about properties before they are published.'
+                }
+            />
 
-                    <PropertiesList initialProperties={properties || []} />
+            <div className="bg-bg pb-section pt-section-sm">
+                <div className="mx-auto max-w-content px-gutter">
+                    <PropertiesList initialProperties={properties} />
                 </div>
             </div>
         </PublicLayout>

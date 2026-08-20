@@ -11,8 +11,8 @@ export function SafeChart({ children }: { children: React.ReactNode }) {
 
     if (!mounted) {
         return (
-            <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800/50 rounded-lg animate-pulse">
-                <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+            <div className="flex h-full w-full animate-pulse items-center justify-center rounded-surface bg-surface-2">
+                <div className="h-4 w-4 rounded-full bg-content/10" />
             </div>
         )
     }

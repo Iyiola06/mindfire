@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { getAdmin, requireAdmin, UnauthorizedError } from '@/lib/auth'
 import { z } from 'zod'
 
 const blogPostSchema = z.object({
@@ -19,8 +20,12 @@ const blogPostSchema = z.object({
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url)
-        const publishedOnly = searchParams.get('published') !== 'false'
         const category = searchParams.get('category')
+
+        // Unpublished posts are drafts. Asking for them requires a session —
+        // otherwise `?published=false` hands every draft to anyone who asks.
+        let publishedOnly = searchParams.get('published') !== 'false'
+        if (!publishedOnly && !(await getAdmin())) publishedOnly = true
 
         let query = supabase
             .from('blog_posts')
@@ -53,6 +58,8 @@ export async function GET(request: NextRequest) {
 // POST /api/blog - Create new blog post (admin only)
 export async function POST(request: NextRequest) {
     try {
+        await requireAdmin()
+
         const body = await request.json()
         const validatedData = blogPostSchema.parse(body)
 
@@ -71,6 +78,9 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ post }, { status: 201 })
     } catch (error) {
+        if (error instanceof UnauthorizedError) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
         if (error instanceof z.ZodError) {
             return NextResponse.json(
                 { error: 'Validation error', details: error.errors },

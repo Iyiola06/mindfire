@@ -2,37 +2,423 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Material Icons and Fonts */
-/* Material Icons and Fonts are loaded in app/layout.tsx */
+/* ==========================================================================
+   Design tokens
+   --------------------------------------------------------------------------
+   Colours are stored as space-separated RGB channel triplets, not hex, so
+   Tailwind's opacity modifiers keep working through the var() bridge in
+   tailwind.config.ts: `rgb(var(--brand-600) / <alpha-value>)` is what lets
+   `bg-brand-600/60` resolve. Hex here would break every opacity modifier.
+   ========================================================================== */
 
 @layer base {
+  :root {
+    /* Brand */
+    --brand-700:   0  84  77;
+    --brand-600:   0 105  96;
+    --brand-500:   0 137 123;
+
+    /* Warm bronze. Fills, borders, and icons >=24px only — at small text
+       sizes it is 2.9:1 on white and fails AA. Use --text-muted there. */
+    --accent-500: 201 138  74;
+
+    /* Neutrals — light theme */
+    --bg:         250 250 250;
+    --surface:    255 255 255;
+    --surface-2:  244 245 246;
+    --text:        26  26  26;
+    --text-muted:  90  98 104;
+    --hairline:     0   0   0;
+
+    /* Glass — light theme */
+    --glass-tint:        255 255 255;
+    --glass-border:      255 255 255;
+    --glass-highlight:   255 255 255;
+    --glass-fallback:    255 255 255;
+    --glass-fallback-2:  248 249 250;
+
+    /* Hero wash. The floating-nav pages open on a light gradient rather than
+       a darkened photograph, so the capsule nav reads as glass over paper
+       instead of glass over an image. */
+    --hero-from: 242 245 244;
+    --hero-to:   250 250 250;
+
+    /* Ambient glow behind the hero. Brand hue at low alpha; never a fill. */
+    --glow: 0 137 123;
+
+    /* Layout contract. Single source of truth for the nav geometry, replacing
+       the three uncoordinated magic numbers that caused the mobile overlap.
+
+       The nav is a floating capsule, so three numbers describe it and every
+       page trusts --nav-h alone for its top clearance:
+         --nav-inset  gap between the viewport top and the capsule
+         --nav-cap-h  the capsule's own height
+         --nav-h      total reserved space (inset * 2 + cap), used by pt-nav */
+    --nav-inset: 14px;
+    --nav-cap-h: 54px;
+    --nav-h: 82px;
+    --content-max: 1180px;
+
+    /* Motion */
+    --dur-short: 200ms;
+    --dur-spatial: 500ms;
+    --ease-standard: cubic-bezier(.32, .72, 0, 1);
+    --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --nav-inset: 16px;
+      --nav-cap-h: 60px;
+      --nav-h: 92px;
+    }
+  }
+
+  .dark {
+    /* Brand lifts one step in dark. --brand-600 on a near-black surface is
+       under 3:1; the light-theme bronze is likewise too dark to read as an
+       accent. Both shift up rather than inverting the ramp. */
+    --brand-700:   0 105  96;
+    --brand-600:   0 137 123;
+    --brand-500:  38 166 154;
+    --accent-500: 214 158 102;
+
+    --bg:          15  15  15;
+    --surface:     26  26  26;
+    --surface-2:   34  34  34;
+    --text:       245 245 245;
+    --text-muted: 156 163 175;
+    --hairline:   255 255 255;
+
+    --glass-tint:       22  24  27;
+    --glass-border:    255 255 255;
+    --glass-highlight: 255 255 255;
+    --glass-fallback:   26  26  26;
+    --glass-fallback-2: 34  34  34;
+
+    /* The wash inverts rather than lightening: the same gradient shape, read
+       as a lit horizon above near-black instead of below off-white. */
+    --hero-from:  20  23  23;
+    --hero-to:    15  15  15;
+    --glow:       38 166 154;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
+    background-color: rgb(var(--bg));
+    color: rgb(var(--text));
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Keyboard users get a visible indicator on every interactive element;
+     pointer users do not, because this is :focus-visible rather than :focus. */
+  :focus-visible {
+    outline: 2px solid rgb(var(--brand-600));
+    outline-offset: 2px;
   }
 }
 
-.material-icons-outlined {
-  font-family: 'Material Icons Outlined';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  /* Preferred icon size */
-  display: inline-block;
-  line-height: 1;
-  text-transform: none;
-  letter-spacing: normal;
-  word-wrap: normal;
-  white-space: nowrap;
-  direction: ltr;
+/* ==========================================================================
+   Skip link
+   --------------------------------------------------------------------------
+   First focusable element in the document. Offscreen until focused, then it
+   parks below the fixed nav rather than under it. Without this, reaching the
+   listing grid by keyboard means tabbing through the whole header on every
+   page load.
+   ========================================================================== */
 
-  /* Support for all WebKit browsers. */
-  -webkit-font-smoothing: antialiased;
-  /* Support for Safari and Chrome. */
-  text-rendering: optimizeLegibility;
+@layer components {
+  .skip-link {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    z-index: 100;
+    translate: -50% -150%;
+    padding: .75rem 1.25rem;
+    border-radius: 0 0 .75rem .75rem;
+    background-color: rgb(var(--brand-600));
+    color: rgb(255 255 255);
+    font-size: .875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: translate var(--dur-short) var(--ease-standard);
+  }
 
-  /* Support for Firefox. */
-  -moz-osx-font-smoothing: grayscale;
+  .skip-link:focus-visible {
+    translate: -50% 0;
+    outline-offset: -4px;
+  }
+}
 
-  /* Support for IE. */
-  font-feature-settings: 'liga';
+/* ==========================================================================
+   Increased contrast
+   --------------------------------------------------------------------------
+   When the OS asks for more contrast, the translucent materials and the
+   low-contrast hairlines are the first things to go: a 10%-alpha border is
+   invisible at this setting, so panel edges and input outlines vanish. Muted
+   body copy is also pushed to full-strength text.
+   ========================================================================== */
+
+@media (prefers-contrast: more) {
+  :root {
+    --text-muted: 45 51 56;
+    --glass-alpha: 1;
+  }
+
+  .dark {
+    --text-muted: 228 231 235;
+  }
+
+  .glass-subtle,
+  .glass-regular,
+  .glass-elevated,
+  .glass-capsule {
+    background-color: rgb(var(--glass-fallback));
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .glass-dark {
+    background-color: rgb(10 11 12);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* Hairlines at 10-15% alpha are the intended whisper in the default theme
+     and simply absent here. Raise every one of them to a visible edge. */
+  [class*="border-hairline"] {
+    border-color: rgb(var(--hairline) / .55) !important;
+  }
+
+  :focus-visible {
+    outline-width: 3px;
+  }
+}
+
+/* ==========================================================================
+   Glass materials
+   --------------------------------------------------------------------------
+   Four named levels sharing one rule body; each instance sets its own
+   --glass-* locals. Levels pair a translucent tint with a blur, a saturation
+   boost, a hairline border, and — for the heavier levels — an inner highlight
+   that reads as a lit top edge.
+
+   Stacking rule: no glass surface may be a descendant of another glass
+   surface. Nested backdrop-filter compounds GPU cost and destroys
+   legibility. Enforced by review, not by tooling.
+   ========================================================================== */
+
+@layer components {
+  .glass-subtle,
+  .glass-regular,
+  .glass-elevated,
+  .glass-capsule,
+  .glass-dark {
+    background-color: rgb(var(--glass-tint) / var(--glass-alpha));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    border: 1px solid rgb(var(--glass-border) / var(--glass-border-alpha));
+  }
+
+  .glass-subtle {
+    --glass-alpha: .72;
+    --glass-blur: 20px;
+    --glass-sat: 1.8;
+    --glass-border-alpha: .5;
+  }
+
+  .glass-regular {
+    --glass-alpha: .78;
+    --glass-blur: 32px;
+    --glass-sat: 1.8;
+    --glass-border-alpha: .5;
+    box-shadow: inset 0 1px 0 rgb(var(--glass-highlight) / .7);
+  }
+
+  .glass-elevated {
+    --glass-alpha: .86;
+    --glass-blur: 40px;
+    --glass-sat: 1.9;
+    --glass-border-alpha: .5;
+    box-shadow:
+      inset 0 1px 0 rgb(var(--glass-highlight) / .7),
+      0 24px 48px -12px rgb(0 0 0 / .18);
+  }
+
+  /* The floating nav capsule. Lighter tint and a stronger blur than
+     glass-subtle because it sits over the hero wash and then over arbitrary
+     page content as the visitor scrolls — the material has to hold on both.
+     The inner highlight is what stops it reading as flat translucent grey. */
+  .glass-capsule {
+    --glass-alpha: .66;
+    --glass-blur: 24px;
+    --glass-sat: 1.8;
+    --glass-border-alpha: .75;
+    box-shadow:
+      0 12px 40px -14px rgb(15 25 25 / .28),
+      inset 0 1px 0 rgb(var(--glass-highlight) / .85);
+  }
+
+  /* Over bright photography: always dark-tinted regardless of theme, so
+     white text stays readable. */
+  .glass-dark {
+    --glass-tint: 16 18 20;
+    --glass-alpha: .6;
+    --glass-blur: 28px;
+    --glass-sat: 1.7;
+    --glass-border-alpha: .12;
+    color: rgb(255 255 255);
+  }
+
+  .dark .glass-capsule {
+    --glass-alpha: .72;
+    --glass-border-alpha: .1;
+    box-shadow:
+      0 12px 40px -14px rgb(0 0 0 / .6),
+      inset 0 1px 0 rgb(var(--glass-highlight) / .08);
+  }
+
+  .dark .glass-subtle { --glass-border-alpha: .12; }
+  .dark .glass-regular { --glass-border-alpha: .12; }
+  .dark .glass-elevated { --glass-border-alpha: .12; }
+  .dark .glass-regular,
+  .dark .glass-elevated {
+    box-shadow:
+      inset 0 1px 0 rgb(var(--glass-highlight) / .08),
+      0 24px 48px -12px rgb(0 0 0 / .5);
+  }
+}
+
+/* Fallbacks: collapse glass to a solid surface. Both guards produce the same
+   result, so any browser or user setting that removes the blur still yields
+   legible text at full contrast. The rules are duplicated rather than
+   combined because `@supports not` and `@media` cannot share one condition. */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-subtle,
+  .glass-regular,
+  .glass-elevated,
+  .glass-capsule {
+    background-color: rgb(var(--glass-fallback));
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .glass-dark {
+    background-color: rgb(16 18 20);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass-subtle,
+  .glass-regular,
+  .glass-elevated,
+  .glass-capsule {
+    background-color: rgb(var(--glass-fallback));
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .glass-dark {
+    background-color: rgb(16 18 20);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* ==========================================================================
+   Page surfaces
+   --------------------------------------------------------------------------
+   The three backgrounds the new home page introduced, lifted out of inline
+   styles so every route can open the same way. `hero-wash` is the vertical
+   gradient the floating nav sits on; `ambient-glow` is the brand halo behind
+   the headline; `showcase-edge` is the long, low-alpha shadow that makes the
+   large panels read as lifted paper rather than as bordered boxes.
+   ========================================================================== */
+
+@layer components {
+  .hero-wash {
+    background-image: linear-gradient(
+      180deg,
+      rgb(var(--hero-from)) 0%,
+      rgb(var(--hero-to)) 70%
+    );
+  }
+
+  /* Sized and positioned by the caller; this rule only owns the paint. */
+  .ambient-glow {
+    background-image: radial-gradient(
+      closest-side,
+      rgb(var(--glow) / .08),
+      rgb(var(--glow) / 0)
+    );
+    pointer-events: none;
+  }
+
+  .dark .ambient-glow {
+    background-image: radial-gradient(
+      closest-side,
+      rgb(var(--glow) / .12),
+      rgb(var(--glow) / 0)
+    );
+  }
+}
+
+/* ==========================================================================
+   Reveal on scroll
+   --------------------------------------------------------------------------
+   Sections start 30px low and transparent, then settle once they cross the
+   viewport threshold. The class is applied by components/motion/Reveal.tsx,
+   which adds `is-revealed` from an IntersectionObserver.
+
+   The no-JS and reduced-motion cases both resolve to the finished state, so
+   content is never trapped invisible: nothing here carries meaning, only
+   emphasis.
+   ========================================================================== */
+
+@layer components {
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition:
+      opacity 900ms var(--ease-standard),
+      transform 900ms var(--ease-standard);
+  }
+
+  .reveal.is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   Motion
+   --------------------------------------------------------------------------
+   Two duration bands, consumed as Tailwind's duration-short / duration-spatial
+   and the .motion-* component classes in Task 4.
+   ========================================================================== */
+
+/* No information may be conveyed by motion alone, so collapsing every
+   duration is safe. 0.01ms rather than 0 so transitionend still fires and
+   JS that waits on it does not hang. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

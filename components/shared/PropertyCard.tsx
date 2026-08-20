@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Property } from '../../types';
 import { Badge } from '../ui/Badge';
+import { IconHeart, IconMapPin, IconBed, IconBath, IconArea } from '../icons';
 
 interface PropertyCardProps {
   property: Property;
@@ -20,55 +21,68 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
   return (
     <Link href={`/properties/${property.id}`} className="group block h-full">
-      <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-soft border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-hover hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
-        <div className="relative h-64 overflow-hidden shrink-0">
+      {/* The card is a lifted plate: large radius, long-throw shadow, hairline
+          edge. The photograph gets its own inner radius so the frame reads as
+          a mount rather than as a bled image. */}
+      <div className="flex h-full flex-col overflow-hidden rounded-showcase border border-hairline/[0.06] bg-surface p-3 shadow-ambient transition-all duration-short ease-standard hover:-translate-y-1 hover:shadow-lift">
+        <div className="relative aspect-[4/3] shrink-0 overflow-hidden rounded-surface">
           <img
             src={property.image}
             alt={property.name}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="h-full w-full object-cover transition-transform duration-spatial ease-standard group-hover:scale-105"
           />
           {property.tags.length > 0 && (
-            <div className="absolute top-4 left-4 z-10 flex gap-2 flex-wrap">
+            <div className="absolute left-3.5 top-3.5 z-10 flex flex-wrap gap-2">
               {property.tags.map(tag => (
                 <Badge key={tag} color={getBadgeColor(tag)}>{tag}</Badge>
               ))}
             </div>
           )}
+          {/* The label names the property because a listings grid renders many
+              of these. The handler stays a no-op — favouriting has no backing
+              store yet — so the label describes what it will do. */}
           <button
-            className="absolute top-4 right-4 p-2 bg-white/80 dark:bg-black/50 backdrop-blur-sm rounded-full text-gray-600 dark:text-gray-200 hover:text-red-500 hover:bg-white transition-colors z-10"
-            onClick={(e) => { e.preventDefault(); /* handle like */ }}
+            type="button"
+            aria-label={`Add ${property.name} to favourites`}
+            className="glass-capsule absolute right-3.5 top-3.5 z-10 flex h-10 w-10 items-center justify-center rounded-pill text-content transition-colors duration-short ease-standard hover:text-red-500"
+            onClick={(e) => { e.preventDefault(); }}
           >
-            <span className="material-icons-outlined text-lg">favorite_border</span>
+            <IconHeart size={18} />
           </button>
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12">
-            <p className="text-white font-bold text-xl flex items-baseline gap-1">
-              {property.currency === 'NGN' ? '₦' : '$'}{property.price.toLocaleString()}
-              {property.priceLabel && <span className="text-sm font-normal opacity-80">{property.priceLabel}</span>}
-            </p>
-          </div>
         </div>
 
-        <div className="p-5 flex-1 flex flex-col">
-          <h3 className="font-display font-semibold text-lg text-gray-900 dark:text-white group-hover:text-primary transition-colors mb-2 line-clamp-1">
+        <div className="flex flex-1 flex-col px-3 pb-2 pt-5">
+          {/* No line-clamp on the name, no truncate on the address — both were
+              hiding the information a buyer is scanning for. */}
+          <h3 className="font-display text-body-lg font-semibold tracking-tight text-content transition-colors duration-short group-hover:text-brand-600">
             {property.name}
           </h3>
-          <p className="text-text-muted-light dark:text-text-muted-dark text-sm mb-4 flex items-center gap-1">
-            <span className="material-icons-outlined text-sm shrink-0">location_on</span>
-            <span className="truncate">{property.address}</span>
+          <p className="mt-2 flex items-start gap-1.5 text-body-sm text-content-muted">
+            <IconMapPin size={16} className="mt-0.5 shrink-0" />
+            <span>{property.address}</span>
           </p>
 
-          <div className="mt-auto flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4 text-sm text-gray-600 dark:text-gray-400">
-            <div className="flex items-center gap-1">
-              <span className="material-icons-outlined text-primary text-base">bed</span>
+          {/* One value, one text node. 'en-NG' is explicit so grouping is the
+              same in tests and in every visitor's browser. */}
+          <p className="mt-4 flex items-baseline gap-1.5 font-display text-display-sm font-bold tracking-tight text-brand-600">
+            {`${property.currency === 'NGN' ? '₦' : '$'}${property.price.toLocaleString('en-NG')}`}
+            {property.priceLabel && (
+              <span className="text-body-sm font-medium text-content-muted">{property.priceLabel}</span>
+            )}
+          </p>
+
+          <div className="mt-auto flex items-center justify-between gap-2 border-t border-hairline/10 pt-4 text-body-sm text-content-muted">
+            <div className="flex items-center gap-1.5">
+              <IconBed size={16} className="text-brand-600" />
               <span>{property.beds} Beds</span>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="material-icons-outlined text-primary text-base">bathtub</span>
+            <div className="flex items-center gap-1.5">
+              <IconBath size={16} className="text-brand-600" />
               <span>{property.baths} Baths</span>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="material-icons-outlined text-primary text-base">square_foot</span>
-              <span>{property.sqft.toLocaleString()} sqft</span>
+            <div className="flex items-center gap-1.5">
+              <IconArea size={16} className="text-brand-600" />
+              <span>{property.sqft.toLocaleString('en-NG')} sqft</span>
             </div>
           </div>
         </div>

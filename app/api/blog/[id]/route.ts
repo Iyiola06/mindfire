@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { requireAdmin, UnauthorizedError } from '@/lib/auth'
 
 type RouteParams = {
     params: Promise<{ id: string }>
@@ -36,6 +37,8 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 // PUT /api/blog/[id] - Update blog post (admin only)
 export async function PUT(request: NextRequest, { params }: RouteParams) {
     try {
+        await requireAdmin()
+
         const { id } = await params
         const body = await request.json()
 
@@ -58,6 +61,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
         return NextResponse.json({ post })
     } catch (error) {
+        if (error instanceof UnauthorizedError) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
         console.error('Error updating blog post:', error)
         return NextResponse.json(
             { error: 'Failed to update blog post' },
@@ -69,6 +75,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/blog/[id] - Delete blog post (admin only)
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     try {
+        await requireAdmin()
+
         const { id } = await params
 
         const { error } = await supabase
@@ -82,6 +90,9 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
 
         return NextResponse.json({ success: true })
     } catch (error) {
+        if (error instanceof UnauthorizedError) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
         console.error('Error deleting blog post:', error)
         return NextResponse.json(
             { error: 'Failed to delete blog post' },

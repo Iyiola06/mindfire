@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { updateLeadStatus, deleteLead } from '@/lib/actions';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { updateLeadStatus, deleteLead } from '@/lib/actions';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { IconMail, IconPhone, IconSearchOff, IconSpinner, IconTrash } from '@/components/icons';
 
 interface Lead {
     id: string;
@@ -18,131 +20,217 @@ interface Lead {
     contactedAt?: string;
 }
 
+const STATUSES = ['New', 'Contacted', 'Pending Review', 'Scheduled Viewing', 'Closed'] as const;
+
+/**
+ * Static class strings per status. Built at runtime before —
+ * `text-${stat.color}-600`, `bg-${stat.color}-50` — which Tailwind cannot see,
+ * so every status pill and every stat chip on this page rendered with no
+ * colour at all. `primary` was also interpolated into `bg-primary-50`, a class
+ * that has never existed in this config.
+ */
+const STATUS_CLASSES: Record<string, string> = {
+    New: 'border-brand-600/30 text-brand-600',
+    Contacted: 'border-hairline/20 text-content-muted',
+    'Pending Review': 'border-accent-500/40 text-accent-500',
+    'Scheduled Viewing': 'border-blue-500/30 text-blue-600 dark:text-blue-400',
+    Closed: 'border-hairline/20 text-content-muted',
+};
+
 export default function LeadsManagement({ initialLeads }: { initialLeads: Lead[] }) {
     const router = useRouter();
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
+    const [error, setError] = useState('');
+    const [filter, setFilter] = useState<'All' | (typeof STATUSES)[number]>('All');
+
+    const leads = useMemo(
+        () => (filter === 'All' ? initialLeads : initialLeads.filter((l) => l.status === filter)),
+        [initialLeads, filter],
+    );
 
     const handleStatusChange = async (id: string, newStatus: string) => {
         setIsUpdating(id);
+        setError('');
         const res = await updateLeadStatus(id, newStatus);
         setIsUpdating(null);
-        if (res.success) {
-            router.refresh();
-        } else {
-            alert('Error updating status: ' + res.error);
-        }
+        if (res.success) router.refresh();
+        else setError(res.error ?? 'Could not update that enquiry.');
     };
 
-    const handleDelete = async (id: string) => {
-        if (confirm('Are you sure you want to delete this lead?')) {
-            const res = await deleteLead(id);
-            if (res.success) {
-                router.refresh();
-            } else {
-                alert('Error deleting lead: ' + res.error);
-            }
-        }
+    const handleDelete = async (id: string, name: string) => {
+        if (!confirm(`Delete the enquiry from ${name}? This cannot be undone.`)) return;
+        setIsUpdating(id);
+        setError('');
+        const res = await deleteLead(id);
+        setIsUpdating(null);
+        if (res.success) router.refresh();
+        else setError(res.error ?? 'Could not delete that enquiry.');
+    };
+
+    const counts = {
+        total: initialLeads.length,
+        uncontacted: initialLeads.filter((l) => l.status === 'New').length,
+        viewings: initialLeads.filter((l) => l.status === 'Scheduled Viewing').length,
+        closed: initialLeads.filter((l) => l.status === 'Closed').length,
     };
 
     const stats = [
-        { label: 'Total Leads', value: initialLeads.length.toString(), icon: 'groups', color: 'primary' },
-        { label: 'Uncontacted', value: initialLeads.filter(l => l.status === 'New').length.toString(), icon: 'phone_missed', color: 'red', alert: initialLeads.some(l => l.status === 'New') },
-        { label: 'High Interest', value: initialLeads.filter(l => l.status === 'Scheduled Viewing').length.toString(), icon: 'star', color: 'secondary' },
-        { label: 'Closed Deals', value: initialLeads.filter(l => l.status === 'Closed').length.toString(), icon: 'verified', color: 'blue' }
+        { label: 'Total enquiries', value: counts.total, tone: 'text-content' },
+        { label: 'Awaiting contact', value: counts.uncontacted, tone: counts.uncontacted > 0 ? 'text-brand-600' : 'text-content' },
+        { label: 'Viewings booked', value: counts.viewings, tone: 'text-accent-500' },
+        { label: 'Closed', value: counts.closed, tone: 'text-content' },
     ];
 
     return (
-        <>
-            <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h2 className="text-3xl font-display font-bold text-gray-900 dark:text-white mb-1">Leads CRM</h2>
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Manage and track your website inquiries efficiently.</p>
-                </div>
-            </div>
+        <div className="mx-auto max-w-content">
+            <header className="mb-8">
+                <Eyebrow>Enquiries</Eyebrow>
+                <h1 className="mt-3 font-display text-display-md font-bold tracking-tight text-content">Leads</h1>
+                <p className="mt-2 max-w-[42rem] text-body text-content-muted">
+                    Every enquiry submitted through the contact form and the property pages, newest first.
+                </p>
+            </header>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {stats.map((stat, i) => (
-                    <div key={i} className="bg-surface-light dark:bg-surface-dark rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-800 flex items-start justify-between relative overflow-hidden group hover:border-primary/50 transition-colors">
-                        {stat.alert && <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-bl-full"></div>}
-                        <div className="relative z-10">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">{stat.label}</p>
-                            <p className="mt-2 text-3xl font-display font-bold text-gray-900 dark:text-white">{stat.value}</p>
-                            {stat.alert && <p className="mt-2 text-[10px] font-bold uppercase tracking-widest flex items-center text-red-500">
-                                <span className="material-icons-outlined text-xs mr-1">priority_high</span> Action required
-                            </p>}
-                        </div>
-                        <div className={`p-3 bg-${stat.color}-50 dark:bg-${stat.color}-900/20 rounded-xl relative z-10`}>
-                            <span className={`material-icons-outlined text-2xl text-${stat.color}-600 dark:text-${stat.color}-400`}>{stat.icon}</span>
-                        </div>
+            {error && (
+                <p role="alert" className="mb-6 rounded-control border border-red-500/30 bg-red-500/10 px-4 py-3 text-body-sm text-red-600 dark:text-red-400">
+                    {error}
+                </p>
+            )}
+
+            <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                {stats.map((stat) => (
+                    <div key={stat.label} className="rounded-surface border border-hairline/10 bg-surface p-5 shadow-soft">
+                        <p className="text-label font-semibold uppercase text-content-muted">{stat.label}</p>
+                        <p className={`mt-2 font-display text-display-sm font-bold tracking-tight ${stat.tone}`}>
+                            {stat.value}
+                        </p>
                     </div>
                 ))}
             </div>
 
-            <div className="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col h-[calc(100vh-320px)] min-h-[400px]">
-                <div className="overflow-x-auto flex-1">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800 relative">
-                        <thead className="bg-gray-50/80 dark:bg-gray-800/80 sticky top-0 z-10 backdrop-blur-sm">
+            <div className="mb-5 flex flex-wrap gap-2">
+                {(['All', ...STATUSES] as const).map((s) => (
+                    <button
+                        key={s}
+                        type="button"
+                        onClick={() => setFilter(s)}
+                        aria-pressed={filter === s}
+                        className={`min-h-[40px] rounded-pill px-4 text-body-sm font-medium transition-colors duration-short ease-standard ${
+                            filter === s
+                                ? 'bg-brand-600 text-white'
+                                : 'border border-hairline/15 text-content-muted hover:text-content'
+                        }`}
+                    >
+                        {s}
+                    </button>
+                ))}
+            </div>
+
+            <div className="overflow-hidden rounded-panel border border-hairline/10 bg-surface shadow-soft">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                        <caption className="sr-only">Property enquiries and their current status</caption>
+                        <thead className="border-b border-hairline/10 bg-surface-2">
                             <tr>
-                                <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Lead Info</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Property Interest</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Budget / Message</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Date</th>
-                                <th scope="col" className="px-6 py-4 text-left text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Status</th>
-                                <th scope="col" className="px-6 py-4 text-center text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Actions</th>
+                                {['Enquirer', 'Interest', 'Budget', 'Received', 'Status', 'Actions'].map((h) => (
+                                    <th
+                                        key={h}
+                                        scope="col"
+                                        className={`whitespace-nowrap px-6 py-4 text-label font-semibold uppercase text-content-muted ${
+                                            h === 'Actions' ? 'text-right' : 'text-left'
+                                        }`}
+                                    >
+                                        {h}
+                                    </th>
+                                ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                            {initialLeads.map((lead) => (
-                                <tr key={lead.id} className={`group transition-colors ${lead.status === 'Contacted' ? 'bg-gray-50/50 dark:bg-gray-800/30' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                        <tbody className="divide-y divide-hairline/10">
+                            {leads.map((lead) => (
+                                <tr key={lead.id} className="transition-colors hover:bg-surface-2/60">
+                                    <td className="px-6 py-4">
                                         <div className="flex items-center gap-4">
-                                            <div className="relative">
-                                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold border-2 border-white dark:border-gray-700 shadow-sm">
-                                                    {lead.name.charAt(0)}
-                                                </div>
-                                                {lead.status === 'New' && <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white dark:ring-surface-dark"></span>}
-                                            </div>
-                                            <div>
-                                                <div className={`text-sm font-bold ${lead.status === 'Contacted' ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>{lead.name}</div>
-                                                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">{lead.email}</div>
+                                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-pill bg-brand-600/10 font-display font-bold text-brand-600">
+                                                {lead.name.charAt(0).toUpperCase()}
+                                            </span>
+                                            <div className="min-w-0">
+                                                <p className="text-body-sm font-semibold text-content">{lead.name}</p>
+                                                {/* Contactable, not just displayed. Reading an
+                                                    address off the screen and retyping it is how
+                                                    replies go to the wrong person. */}
+                                                <a
+                                                    href={`mailto:${lead.email}`}
+                                                    className="mt-0.5 flex items-center gap-1.5 text-[0.8125rem] text-content-muted hover:text-brand-600"
+                                                >
+                                                    <IconMail size={13} />
+                                                    {lead.email}
+                                                </a>
+                                                {lead.phone && (
+                                                    <a
+                                                        href={`tel:${lead.phone}`}
+                                                        className="mt-0.5 flex items-center gap-1.5 text-[0.8125rem] text-content-muted hover:text-brand-600"
+                                                    >
+                                                        <IconPhone size={13} />
+                                                        {lead.phone}
+                                                    </a>
+                                                )}
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-bold text-gray-900 dark:text-gray-200">{lead.propertyInterest}</div>
-                                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">{lead.propertyDetails}</div>
-                                    </td>
                                     <td className="px-6 py-4">
-                                        <div className="text-sm font-bold text-gray-900 dark:text-gray-200 font-mono">{lead.budget || 'N/A'}</div>
-                                        {lead.message && <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1 italic">"{lead.message}"</div>}
+                                        <p className="text-body-sm font-medium text-content">{lead.propertyInterest}</p>
+                                        {lead.propertyDetails && (
+                                            <p className="mt-0.5 text-[0.8125rem] text-content-muted">{lead.propertyDetails}</p>
+                                        )}
+                                        {lead.message && (
+                                            <p className="mt-1 max-w-sm text-[0.8125rem] italic text-content-muted">
+                                                “{lead.message}”
+                                            </p>
+                                        )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {new Date(lead.createdAt).toLocaleDateString()}
+                                    <td className="whitespace-nowrap px-6 py-4 text-body-sm font-medium text-content">
+                                        {lead.budget || '—'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="whitespace-nowrap px-6 py-4 text-body-sm text-content-muted">
+                                        {new Date(lead.createdAt).toLocaleDateString('en-NG', {
+                                            day: 'numeric',
+                                            month: 'short',
+                                            year: 'numeric',
+                                        })}
+                                    </td>
+                                    <td className="whitespace-nowrap px-6 py-4">
+                                        <label className="sr-only" htmlFor={`status-${lead.id}`}>
+                                            Status for {lead.name}
+                                        </label>
                                         <select
+                                            id={`status-${lead.id}`}
                                             value={lead.status}
                                             disabled={isUpdating === lead.id}
                                             onChange={(e) => handleStatusChange(lead.id, e.target.value)}
-                                            className={`text-[10px] font-bold uppercase tracking-wider border rounded-full px-3 py-1 bg-transparent outline-none cursor-pointer
-                                                ${lead.status === 'New' ? 'text-primary border-primary/20' :
-                                                    lead.status === 'Pending Review' ? 'text-secondary-hover border-secondary/20 dark:text-secondary' :
-                                                        lead.status === 'Scheduled Viewing' ? 'text-blue-700 border-blue-200 dark:text-blue-400 dark:border-blue-800' :
-                                                            'text-gray-600 border-gray-200 dark:text-gray-400 dark:border-gray-700'}`}
+                                            className={`min-h-[40px] cursor-pointer rounded-pill border bg-transparent px-4 text-body-sm font-medium outline-none disabled:opacity-50 ${
+                                                STATUS_CLASSES[lead.status] ?? 'border-hairline/20 text-content-muted'
+                                            }`}
                                         >
-                                            <option value="New">New</option>
-                                            <option value="Contacted">Contacted</option>
-                                            <option value="Pending Review">Pending Review</option>
-                                            <option value="Scheduled Viewing">Viewing</option>
-                                            <option value="Closed">Closed</option>
+                                            {STATUSES.map((s) => (
+                                                <option key={s} value={s}>
+                                                    {s}
+                                                </option>
+                                            ))}
                                         </select>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                                    <td className="whitespace-nowrap px-6 py-4 text-right">
                                         <button
-                                            onClick={() => handleDelete(lead.id)}
-                                            className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                                            type="button"
+                                            onClick={() => handleDelete(lead.id, lead.name)}
+                                            disabled={isUpdating === lead.id}
+                                            aria-label={`Delete the enquiry from ${lead.name}`}
+                                            className="inline-flex h-10 w-10 items-center justify-center rounded-pill text-content-muted transition-colors duration-short ease-standard hover:bg-red-500/10 hover:text-red-600 disabled:opacity-50"
                                         >
-                                            <span className="material-icons-outlined text-xl">delete_outline</span>
+                                            {isUpdating === lead.id ? (
+                                                <IconSpinner size={18} className="animate-spin" />
+                                            ) : (
+                                                <IconTrash size={18} />
+                                            )}
                                         </button>
                                     </td>
                                 </tr>
@@ -150,7 +238,21 @@ export default function LeadsManagement({ initialLeads }: { initialLeads: Lead[]
                         </tbody>
                     </table>
                 </div>
+
+                {leads.length === 0 && (
+                    <div className="px-6 py-20 text-center">
+                        <IconSearchOff size={40} className="mx-auto mb-4 text-content-muted" />
+                        <p className="font-display text-body-lg font-semibold text-content">
+                            {initialLeads.length === 0 ? 'No enquiries yet' : `No enquiries marked “${filter}”`}
+                        </p>
+                        <p className="mx-auto mt-2 max-w-sm text-body-sm text-content-muted">
+                            {initialLeads.length === 0
+                                ? 'Submissions from the contact form and the property pages land here.'
+                                : 'Choose a different status to see the rest.'}
+                        </p>
+                    </div>
+                )}
             </div>
-        </>
+        </div>
     );
 }

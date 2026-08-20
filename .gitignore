@@ -6,6 +6,9 @@ node_modules
 # Testing
 /coverage
 
+# Superpowers scratch (SDD ledger, briefs, review packages, brainstorm mockups)
+.superpowers/
+
 # Next.js
 /.next/
 /out/
@@ -35,3 +38,6 @@ next-env.d.ts
 
 # Prisma
 prisma/migrations/dev.db*
+
+# Per-machine Claude Code permissions. launch.json is shared; this is not.
+.claude/settings.local.json

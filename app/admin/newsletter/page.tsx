@@ -2,126 +2,159 @@
 
 import React, { useState } from 'react';
 import { sendBulkEmail } from '@/lib/actions';
+import { Button } from '@/components/ui/Button';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { IconAlert, IconCheck, IconSend, IconSpinner } from '@/components/icons';
+
+const FIELD =
+    'block w-full rounded-control border border-hairline/15 bg-surface-2 px-4 py-3 text-body-sm text-content outline-none transition-colors duration-short ease-standard placeholder:text-content-muted/70 focus:border-brand-600 focus:ring-1 focus:ring-brand-600';
+const LABEL = 'mb-2 block text-label font-semibold uppercase text-content-muted';
 
 export default function NewsletterAdminPage() {
     const [subject, setSubject] = useState('');
     const [content, setContent] = useState('');
     const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
     const [result, setResult] = useState<{ sent: number; failed: number } | null>(null);
+    const [error, setError] = useState('');
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!confirm('Are you sure you want to send this email to ALL subscribers?')) return;
+        // This mails every subscriber on the list and cannot be recalled.
+        if (!confirm('Send this email to every subscriber? This cannot be undone.')) return;
 
         setStatus('sending');
+        setError('');
+
         const res = await sendBulkEmail(subject, content);
 
+        // `sendBulkEmail` returns either a send report or an authorisation
+        // failure. The previous version read `res.sent` unconditionally, so a
+        // rejected send reported "sent to 0 subscribers" as a success.
         if (res.success) {
             setStatus('success');
-            setResult({ sent: res.sent || 0, failed: res.failed || 0 });
+            setResult({ sent: res.sent ?? 0, failed: res.failed ?? 0 });
             setSubject('');
             setContent('');
         } else {
             setStatus('error');
-            console.error(res.error);
+            setError(res.error ?? 'The broadcast could not be sent.');
         }
     };
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white mb-8">Newsletter Broadcast</h1>
+        <div className="mx-auto max-w-4xl">
+            <header className="mb-8">
+                <Eyebrow>Broadcast</Eyebrow>
+                <h1 className="mt-3 font-display text-display-md font-bold tracking-tight text-content">
+                    Newsletter
+                </h1>
+                <p className="mt-2 max-w-[42rem] text-body text-content-muted">
+                    One email to everyone on the subscriber list. There is no send queue and no undo —
+                    check the preview below before you send.
+                </p>
+            </header>
 
-            <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-
+            <div className="rounded-panel border border-hairline/10 bg-surface p-6 shadow-soft sm:p-8">
                 {status === 'success' && result && (
-                    <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-300">
-                        <p className="font-bold">Email Broadcast Sent!</p>
-                        <p>Successfully sent to {result.sent} subscribers. ({result.failed} failed)</p>
-                    </div>
+                    <p
+                        role="status"
+                        className="mb-6 flex items-start gap-3 rounded-control border border-brand-600/30 bg-brand-600/10 px-4 py-3 text-body-sm text-content"
+                    >
+                        <IconCheck size={18} className="mt-0.5 shrink-0 text-brand-600" />
+                        <span>
+                            Sent to {result.sent} subscriber{result.sent === 1 ? '' : 's'}.
+                            {result.failed > 0 && ` ${result.failed} failed — see the server log.`}
+                        </span>
+                    </p>
                 )}
 
                 {status === 'error' && (
-                    <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300">
-                        <p className="font-bold">Error Sending Broadcast</p>
-                        <p>Check console for details.</p>
-                    </div>
+                    <p
+                        role="alert"
+                        className="mb-6 flex items-start gap-3 rounded-control border border-red-500/30 bg-red-500/10 px-4 py-3 text-body-sm text-red-600 dark:text-red-400"
+                    >
+                        <IconAlert size={18} className="mt-0.5 shrink-0" />
+                        <span>{error}</span>
+                    </p>
                 )}
 
                 <form onSubmit={handleSend} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Subject Line</label>
+                        <label htmlFor="broadcast-subject" className={LABEL}>
+                            Subject line
+                        </label>
                         <input
+                            id="broadcast-subject"
                             type="text"
                             required
                             value={subject}
                             onChange={(e) => setSubject(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
-                            placeholder="e.g. New Exclusive Listing: Seaside Villa"
+                            className={FIELD}
+                            placeholder="Three new Maitama listings, and what we checked"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Email Content (HTML supported)</label>
+                        <label htmlFor="broadcast-content" className={LABEL}>
+                            Body
+                        </label>
                         <textarea
+                            id="broadcast-content"
                             required
+                            rows={10}
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
-                            rows={10}
-                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary outline-none font-mono text-sm"
-                            placeholder="<p>Hello subscribers,</p>..."
+                            className={`${FIELD} resize-y font-mono text-[0.8125rem]`}
+                            placeholder="<p>Hello,</p>"
                         />
-                        <p className="text-xs text-gray-500 mt-1">Basic HTML tags like &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt;, &lt;br&gt; are supported.</p>
+                        <p className="mt-2 text-[0.75rem] text-content-muted">
+                            Basic HTML — &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt;, &lt;a&gt;, &lt;br&gt;.
+                        </p>
                     </div>
 
-                    <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
-                        <button
+                    <div className="border-t border-hairline/10 pt-6">
+                        <Button
                             type="submit"
+                            size="lg"
                             disabled={status === 'sending'}
-                            className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            icon={
+                                status === 'sending' ? (
+                                    <IconSpinner size={18} className="animate-spin" />
+                                ) : (
+                                    <IconSend size={18} />
+                                )
+                            }
                         >
-                            {status === 'sending' ? (
-                                <>
-                                    <span className="material-icons-outlined animate-spin">refresh</span>
-                                    Sending Broadcast...
-                                </>
-                            ) : (
-                                <>
-                                    <span className="material-icons-outlined">send</span>
-                                    Send to All Subscribers
-                                </>
-                            )}
-                        </button>
+                            {status === 'sending' ? 'Sending…' : 'Send to all subscribers'}
+                        </Button>
                     </div>
                 </form>
             </div>
 
-            <div className="mt-8">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Preview</h2>
-                <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-gray-50">
+            <section className="mt-8">
+                <h2 className="mb-4 font-display text-body-lg font-bold text-content">Preview</h2>
+                <div className="overflow-hidden rounded-panel border border-hairline/10 bg-white">
                     <iframe
-                        srcDoc={`
-                            <html>
-                            <head><style>body { margin: 0; font-family: sans-serif; }</style></head>
-                            <body>
-                                <div style="max-width: 600px; margin: 0 auto; background: white; padding: 20px;">
-                                    <div style="background: #111; color: white; padding: 20px; text-align: center;">Mindfire Homes</div>
-                                    <div style="padding: 20px;">
-                                        <h2>${subject || 'Subject Line'}</h2>
-                                        <div>${content || 'Content will appear here...'}</div>
-                                    </div>
-                                    <div style="background: #eee; padding: 20px; text-align: center; font-size: 12px;">
-                                        © ${new Date().getFullYear()} Mindfire Homes
-                                    </div>
+                        // Sandboxed with no allowances: the preview renders
+                        // author-supplied markup and has no reason to run
+                        // scripts or reach the parent document.
+                        sandbox=""
+                        srcDoc={`<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;font-family:system-ui,sans-serif;color:#1a1a1a}</style></head><body>
+                            <div style="max-width:600px;margin:0 auto;background:#fff">
+                                <div style="background:#0a0a0a;color:#fff;padding:24px;text-align:center;font-weight:700;letter-spacing:-0.01em">MINDFIRE HOMES</div>
+                                <div style="padding:28px 24px">
+                                    <h2 style="margin:0 0 16px;font-size:22px;letter-spacing:-0.02em">${subject || 'Subject line'}</h2>
+                                    <div style="font-size:15px;line-height:1.65;color:#4b5459">${content || 'Body will appear here…'}</div>
                                 </div>
-                            </body>
-                            </html>
-                        `}
-                        className="w-full h-[500px] bg-white"
-                        title="Email Preview"
+                                <div style="background:#f4f5f6;padding:20px;text-align:center;font-size:12px;color:#7a8288">© ${new Date().getFullYear()} Mindfire Homes</div>
+                            </div>
+                        </body></html>`}
+                        className="h-[500px] w-full bg-white"
+                        title="Email preview"
                     />
                 </div>
-            </div>
+            </section>
         </div>
     );
 }

@@ -1,9 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import { createBlogPost, updateBlogPost, deleteBlogPost } from '@/lib/actions';
+import React, { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createBlogPost, updateBlogPost, deleteBlogPost } from '@/lib/actions';
 import { uploadFile } from '@/lib/storage';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { IconClose, IconEdit, IconFileText, IconImage, IconPlus, IconTrash } from '@/components/icons';
 
 interface BlogPost {
     id: string;
@@ -17,175 +21,237 @@ interface BlogPost {
     category: string;
     tags: string[];
     published: boolean;
-    publishedAt?: string;
+    publishedAt?: string | null;
 }
 
+const CATEGORIES = ['Market Trends', 'Buying Guide', 'Title & Documentation', 'Design', 'Finance'];
+
+const FIELD =
+    'block w-full rounded-control border border-hairline/15 bg-surface-2 px-4 py-3 text-body-sm text-content outline-none transition-colors duration-short ease-standard placeholder:text-content-muted/70 focus:border-brand-600 focus:ring-1 focus:ring-brand-600';
+const LABEL = 'mb-2 block text-label font-semibold uppercase text-content-muted';
+
+const slugify = (value: string) =>
+    value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+        .slice(0, 80);
+
+const emptyForm = () => ({
+    title: '',
+    slug: '',
+    excerpt: '',
+    content: '',
+    category: CATEGORIES[0],
+    image: '',
+    published: false,
+    author: 'Mindfire Homes',
+    tags: '',
+});
+
 export default function BlogManagement({ initialPosts }: { initialPosts: BlogPost[] }) {
+    const router = useRouter();
+    const imageRef = useRef<HTMLInputElement>(null);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const router = useRouter();
-    const imageRef = React.useRef<HTMLInputElement>(null);
+    const [error, setError] = useState('');
     const [tempFile, setTempFile] = useState<File | null>(null);
+    const [formData, setFormData] = useState(emptyForm());
 
-    const [formData, setFormData] = useState({
-        title: '',
-        excerpt: '',
-        content: '',
-        category: 'Market Trends',
-        image: '',
-        published: false,
-        author: 'Mindfire Admin',
-        authorAvatar: '/logo.svg'
-    });
+    const preview = useMemo(
+        () => (tempFile ? URL.createObjectURL(tempFile) : formData.image || ''),
+        [tempFile, formData.image],
+    );
 
     const openAddModal = () => {
         setEditingPost(null);
         setTempFile(null);
-        setFormData({
-            title: '',
-            excerpt: '',
-            content: '',
-            category: 'Market Trends',
-            image: '',
-            published: false,
-            author: 'Mindfire Admin',
-            authorAvatar: '/logo.svg'
-        });
+        setError('');
+        setFormData(emptyForm());
         setIsModalOpen(true);
     };
 
     const openEditModal = (post: BlogPost) => {
         setEditingPost(post);
         setTempFile(null);
+        setError('');
         setFormData({
             title: post.title,
+            slug: post.slug ?? '',
             excerpt: post.excerpt,
             content: post.content,
             category: post.category,
             image: post.image || '',
             published: post.published,
             author: post.author,
-            authorAvatar: post.authorAvatar || '/logo.svg'
+            tags: (post.tags ?? []).join(', '),
         });
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (id: string) => {
-        if (confirm('Are you sure you want to delete this post?')) {
-            const res = await deleteBlogPost(id);
-            if (res.success) {
-                router.refresh();
-            } else {
-                alert('Error deleting post: ' + res.error);
-            }
-        }
+    const handleDelete = async (post: BlogPost) => {
+        if (!confirm(`Delete “${post.title}”? This cannot be undone.`)) return;
+        const res = await deleteBlogPost(post.id);
+        if (res.success) router.refresh();
+        else setError(res.error ?? 'Could not delete that article.');
+    };
+
+    /**
+     * The slug is derived from the title once, when the post is created, and
+     * then left alone.
+     *
+     * The previous version regenerated it from the title on every save. Two
+     * consequences: renaming a published article changed its slug, and two
+     * articles that happened to share a title collided on the table's UNIQUE
+     * constraint and surfaced a raw Postgres error to the author.
+     */
+    const resolveSlug = () => {
+        if (editingPost) return formData.slug || editingPost.slug || slugify(formData.title);
+
+        const base = slugify(formData.slug || formData.title) || 'article';
+        const taken = new Set(initialPosts.map((p) => p.slug));
+        if (!taken.has(base)) return base;
+
+        let n = 2;
+        while (taken.has(`${base}-${n}`)) n += 1;
+        return `${base}-${n}`;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setError('');
 
         try {
             let imageUrl = formData.image;
-            if (tempFile) {
-                imageUrl = await uploadFile(tempFile, 'blog');
-            }
+            if (tempFile) imageUrl = await uploadFile(tempFile, 'blog');
 
-            const slug = formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-            const data = {
-                ...formData,
-                image: imageUrl,
-                slug,
-                tags: [formData.category],
-                publishedAt: formData.published ? new Date().toISOString() : null
+            const tags = formData.tags
+                .split(',')
+                .map((t) => t.trim())
+                .filter(Boolean);
+
+            // Preserve the original publication date. Re-saving a published
+            // article used to stamp it with the current time, which silently
+            // reordered the journal and rewrote the byline date.
+            const publishedAt = formData.published
+                ? editingPost?.publishedAt ?? new Date().toISOString()
+                : null;
+
+            const payload = {
+                title: formData.title.trim(),
+                slug: resolveSlug(),
+                excerpt: formData.excerpt.trim(),
+                content: formData.content,
+                author: formData.author.trim() || 'Mindfire Homes',
+                authorAvatar: '/logo.svg',
+                category: formData.category,
+                image: imageUrl || null,
+                tags: tags.length > 0 ? tags : [formData.category],
+                published: formData.published,
+                publishedAt,
             };
 
-            let res;
-            if (editingPost) {
-                res = await updateBlogPost(editingPost.id, data);
-            } else {
-                res = await createBlogPost(data);
-            }
+            const res = editingPost
+                ? await updateBlogPost(editingPost.id, payload)
+                : await createBlogPost(payload);
 
             if (res.success) {
                 setIsModalOpen(false);
                 router.refresh();
             } else {
-                alert('Error saving post: ' + res.error);
+                setError(res.error ?? 'Could not save that article.');
             }
-        } catch (error: any) {
-            alert('Error uploading file: ' + error.message);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Could not upload that image.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div className="mx-auto max-w-content">
+            <header className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
-                    <h2 className="text-3xl font-display font-bold text-gray-900 dark:text-white mb-1">Blog Management</h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Create and manage content to engage your audience.</p>
+                    <Eyebrow>Content</Eyebrow>
+                    <h1 className="mt-3 font-display text-display-md font-bold tracking-tight text-content">Journal</h1>
+                    <p className="mt-2 max-w-[42rem] text-body text-content-muted">
+                        Articles published to the public journal, plus anything still in draft.
+                    </p>
                 </div>
-                <button
-                    onClick={openAddModal}
-                    className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl shadow-lg shadow-primary/20 flex items-center gap-2 transition-all transform hover:-translate-y-0.5 font-bold"
-                >
-                    <span className="material-icons-outlined">edit_document</span>
-                    New Post
-                </button>
-            </div>
+                <Button onClick={openAddModal} size="lg" icon={<IconPlus size={18} />}>
+                    New article
+                </Button>
+            </header>
 
-            <div className="bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col min-h-[500px]">
-                <div className="overflow-x-auto flex-1">
-                    <table className="w-full text-left border-collapse relative">
-                        <thead className="bg-gray-50/80 dark:bg-gray-800/80 sticky top-0 z-10 backdrop-blur-sm">
+            {error && !isModalOpen && (
+                <p role="alert" className="mb-6 rounded-control border border-red-500/30 bg-red-500/10 px-4 py-3 text-body-sm text-red-600 dark:text-red-400">
+                    {error}
+                </p>
+            )}
+
+            <div className="overflow-hidden rounded-panel border border-hairline/10 bg-surface shadow-soft">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <caption className="sr-only">Journal articles</caption>
+                        <thead className="border-b border-hairline/10 bg-surface-2">
                             <tr>
-                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Post Info</th>
-                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Author</th>
-                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 text-right">Actions</th>
+                                {['Article', 'Author', 'Status', 'Actions'].map((h) => (
+                                    <th
+                                        key={h}
+                                        scope="col"
+                                        className={`whitespace-nowrap px-6 py-4 text-label font-semibold uppercase text-content-muted ${
+                                            h === 'Actions' ? 'text-right' : 'text-left'
+                                        }`}
+                                    >
+                                        {h}
+                                    </th>
+                                ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                        <tbody className="divide-y divide-hairline/10">
                             {initialPosts.map((post) => (
-                                <tr key={post.id} className="group hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                                <tr key={post.id} className="transition-colors hover:bg-surface-2/60">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-4">
-                                            <img src={post.image || '/logo.svg'} alt="" className="w-16 h-12 rounded object-cover shadow-sm" />
-                                            <div className="flex flex-col max-w-sm">
-                                                <span className="font-bold text-gray-900 dark:text-white text-sm truncate">{post.title}</span>
-                                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">{post.category}</span>
+                                            <img
+                                                src={post.image || '/logo.svg'}
+                                                alt=""
+                                                className="h-12 w-16 shrink-0 rounded-control bg-surface-2 object-cover"
+                                            />
+                                            <div className="min-w-0">
+                                                <p className="text-body-sm font-semibold text-content">{post.title}</p>
+                                                <p className="mt-0.5 text-[0.8125rem] text-content-muted">
+                                                    {post.category} · /{post.slug}
+                                                </p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center gap-2">
-                                            <img src={post.authorAvatar || '/logo.svg'} alt="" className="w-6 h-6 rounded-full" />
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{post.author}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
-                                            ${post.published ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800' :
-                                                'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700'}`}>
+                                    <td className="whitespace-nowrap px-6 py-4 text-body-sm text-content">{post.author}</td>
+                                    <td className="whitespace-nowrap px-6 py-4">
+                                        <Badge color={post.published ? 'primary' : 'gray'}>
                                             {post.published ? 'Published' : 'Draft'}
-                                        </span>
+                                        </Badge>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                                        <div className="flex items-center justify-end gap-2">
+                                    <td className="whitespace-nowrap px-6 py-4 text-right">
+                                        <div className="flex items-center justify-end gap-1">
                                             <button
+                                                type="button"
                                                 onClick={() => openEditModal(post)}
-                                                className="text-gray-400 hover:text-primary transition-colors p-2 rounded-lg hover:bg-primary/5"
+                                                aria-label={`Edit ${post.title}`}
+                                                className="inline-flex h-10 w-10 items-center justify-center rounded-pill text-content-muted transition-colors duration-short ease-standard hover:bg-brand-600/10 hover:text-brand-600"
                                             >
-                                                <span className="material-icons-outlined text-xl">edit</span>
+                                                <IconEdit size={18} />
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(post.id)}
-                                                className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                type="button"
+                                                onClick={() => handleDelete(post)}
+                                                aria-label={`Delete ${post.title}`}
+                                                className="inline-flex h-10 w-10 items-center justify-center rounded-pill text-content-muted transition-colors duration-short ease-standard hover:bg-red-500/10 hover:text-red-600"
                                             >
-                                                <span className="material-icons-outlined text-xl">delete_outline</span>
+                                                <IconTrash size={18} />
                                             </button>
                                         </div>
                                     </td>
@@ -194,141 +260,211 @@ export default function BlogManagement({ initialPosts }: { initialPosts: BlogPos
                         </tbody>
                     </table>
                 </div>
+
+                {initialPosts.length === 0 && (
+                    <div className="px-6 py-20 text-center">
+                        <IconFileText size={40} className="mx-auto mb-4 text-content-muted" />
+                        <p className="font-display text-body-lg font-semibold text-content">No articles yet</p>
+                        <p className="mx-auto mt-2 max-w-sm text-body-sm text-content-muted">
+                            Drafts are visible here only. Publishing puts an article on the public journal.
+                        </p>
+                    </div>
+                )}
             </div>
 
-            {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setIsModalOpen(false)}></div>
-                    <div className="relative transform overflow-hidden rounded-2xl bg-surface-light dark:bg-surface-dark text-left shadow-2xl transition-all w-full max-w-3xl border border-gray-200 dark:border-gray-700 flex flex-col max-h-[90vh]">
-                        <div className="bg-primary px-6 py-5 flex justify-between items-center shrink-0">
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="article-modal-title"
+                    className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4"
+                >
+                    <div
+                        role="presentation"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setIsModalOpen(false)}
+                    />
+                    <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-panel border border-hairline/10 bg-surface shadow-elevated">
+                        <div className="flex shrink-0 items-center justify-between border-b border-hairline/10 px-6 py-5">
                             <div>
-                                <span className="text-white/80 text-[10px] font-bold uppercase tracking-widest mb-1 block">{editingPost ? 'Update Post' : 'New Post'}</span>
-                                <h3 className="text-xl font-display font-bold text-white leading-none">{editingPost ? 'Edit Article' : 'Draft Article'}</h3>
+                                <Eyebrow>{editingPost ? 'Update' : 'New'}</Eyebrow>
+                                <h2 id="article-modal-title" className="mt-1.5 font-display text-display-sm font-bold tracking-tight text-content">
+                                    {editingPost ? 'Edit article' : 'Draft article'}
+                                </h2>
                             </div>
-                            <button className="text-white/70 hover:text-white transition-colors p-1" onClick={() => setIsModalOpen(false)}>
-                                <span className="material-icons-outlined">close</span>
+                            <button
+                                type="button"
+                                onClick={() => setIsModalOpen(false)}
+                                aria-label="Close"
+                                className="flex h-10 w-10 items-center justify-center rounded-pill text-content-muted transition-colors hover:bg-content/10"
+                            >
+                                <IconClose size={22} />
                             </button>
                         </div>
 
-                        <div className="px-6 py-6 overflow-y-auto flex-1">
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div className="sm:col-span-2">
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Post Title</label>
+                        <div className="flex-1 overflow-y-auto px-6 py-6">
+                            <form onSubmit={handleSubmit} className="space-y-5" id="article-form">
+                                {error && (
+                                    <p role="alert" className="rounded-control border border-red-500/30 bg-red-500/10 px-4 py-3 text-body-sm text-red-600 dark:text-red-400">
+                                        {error}
+                                    </p>
+                                )}
+
+                                <div>
+                                    <label htmlFor="post-title" className={LABEL}>Title</label>
+                                    <input
+                                        id="post-title"
+                                        type="text"
+                                        required
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                        placeholder="What a buyer should check before paying a deposit"
+                                        className={FIELD}
+                                    />
+                                </div>
+
+                                <div className="grid gap-5 sm:grid-cols-2">
+                                    <div>
+                                        <label htmlFor="post-slug" className={LABEL}>URL slug</label>
                                         <input
+                                            id="post-slug"
                                             type="text"
-                                            required
-                                            value={formData.title}
-                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            placeholder="Engaging title goes here..."
-                                            className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 font-medium outline-none transition-all"
+                                            value={formData.slug}
+                                            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                                            placeholder={slugify(formData.title) || 'auto-generated'}
+                                            className={FIELD}
                                         />
+                                        <p className="mt-1.5 text-[0.75rem] text-content-muted">
+                                            {editingPost
+                                                ? 'Changing this breaks any existing links to the article.'
+                                                : 'Left blank, it is generated from the title.'}
+                                        </p>
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Category</label>
+                                        <label htmlFor="post-category" className={LABEL}>Category</label>
                                         <select
+                                            id="post-category"
                                             value={formData.category}
                                             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                            className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 font-medium outline-none transition-all cursor-pointer"
+                                            className={`${FIELD} cursor-pointer`}
                                         >
-                                            <option>Market Trends</option>
-                                            <option>Design</option>
-                                            <option>Finance</option>
-                                            <option>Home Improvement</option>
+                                            {CATEGORIES.map((c) => (
+                                                <option key={c}>{c}</option>
+                                            ))}
                                         </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Status</label>
-                                        <div className="flex items-center mt-3">
-                                            <input
-                                                type="checkbox"
-                                                id="published"
-                                                checked={formData.published}
-                                                onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
-                                                className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
-                                            />
-                                            <label htmlFor="published" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">Publish Immediately</label>
-                                        </div>
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Excerpt (Short Summary)</label>
-                                        <textarea
-                                            rows={2}
-                                            required
-                                            value={formData.excerpt}
-                                            onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                                            placeholder="A short summary for the blog grid..."
-                                            className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 font-medium outline-none transition-all"
-                                        ></textarea>
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Cover Image</label>
-                                        <div
-                                            onClick={() => imageRef.current?.click()}
-                                            className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-6 text-center hover:border-primary transition-colors cursor-pointer bg-gray-50 dark:bg-gray-800/50"
-                                        >
-                                            {tempFile || formData.image ? (
-                                                <div className="flex items-center justify-center gap-4">
-                                                    <img
-                                                        src={tempFile ? URL.createObjectURL(tempFile) : formData.image}
-                                                        className="h-16 w-16 object-cover rounded-lg shadow-sm"
-                                                        alt="Preview"
-                                                    />
-                                                    <div className="text-left">
-                                                        <p className="text-sm font-bold text-gray-900 dark:text-white">Image Selected</p>
-                                                        <p className="text-xs text-primary font-bold mt-1">Click to replace</p>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <span className="material-icons-outlined text-3xl text-gray-400 mb-2">add_photo_alternate</span>
-                                                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400">Click to upload cover image</p>
-                                                </>
-                                            )}
-                                            <input
-                                                type="file"
-                                                hidden
-                                                ref={imageRef}
-                                                accept="image/*"
-                                                onChange={(e) => setTempFile(e.target.files?.[0] || null)}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-700 dark:text-gray-300 mb-2">Main Content</label>
-                                        <textarea
-                                            rows={12}
-                                            required
-                                            value={formData.content}
-                                            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                            placeholder="Write your content here (Markdown or HTML supported)..."
-                                            className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 font-medium outline-none transition-all resize-y"
-                                        ></textarea>
                                     </div>
                                 </div>
 
-                                <div className="flex justify-end gap-3 mt-8">
+                                <div className="grid gap-5 sm:grid-cols-2">
+                                    <div>
+                                        <label htmlFor="post-author" className={LABEL}>Author</label>
+                                        <input
+                                            id="post-author"
+                                            type="text"
+                                            value={formData.author}
+                                            onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                                            className={FIELD}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="post-tags" className={LABEL}>Tags</label>
+                                        <input
+                                            id="post-tags"
+                                            type="text"
+                                            value={formData.tags}
+                                            onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                                            placeholder="title, abuja, deposits"
+                                            className={FIELD}
+                                        />
+                                        <p className="mt-1.5 text-[0.75rem] text-content-muted">Comma separated.</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="post-excerpt" className={LABEL}>Excerpt</label>
+                                    <textarea
+                                        id="post-excerpt"
+                                        rows={2}
+                                        required
+                                        value={formData.excerpt}
+                                        onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                                        placeholder="One or two sentences — this is the search-result description as well as the card summary."
+                                        className={FIELD}
+                                    />
+                                    <p className="mt-1.5 text-[0.75rem] text-content-muted">
+                                        {formData.excerpt.length}/160 characters used by search engines.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <span className={LABEL}>Cover image</span>
                                     <button
                                         type="button"
-                                        className="px-6 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                                        onClick={() => setIsModalOpen(false)}
+                                        onClick={() => imageRef.current?.click()}
+                                        className="flex w-full cursor-pointer items-center justify-center rounded-control border-2 border-dashed border-hairline/15 bg-surface-2 p-6 text-center transition-colors duration-short ease-standard hover:border-brand-600"
                                     >
-                                        Cancel
+                                        {preview ? (
+                                            <span className="flex items-center gap-4">
+                                                <img src={preview} className="h-16 w-24 rounded-control object-cover" alt="" />
+                                                <span className="text-left">
+                                                    <span className="block text-body-sm font-semibold text-content">Image selected</span>
+                                                    <span className="mt-0.5 block text-[0.8125rem] font-semibold text-brand-600">Click to replace</span>
+                                                </span>
+                                            </span>
+                                        ) : (
+                                            <span className="flex flex-col items-center gap-2 text-content-muted">
+                                                <IconImage size={28} />
+                                                <span className="text-body-sm font-medium">Click to upload a cover image</span>
+                                            </span>
+                                        )}
                                     </button>
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className="px-8 py-2.5 rounded-lg bg-primary text-white font-bold hover:bg-primary-dark shadow-lg shadow-primary/20 transition-all disabled:opacity-50"
-                                    >
-                                        {isSubmitting ? 'Saving...' : editingPost ? 'Update Post' : 'Publish Post'}
-                                    </button>
+                                    <input
+                                        type="file"
+                                        hidden
+                                        ref={imageRef}
+                                        accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
+                                        onChange={(e) => setTempFile(e.target.files?.[0] || null)}
+                                    />
                                 </div>
+
+                                <div>
+                                    <label htmlFor="post-content" className={LABEL}>Article body</label>
+                                    <textarea
+                                        id="post-content"
+                                        rows={12}
+                                        required
+                                        value={formData.content}
+                                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                                        placeholder="<p>The body is sanitised against an allowlist before it renders.</p>"
+                                        className={`${FIELD} resize-y font-mono text-[0.8125rem]`}
+                                    />
+                                </div>
+
+                                <label className="flex cursor-pointer items-center gap-3 rounded-control border border-hairline/15 px-4 py-3">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.published}
+                                        onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
+                                        className="h-4 w-4 rounded border-hairline/30 text-brand-600 focus:ring-brand-600"
+                                    />
+                                    <span className="text-body-sm font-medium text-content">
+                                        Published — visible on the public journal
+                                    </span>
+                                </label>
                             </form>
+                        </div>
+
+                        <div className="flex shrink-0 justify-end gap-3 border-t border-hairline/10 px-6 py-4">
+                            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" form="article-form" disabled={isSubmitting}>
+                                {isSubmitting ? 'Saving…' : editingPost ? 'Save changes' : 'Create article'}
+                            </Button>
                         </div>
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 }

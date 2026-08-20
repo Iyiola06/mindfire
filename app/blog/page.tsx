@@ -1,9 +1,42 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { PublicLayout } from '@/components/layout/PublicLayout';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { Reveal } from '@/components/motion/Reveal';
+import { Badge } from '@/components/ui/Badge';
+import { ButtonLink } from '@/components/ui/Button';
 import { supabase } from '@/lib/supabase';
+import { absoluteUrl, breadcrumbJsonLd, SITE } from '@/lib/seo';
+import { IconFileText } from '@/components/icons';
 
-export const revalidate = 60; // Revalidate every minute
+export const revalidate = 60;
+
+export const metadata: Metadata = {
+    title: 'Journal — notes on buying property in Abuja',
+    description:
+        'Title verification, payment structures, district infrastructure, and what to check before you commit — what we have learned buying and selling in Abuja.',
+    alternates: { canonical: '/blog' },
+    openGraph: {
+        type: 'website',
+        url: absoluteUrl('/blog'),
+        title: `Journal | ${SITE.name}`,
+        description:
+            'Notes on buying property in Abuja — title verification, payment structures, and district infrastructure.',
+    },
+};
+
+/** `blog_posts` stores `publishedAt`, not `date`. The previous version read
+    `post.date`, a column that does not exist, so every card rendered a blank
+    line where the date should be. */
+const formatDate = (post: { publishedAt?: string | null; createdAt?: string | null }) => {
+    const raw = post.publishedAt ?? post.createdAt;
+    if (!raw) return null;
+    const d = new Date(raw);
+    return Number.isNaN(d.getTime())
+        ? null
+        : d.toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' });
+};
 
 export default async function BlogPage() {
     const { data: posts, error } = await supabase
@@ -12,92 +45,124 @@ export default async function BlogPage() {
         .eq('published', true)
         .order('publishedAt', { ascending: false });
 
-    if (error) {
-        console.error('Error fetching blog posts:', error);
-    }
+    if (error) console.error('Error fetching blog posts:', error);
 
-    const featuredPost = posts && posts.length > 0 ? posts[0] : null;
-    const otherPosts = posts && posts.length > 1 ? posts.slice(1) : [];
+    const [featuredPost, ...otherPosts] = posts ?? [];
 
     return (
         <PublicLayout>
-            <div className="bg-background-light dark:bg-background-dark min-h-screen pt-24 pb-16">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify(
+                        breadcrumbJsonLd([
+                            { name: 'Home', path: '/' },
+                            { name: 'Journal', path: '/blog' },
+                        ]),
+                    ),
+                }}
+            />
 
-                    <div className="mb-12 border-b border-gray-200 dark:border-gray-800 pb-8 text-center md:text-left">
-                        <p className="text-secondary font-bold text-xs uppercase tracking-widest mb-2">Insights & News</p>
-                        <h1 className="font-display text-4xl md:text-6xl font-bold text-gray-900 dark:text-white">
-                            Mindfire <span className="text-primary italic">Journal</span>
-                        </h1>
-                        <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl">
-                            Expert advice, market trends, and design inspiration for the modern real estate investor.
-                        </p>
-                    </div>
+            <PageHeader
+                eyebrow="Insights and market notes"
+                title="Journal"
+                lede="What we have learned buying and selling in Abuja — title verification, payment structures, district infrastructure, and the questions worth asking before you commit."
+            />
 
-                    {/* Featured Post */}
+            <div className="bg-bg pb-section pt-section-sm">
+                <div className="mx-auto max-w-content px-gutter">
                     {featuredPost && (
-                        <div className="mb-16">
-                            <Link href={`/blog/${featuredPost.id}`} className="group block relative rounded-2xl overflow-hidden shadow-xl aspect-auto md:aspect-[21/9]">
+                        <Reveal>
+                            <Link
+                                href={`/blog/${featuredPost.id}`}
+                                className="group relative block overflow-hidden rounded-showcase shadow-ambient"
+                            >
                                 <img
                                     src={featuredPost.image}
-                                    alt={featuredPost.title}
-                                    className="w-full h-[500px] md:h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                    alt=""
+                                    className="h-[24rem] w-full object-cover transition-transform duration-spatial ease-standard group-hover:scale-105 md:h-[32rem]"
+                                    fetchPriority="high"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                                {/* Decorative alt above: the headline immediately
+                                    below already carries the meaning, so an
+                                    announced duplicate would be noise. */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                                 <div className="absolute bottom-0 left-0 w-full p-6 md:p-12">
-                                    <span className="inline-block bg-primary text-white text-xs font-bold px-3 py-1 rounded uppercase tracking-wider mb-4">
-                                        {featuredPost.category}
-                                    </span>
-                                    <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-4 group-hover:text-secondary transition-colors max-w-4xl">
+                                    <Badge color="primary">{featuredPost.category}</Badge>
+                                    <h2 className="mt-4 max-w-4xl font-display text-[clamp(1.5rem,3vw,2.5rem)] font-bold leading-[1.1] tracking-[-0.025em] text-white">
                                         {featuredPost.title}
                                     </h2>
-                                    <p className="text-gray-300 md:text-lg mb-6 max-w-3xl line-clamp-2 md:line-clamp-none">
+                                    <p className="mt-3 max-w-[42rem] text-body-lg text-white/80">
                                         {featuredPost.excerpt}
                                     </p>
-                                    <div className="flex items-center gap-4">
-                                        <img src={featuredPost.authorAvatar} alt={featuredPost.author} className="w-10 h-10 rounded-full border-2 border-white" />
-                                        <div className="text-sm">
-                                            <p className="font-bold text-white">{featuredPost.author}</p>
-                                            <p className="text-gray-400">{featuredPost.date}</p>
-                                        </div>
-                                    </div>
+                                    <p className="mt-5 text-body-sm font-medium text-white/70">
+                                        {featuredPost.author}
+                                        {formatDate(featuredPost) && ` · ${formatDate(featuredPost)}`}
+                                    </p>
                                 </div>
                             </Link>
+                        </Reveal>
+                    )}
+
+                    {otherPosts.length > 0 && (
+                        <div className="grid grid-cols-1 gap-7 pt-14 md:grid-cols-2 lg:grid-cols-3">
+                            {otherPosts.map((post, i) => (
+                                <Reveal key={post.id} delay={(i % 3) * 80}>
+                                    <Link
+                                        href={`/blog/${post.id}`}
+                                        className="group flex h-full flex-col overflow-hidden rounded-showcase border border-hairline/[0.06] bg-surface p-3 shadow-ambient transition-all duration-short ease-standard hover:-translate-y-1 hover:shadow-lift"
+                                    >
+                                        <div className="relative aspect-[16/10] shrink-0 overflow-hidden rounded-surface">
+                                            <img
+                                                src={post.image}
+                                                alt=""
+                                                className="h-full w-full object-cover transition-transform duration-spatial ease-standard group-hover:scale-105"
+                                                loading="lazy"
+                                            />
+                                            <span className="absolute left-3.5 top-3.5">
+                                                <Badge color="overlay">{post.category}</Badge>
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-1 flex-col px-3 pb-2 pt-5">
+                                            {formatDate(post) && (
+                                                <p className="mb-2 text-body-sm text-content-muted">{formatDate(post)}</p>
+                                            )}
+                                            <h3 className="font-display text-body-lg font-semibold tracking-tight text-content transition-colors duration-short ease-standard group-hover:text-brand-600">
+                                                {post.title}
+                                            </h3>
+                                            <p className="mt-3 line-clamp-3 text-body-sm text-content-muted">
+                                                {post.excerpt}
+                                            </p>
+                                            <p className="mt-auto border-t border-hairline/10 pt-4 text-body-sm font-medium text-content">
+                                                {post.author}
+                                            </p>
+                                        </div>
+                                    </Link>
+                                </Reveal>
+                            ))}
                         </div>
                     )}
 
-                    {/* Post Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {otherPosts.map(post => (
-                            <Link key={post.id} href={`/blog/${post.id}`} className="group bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-soft border border-gray-200 dark:border-gray-800 hover:shadow-hover hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
-                                <div className="relative h-60 overflow-hidden">
-                                    <img src={post.image} alt={post.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                    <div className="absolute top-4 left-4 bg-white/90 dark:bg-black/70 backdrop-blur-sm text-gray-900 dark:text-white text-xs font-bold px-3 py-1 rounded uppercase tracking-wider shadow-sm">
-                                        {post.category}
-                                    </div>
-                                </div>
-                                <div className="p-6 flex flex-col flex-1">
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium">{post.date}</p>
-                                    <h3 className="font-display text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-primary transition-colors line-clamp-2">
-                                        {post.title}
-                                    </h3>
-                                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 line-clamp-3">
-                                        {post.excerpt}
-                                    </p>
-                                    <div className="mt-auto flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
-                                        <img src={post.authorAvatar} alt={post.author} className="w-8 h-8 rounded-full" />
-                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{post.author}</span>
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
+                    {/* The previous version ended with a "Load More Articles"
+                        button that was wired to nothing. Every published post is
+                        on this page; when the archive grows past a single screen
+                        this becomes real pagination rather than a decoy. */}
 
-                    <div className="mt-16 flex justify-center">
-                        <button className="bg-transparent border-2 border-primary text-primary hover:bg-primary hover:text-white px-8 py-3 rounded-xl font-bold transition-colors">
-                            Load More Articles
-                        </button>
-                    </div>
+                    {!featuredPost && (
+                        <div className="rounded-showcase border border-hairline/[0.06] bg-surface py-24 text-center shadow-ambient">
+                            <IconFileText size={44} className="mx-auto mb-4 text-content-muted" />
+                            <p className="font-display text-display-sm font-semibold text-content">
+                                No articles published yet
+                            </p>
+                            <p className="mx-auto mt-2 max-w-md text-body text-content-muted">
+                                We are writing up what we know about buying in Abuja. In the meantime, an
+                                advisor can answer the same questions directly.
+                            </p>
+                            <ButtonLink href="/contact" className="mt-7">
+                                Ask an advisor
+                            </ButtonLink>
+                        </div>
+                    )}
                 </div>
             </div>
         </PublicLayout>

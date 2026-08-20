@@ -1,231 +1,156 @@
-'use client';
-
-import React, { useState } from 'react';
+import type { Metadata } from 'next';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { createLead } from '@/lib/actions';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { ContactForm } from '@/components/contact/ContactForm';
+import { Reveal } from '@/components/motion/Reveal';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { OFFICE, displayPhone, mailtoHref, whatsappHref } from '@/lib/contact';
+import { absoluteUrl, breadcrumbJsonLd, SITE } from '@/lib/seo';
+import { IconClock, IconMail, IconMapPin, IconPhone, IconWhatsApp } from '@/components/icons';
+
+export const metadata: Metadata = {
+    title: 'Contact us — Abuja property advisors',
+    description:
+        'Questions about a property, a viewing to arrange, or a development to discuss — contact the Mindfire Homes advisory team in Abuja.',
+    alternates: { canonical: '/contact' },
+    openGraph: {
+        type: 'website',
+        url: absoluteUrl('/contact'),
+        title: `Contact ${SITE.name}`,
+        description: 'Arrange a viewing or ask about a property. We reply within one business day.',
+    },
+};
+
+const INFO_CARDS = [
+    {
+        icon: IconMapPin,
+        label: 'Office',
+        render: () => (
+            <>
+                {OFFICE.name}
+                <br />
+                {OFFICE.streetLine ? (
+                    <>
+                        {OFFICE.streetLine}
+                        <br />
+                    </>
+                ) : null}
+                {OFFICE.cityLine}
+            </>
+        ),
+    },
+    {
+        icon: IconMail,
+        label: 'Email',
+        render: () => (
+            <a href={mailtoHref('Hello Mindfire Homes')} className="hover:underline">
+                {OFFICE.email}
+            </a>
+        ),
+    },
+    {
+        icon: IconClock,
+        label: 'Office hours',
+        render: () => OFFICE.hours,
+    },
+];
 
 export default function ContactPage() {
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
-    const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        subject: 'General Inquiry',
-        message: ''
-    });
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-
-        const data = {
-            name: `${formData.firstName} ${formData.lastName}`.trim(),
-            email: formData.email,
-            phone: formData.phone,
-            budget: '$0 - $1M+', // Placeholder/Default
-            propertyInterest: formData.subject,
-            message: formData.message
-        };
-
-        const res = await createLead(data);
-        setIsSubmitting(false);
-
-        if (res.success) {
-            setIsSuccess(true);
-            setFormData({
-                firstName: '',
-                lastName: '',
-                email: '',
-                phone: '',
-                subject: 'General Inquiry',
-                message: ''
-            });
-        } else {
-            alert('Error sending message: ' + res.error);
-        }
-    };
-
     return (
         <PublicLayout>
-            <div className="bg-background-light dark:bg-background-dark min-h-screen pt-24 pb-20">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify(
+                        breadcrumbJsonLd([
+                            { name: 'Home', path: '/' },
+                            { name: 'Contact', path: '/contact' },
+                        ]),
+                    ),
+                }}
+            />
 
-                {/* Header */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16 text-center">
-                    <p className="text-secondary font-bold text-xs uppercase tracking-widest mb-3">We're Here to Help</p>
-                    <h1 className="font-display text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-                        Get in <span className="text-primary italic">Touch</span>
-                    </h1>
-                    <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                        Have a question about a property, want to schedule a viewing, or just want to chat about your real estate goals? We'd love to hear from you.
-                    </p>
-                </div>
+            <PageHeader
+                eyebrow="We are here to help"
+                title="Get in touch"
+                align="center"
+                lede={`A question about a property, a viewing to arrange, or a development to discuss — the advisory team will come back to you ${OFFICE.responseTime}.`}
+            />
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
-
-                        {/* Contact Information (Left) */}
-                        <div className="lg:w-1/3 space-y-10">
-                            <div className="bg-surface-light dark:bg-surface-dark rounded-2xl p-8 shadow-sm border border-gray-200 dark:border-gray-800">
-                                <h3 className="font-display text-2xl font-bold text-gray-900 dark:text-white mb-6">Contact Details</h3>
+            <div className="bg-bg pb-section pt-section-sm">
+                <div className="mx-auto max-w-content px-gutter">
+                    <div className="grid gap-10 lg:grid-cols-5 lg:gap-14">
+                        <Reveal className="space-y-6 lg:col-span-2">
+                            <div className="rounded-showcase border border-hairline/[0.06] bg-surface p-8 shadow-ambient">
+                                <Eyebrow>Direct</Eyebrow>
+                                <h2 className="mb-6 mt-2 font-display text-display-sm font-semibold tracking-tight text-content">
+                                    Contact details
+                                </h2>
 
                                 <div className="space-y-6">
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
-                                            <span className="material-icons-outlined" aria-hidden="true">location_on</span>
+                                    {INFO_CARDS.map(({ icon: Glyph, label, render }) => (
+                                        <div key={label} className="flex items-start gap-4">
+                                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-brand-600/[0.09] text-brand-600">
+                                                <Glyph size={22} />
+                                            </div>
+                                            <div>
+                                                <p className="mb-1 text-eyebrow font-semibold uppercase text-content-muted">
+                                                    {label}
+                                                </p>
+                                                <p className="text-body text-content">{render()}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider mb-1">Headquarters</p>
-                                            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                                                123 Luxury Boulevard,<br />
-                                                Suite 400, Beverly Hills,<br />
-                                                CA 90210
-                                            </p>
-                                        </div>
-                                    </div>
+                                    ))}
 
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
-                                            <span className="material-icons-outlined" aria-hidden="true">phone</span>
+                                    {/* Only rendered once the owner supplies the real
+                                        number — see lib/contact.ts. */}
+                                    {OFFICE.phoneE164 && (
+                                        <div className="flex items-start gap-4">
+                                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-brand-600/[0.09] text-brand-600">
+                                                <IconPhone size={22} />
+                                            </div>
+                                            <div>
+                                                <p className="mb-1 text-eyebrow font-semibold uppercase text-content-muted">
+                                                    Call us
+                                                </p>
+                                                <p className="text-body text-content">
+                                                    <a href={`tel:${OFFICE.phoneE164}`} className="hover:underline">
+                                                        {displayPhone(OFFICE.phoneE164)}
+                                                    </a>
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider mb-1">Call Us</p>
-                                            <p className="text-gray-600 dark:text-gray-400 text-sm">Main: +1 (555) 123-4567</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
-                                            <span className="material-icons-outlined" aria-hidden="true">email</span>
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider mb-1">Email</p>
-                                            <p className="text-gray-600 dark:text-gray-400 text-sm">hello@mindfirehomes.com</p>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Contact Form (Right) */}
-                        <div className="lg:w-2/3">
-                            <div className="bg-surface-light dark:bg-surface-dark rounded-2xl p-8 md:p-12 shadow-xl border border-gray-200 dark:border-gray-800 h-full">
-                                {isSuccess ? (
-                                    <div className="text-center py-20">
-                                        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-6 scale-110">
-                                            <span className="material-icons-outlined text-4xl">check_circle</span>
-                                        </div>
-                                        <h3 className="text-3xl font-display font-bold text-gray-900 dark:text-white mb-4">Message Sent!</h3>
-                                        <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-8">Thank you for reaching out. One of our elite agents will contact you within 24 hours.</p>
-                                        <button
-                                            onClick={() => setIsSuccess(false)}
-                                            className="text-primary font-bold hover:underline"
-                                        >
-                                            Send another message
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <h3 className="font-display text-3xl font-bold text-gray-900 dark:text-white mb-2">Send a Message</h3>
-                                        <p className="text-gray-500 dark:text-gray-400 mb-8">Fill out the form below and one of our agents will get back to you shortly.</p>
+                            {OFFICE.phoneE164 && (
+                                <div className="rounded-showcase border border-hairline/[0.06] bg-surface p-8 shadow-ambient">
+                                    <h2 className="mb-3 font-display text-display-sm font-semibold tracking-tight text-content">
+                                        Prefer WhatsApp?
+                                    </h2>
+                                    <p className="mb-6 text-body-sm text-content-muted">
+                                        Message the team directly and get an answer at your own pace.
+                                    </p>
+                                    <a
+                                        href={whatsappHref(
+                                            OFFICE.phoneE164,
+                                            'Hello, I have a question about Mindfire Homes.',
+                                        )}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex h-12 items-center justify-center gap-2 rounded-pill border border-hairline/15 px-6 font-semibold text-content transition-colors duration-short ease-standard hover:border-brand-600 hover:text-brand-600"
+                                    >
+                                        <IconWhatsApp size={20} />
+                                        Message on WhatsApp
+                                    </a>
+                                </div>
+                            )}
+                        </Reveal>
 
-                                        <form onSubmit={handleSubmit} className="space-y-6">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="firstName">First Name</label>
-                                                    <input
-                                                        type="text"
-                                                        id="firstName"
-                                                        required
-                                                        value={formData.firstName}
-                                                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                                        placeholder="John"
-                                                        className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="lastName">Last Name</label>
-                                                    <input
-                                                        type="text"
-                                                        id="lastName"
-                                                        required
-                                                        value={formData.lastName}
-                                                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                                        placeholder="Doe"
-                                                        className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="email">Email Address</label>
-                                                    <input
-                                                        type="email"
-                                                        id="email"
-                                                        required
-                                                        value={formData.email}
-                                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                        placeholder="john@example.com"
-                                                        className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="phone">Phone Number</label>
-                                                    <input
-                                                        type="tel"
-                                                        id="phone"
-                                                        required
-                                                        value={formData.phone}
-                                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                                        placeholder="+1 (555) 000-0000"
-                                                        className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="subject">Subject</label>
-                                                <select
-                                                    id="subject"
-                                                    value={formData.subject}
-                                                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                                                    className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors cursor-pointer"
-                                                >
-                                                    <option>I want to buy a property</option>
-                                                    <option>I want to sell my property</option>
-                                                    <option>I'm looking for an investment</option>
-                                                    <option>General Inquiry</option>
-                                                </select>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest" htmlFor="message">Your Message</label>
-                                                <textarea
-                                                    id="message"
-                                                    rows={5}
-                                                    required
-                                                    value={formData.message}
-                                                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                                                    placeholder="How can we help you?"
-                                                    className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-primary focus:ring-primary px-4 py-3 outline-none transition-colors resize-none"
-                                                ></textarea>
-                                            </div>
-
-                                            <button
-                                                type="submit"
-                                                disabled={isSubmitting}
-                                                className="bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-primary/30 transition-transform active:scale-95 flex items-center justify-center gap-2 w-full md:w-auto min-w-[200px] disabled:opacity-50"
-                                            >
-                                                {isSubmitting ? 'Sending...' : 'Send Message'}
-                                                <span className="material-icons-outlined text-sm" aria-hidden="true">send</span>
-                                            </button>
-                                        </form>
-                                    </>
-                                )}
-                            </div>
-                        </div>
+                        <Reveal delay={100} className="lg:col-span-3">
+                            <ContactForm />
+                        </Reveal>
                     </div>
                 </div>
             </div>

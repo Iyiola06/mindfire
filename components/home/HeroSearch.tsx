@@ -2,90 +2,156 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { IconSearch } from '@/components/icons';
+
+/**
+ * Abuja districts, spelled as the market spells them. These are the values a
+ * buyer types, so they are also what the free-text search matches against
+ * property names and addresses.
+ */
+const LOCATIONS = [
+    'All Locations',
+    'Maitama',
+    'Asokoro',
+    'Wuse II',
+    'Jabi',
+    'Guzape',
+    'Gwarinpa',
+    'Katampe Extension',
+    'Lokogoma',
+    'Lugbe',
+];
+
+/** "Appartment" was the previous spelling. */
+const TYPES = ['All Types', 'Apartment', 'Terrace', 'Duplex', 'Penthouse', 'Villa', 'Land', 'Commercial'];
+
+/** Values are the numeric bounds handed to the listing page, so the label and
+    the filter can never drift apart. `''` means unbounded on that side. */
+const BUDGETS: { label: string; min: string; max: string }[] = [
+    { label: 'Any budget', min: '', max: '' },
+    { label: 'Under ₦50M', min: '', max: '50000000' },
+    { label: '₦50M – ₦100M', min: '50000000', max: '100000000' },
+    { label: '₦100M – ₦250M', min: '100000000', max: '250000000' },
+    { label: '₦250M – ₦500M', min: '250000000', max: '500000000' },
+    { label: 'Above ₦500M', min: '500000000', max: '' },
+];
+
+const FIELD_LABEL = 'block text-label font-semibold uppercase text-content-muted';
+const FIELD_CONTROL =
+    'mt-1 w-full cursor-pointer border-none bg-transparent p-0 font-display text-base font-semibold text-content outline-none focus:ring-0';
 
 export const HeroSearch = () => {
     const router = useRouter();
-    const [intent, setIntent] = useState('Buy Property');
-    const [location, setLocation] = useState('');
-    const [type, setType] = useState('All Types');
+    const [intent, setIntent] = useState('Buy');
+    const [location, setLocation] = useState(LOCATIONS[0]);
+    const [type, setType] = useState(TYPES[0]);
+    const [budget, setBudget] = useState(BUDGETS[0].label);
 
     const handleSearch = () => {
         const params = new URLSearchParams();
 
-        // Map Intent to Status
-        if (intent === 'Buy Property') params.set('status', 'For Sale');
-        if (intent === 'Rent Home') params.set('status', 'For Rent');
+        if (intent === 'Buy') params.set('status', 'For Sale');
+        if (intent === 'Rent') params.set('status', 'For Rent');
 
-        // Map Location & Type to Search
-        // We'll combine them since PropertiesList search covers name/address. 
-        // Ideally we'd have a separate type filter, but for now this works if types are in names/tags.
-        const searchTerms = [];
-        if (location) searchTerms.push(location);
-        if (type !== 'All Types') searchTerms.push(type);
+        // Location and type are their own params rather than being flattened
+        // into `search`, so the listing page can render them as removable chips
+        // and the browser back button restores each one independently.
+        if (location !== LOCATIONS[0]) params.set('location', location);
+        if (type !== TYPES[0]) params.set('type', type);
 
-        if (searchTerms.length > 0) {
-            params.set('search', searchTerms.join(' '));
-        }
+        const chosen = BUDGETS.find((b) => b.label === budget);
+        if (chosen?.min) params.set('minPrice', chosen.min);
+        if (chosen?.max) params.set('maxPrice', chosen.max);
 
         router.push(`/properties?${params.toString()}`);
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') handleSearch();
-    };
-
     return (
-        <div className="w-full max-w-4xl bg-surface-light dark:bg-surface-dark/95 backdrop-blur-md rounded-2xl shadow-2xl p-4 md:p-6 transform translate-y-8 md:translate-y-12 border border-white/10">
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 pb-3 md:pb-0 md:pr-6">
-                    <label className="block text-[10px] font-bold text-text-muted-light dark:text-text-muted-dark uppercase tracking-widest mb-1">Looking to</label>
+        <form
+            role="search"
+            aria-label="Property search"
+            onSubmit={(e) => {
+                e.preventDefault();
+                handleSearch();
+            }}
+            className="glass-elevated w-full max-w-4xl rounded-showcase p-4 text-content shadow-ambient md:p-5"
+        >
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-0">
+                <div className="md:flex-1 md:border-r md:border-hairline/15 md:pr-5">
+                    <label htmlFor="hero-intent" className={FIELD_LABEL}>
+                        Looking to
+                    </label>
                     <select
+                        id="hero-intent"
                         value={intent}
                         onChange={(e) => setIntent(e.target.value)}
-                        aria-label="Looking to buy or rent"
-                        className="w-full bg-transparent border-none text-text-main-light dark:text-white font-display font-semibold text-base sm:text-lg p-0 focus:ring-0 cursor-pointer outline-none"
+                        className={FIELD_CONTROL}
                     >
-                        <option>Buy Property</option>
-                        <option>Rent Home</option>
+                        <option>Buy</option>
+                        <option>Rent</option>
                     </select>
                 </div>
-                <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 pb-3 md:pb-0 md:pr-6">
-                    <label className="block text-[10px] font-bold text-text-muted-light dark:text-text-muted-dark uppercase tracking-widest mb-1">Location</label>
-                    <input
-                        type="text"
+
+                <div className="md:flex-1 md:border-r md:border-hairline/15 md:px-5">
+                    <label htmlFor="hero-location" className={FIELD_LABEL}>
+                        Location
+                    </label>
+                    <select
+                        id="hero-location"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        aria-label="Search by location"
-                        placeholder="City, Zip, or Address"
-                        className="w-full bg-transparent border-none text-text-main-light dark:text-white font-display font-semibold text-base sm:text-lg p-0 focus:ring-0 placeholder-gray-400 outline-none"
-                    />
-                </div>
-                <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 pb-3 md:pb-0 md:pr-6">
-                    <label className="block text-[10px] font-bold text-text-muted-light dark:text-text-muted-dark uppercase tracking-widest mb-1">Type</label>
-                    <select
-                        value={type}
-                        onChange={(e) => setType(e.target.value)}
-                        aria-label="Property type"
-                        className="w-full bg-transparent border-none text-text-main-light dark:text-white font-display font-semibold text-base sm:text-lg p-0 focus:ring-0 cursor-pointer outline-none"
+                        className={FIELD_CONTROL}
                     >
-                        <option>All Types</option>
-                        <option>Villa</option>
-                        <option>Penthouse</option>
-                        <option>Appartment</option>
-                        <option>Mansion</option>
+                        {LOCATIONS.map((l) => (
+                            <option key={l}>{l}</option>
+                        ))}
                     </select>
                 </div>
-                <div className="md:w-auto flex items-end pt-2 md:pt-0">
-                    <button
-                        onClick={handleSearch}
-                        aria-label="Search Properties"
-                        className="w-full md:w-auto bg-primary hover:bg-primary-dark text-white px-8 h-full min-h-[50px] rounded-xl font-bold text-base sm:text-lg shadow-lg shadow-primary/30 transition-all flex items-center justify-center gap-2"
+
+                <div className="md:flex-1 md:border-r md:border-hairline/15 md:px-5">
+                    <label htmlFor="hero-type" className={FIELD_LABEL}>
+                        Property type
+                    </label>
+                    <select
+                        id="hero-type"
+                        value={type}
+                        onChange={(e) => setType(e.target.value)}
+                        className={FIELD_CONTROL}
                     >
-                        <span className="material-icons-outlined">search</span> Search
+                        {TYPES.map((t) => (
+                            <option key={t}>{t}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="md:flex-1 md:px-5">
+                    <label htmlFor="hero-budget" className={FIELD_LABEL}>
+                        Budget
+                    </label>
+                    <select
+                        id="hero-budget"
+                        value={budget}
+                        onChange={(e) => setBudget(e.target.value)}
+                        className={FIELD_CONTROL}
+                    >
+                        {BUDGETS.map((b) => (
+                            <option key={b.label}>{b.label}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* min-h-[44px] is the touch-target floor, and the button keeps
+                    its visible label so the icon stays decorative. */}
+                <div className="md:pl-5">
+                    <button
+                        type="submit"
+                        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-pill bg-brand-600 px-8 py-3 font-semibold text-white shadow-cta transition-colors duration-short ease-standard hover:bg-brand-700 md:w-auto"
+                    >
+                        <IconSearch size={20} />
+                        Search
                     </button>
                 </div>
             </div>
-        </div>
+        </form>
     );
 };

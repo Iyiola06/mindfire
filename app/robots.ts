@@ -1,14 +1,23 @@
 import { MetadataRoute } from 'next';
-
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mindfirehomes.com';
+import { absoluteUrl, BASE_URL } from '@/lib/seo';
 
 export default function robots(): MetadataRoute.Robots {
     return {
-        rules: {
-            userAgent: '*',
-            allow: '/',
-            disallow: ['/admin/', '/api/'],
-        },
-        sitemap: `${BASE_URL}/sitemap.xml`,
+        rules: [
+            {
+                userAgent: '*',
+                allow: '/',
+                /**
+                 * `/design-system` is an internal acceptance page; it also
+                 * carries `robots: noindex`, and this stops it being crawled at
+                 * all. The API routes return JSON, and `/admin` is behind a
+                 * session — a crawler following a link there gets a redirect to
+                 * a sign-in screen, which is wasted crawl budget either way.
+                 */
+                disallow: ['/admin', '/api/', '/design-system'],
+            },
+        ],
+        sitemap: absoluteUrl('/sitemap.xml'),
+        host: BASE_URL,
     };
 }

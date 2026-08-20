@@ -1,194 +1,385 @@
 import React from 'react';
 import Link from 'next/link';
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { notFound } from 'next/navigation';
 import { Property } from '@/types';
 import { PropertyContactForm } from '@/components/properties/PropertyContactForm';
+import { Chip } from '@/components/ui/Chip';
+import { Eyebrow } from '@/components/ui/Eyebrow';
+import { absoluteUrl, BASE_URL, breadcrumbJsonLd, metaDescription, SITE } from '@/lib/seo';
+import {
+    IconArea,
+    IconBath,
+    IconBed,
+    IconBuilding,
+    IconCheck,
+    IconFileText,
+    IconMapPin,
+    IconShieldCheck,
+} from '@/components/icons';
 
 export const dynamic = 'force-dynamic';
 
-export default async function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+const fetchProperty = async (id: string) => {
+    const { data, error } = await supabase.from('properties').select('*').eq('id', id).single();
+    return error || !data ? null : (data as Property);
+};
+
+/** Naira is formatted with the Nigerian locale so grouping matches how a local
+    buyer reads a price; the previous call used the runtime default. */
+const formatPrice = (p: Property) =>
+    p.currency === 'USD'
+        ? `$${p.price.toLocaleString('en-US')}`
+        : `₦${p.price.toLocaleString('en-NG')}`;
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}): Promise<Metadata> {
     const { id } = await params;
+    const property = await fetchProperty(id);
 
-    const { data: property, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-    if (error || !property) {
-        return notFound();
+    // A 404 must not be indexable. Without this the not-found page inherits the
+    // site defaults and invites a crawler to keep it.
+    if (!property) {
+        return { title: 'Property not found', robots: { index: false, follow: false } };
     }
 
-    const typedProperty = property as Property;
+    const description = metaDescription(
+        property.description ??
+            `${property.beds} bedroom property at ${property.address}. ${formatPrice(property)}. Title checked with the land registry before listing.`,
+    );
+
+    return {
+        title: `${property.name}, ${property.address}`,
+        description,
+        alternates: { canonical: `/properties/${property.id}` },
+        openGraph: {
+            type: 'website',
+            url: absoluteUrl(`/properties/${property.id}`),
+            title: `${property.name} | ${SITE.name}`,
+            description,
+            images: property.image ? [{ url: property.image, alt: property.name }] : undefined,
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: `${property.name} | ${SITE.name}`,
+            description,
+            images: property.image ? [property.image] : undefined,
+        },
+    };
+}
+
+/** What Mindfire does for every listing. Stated as process rather than as a
+    per-property claim, because the schema has no title-type or search-date
+    column — asserting a specific title for a specific property would be
+    inventing data. The documents themselves are shared on request. */
+const ASSURANCES = [
+    {
+        icon: IconShieldCheck,
+        title: 'Title checked before listing',
+        body: 'The title type and its current status are confirmed with the relevant land registry before this property appears on the site.',
+    },
+    {
+        icon: IconFileText,
+        title: 'Documents shared on request',
+        body: 'Ask an advisor for the search results, survey plan, and payment schedule for this property and they will be sent to you in full.',
+    },
+    {
+        icon: IconBuilding,
+        title: 'Visit before you commit',
+        body: 'Accompanied site visits are arranged at your convenience, including during construction where the development is not yet complete.',
+    },
+];
+
+const SectionHeading = ({ children }: { children: React.ReactNode }) => (
+    <h2 className="mb-6 font-display text-display-sm font-semibold text-content">{children}</h2>
+);
+
+export default async function PropertyDetailsPage({
+    params,
+}: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = await params;
+    const property = await fetchProperty(id);
+
+    if (!property) return notFound();
+
+    const isSold = property.status.trim().toLowerCase() === 'sold';
+    const gallery = property.images?.filter(Boolean) ?? [];
+    const price = formatPrice(property);
+
+    // Only the four facts the schema actually stores. The previous version
+    // showed a hardcoded "2 Cars" for every property with no field behind it.
+    const stats = [
+        { icon: IconBed, value: property.beds, label: property.beds === 1 ? 'Bedroom' : 'Bedrooms' },
+        { icon: IconBath, value: property.baths, label: property.baths === 1 ? 'Bathroom' : 'Bathrooms' },
+        { icon: IconArea, value: property.sqft.toLocaleString('en-NG'), label: 'Sq. ft.' },
+        { icon: IconBuilding, value: property.status, label: 'Status' },
+    ];
+
+    /**
+     * Only fields present in the record are emitted, so the markup never
+     * describes something the listing does not have.
+     *
+     * The listing is modelled as a `Product` wrapping the `Residence`, because
+     * `Residence` alone has no `offers` — and the price and availability are
+     * the two things a search result should carry for a property that is for
+     * sale. Availability maps from the same `status` string the page renders,
+     * so the badge and the structured data cannot disagree.
+     */
+    const structuredData = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        '@id': absoluteUrl(`/properties/${property.id}#listing`),
+        name: property.name,
+        description: property.description ?? undefined,
+        image: [property.image, ...(property.images ?? [])].filter(Boolean),
+        url: absoluteUrl(`/properties/${property.id}`),
+        category: 'Real estate',
+        offers: {
+            '@type': 'Offer',
+            price: property.price,
+            priceCurrency: property.currency ?? 'NGN',
+            url: absoluteUrl(`/properties/${property.id}`),
+            availability: isSold
+                ? 'https://schema.org/SoldOut'
+                : 'https://schema.org/InStock',
+            // Points at the RealEstateAgent node emitted on the home page,
+            // so the offer is attributed to the business rather than orphaned.
+            seller: { '@id': `${BASE_URL}/#organisation` },
+        },
+        additionalProperty: [
+            { '@type': 'PropertyValue', name: 'Bedrooms', value: property.beds },
+            { '@type': 'PropertyValue', name: 'Bathrooms', value: property.baths },
+            { '@type': 'PropertyValue', name: 'Floor area (sq ft)', value: property.sqft },
+        ],
+        subjectOf: {
+            '@type': 'Residence',
+            name: property.name,
+            address: {
+                '@type': 'PostalAddress',
+                streetAddress: property.address,
+                addressLocality: 'Abuja',
+                addressCountry: 'NG',
+            },
+            numberOfBedrooms: property.beds,
+            numberOfBathroomsTotal: property.baths,
+            floorSize: { '@type': 'QuantitativeValue', value: property.sqft, unitCode: 'FTK' },
+        },
+    };
 
     return (
         <PublicLayout>
-            <div className="bg-background-light dark:bg-background-dark min-h-screen pt-24 pb-28 lg:pb-16 relative">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify(
+                        breadcrumbJsonLd([
+                            { name: 'Home', path: '/' },
+                            { name: 'Properties', path: '/properties' },
+                            { name: property.name, path: `/properties/${property.id}` },
+                        ]),
+                    ),
+                }}
+            />
 
-                    {/* Breadcrumb & Header */}
-                    <div className="mb-8">
-                        <nav aria-label="Breadcrumb" className="flex text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4 font-medium overflow-x-auto whitespace-nowrap pb-2 no-scrollbar">
-                            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-                            <span className="mx-2" aria-hidden="true">/</span>
-                            <Link href="/properties" className="hover:text-primary transition-colors">Listings</Link>
-                            <span className="mx-2" aria-hidden="true">/</span>
-                            <span className="text-gray-900 dark:text-white" aria-current="page">{typedProperty.name}</span>
-                        </nav>
+            <div className="hero-wash min-h-screen pb-section">
+                <div className="mx-auto max-w-content px-gutter">
+                    <nav aria-label="Breadcrumb" className="py-6">
+                        <ol className="flex flex-wrap items-center gap-x-2 text-body-sm text-content-muted">
+                            <li>
+                                <Link href="/" className="hover:text-brand-600">
+                                    Home
+                                </Link>
+                            </li>
+                            <li aria-hidden="true">/</li>
+                            <li>
+                                <Link href="/properties" className="hover:text-brand-600">
+                                    Properties
+                                </Link>
+                            </li>
+                            <li aria-hidden="true">/</li>
+                            <li aria-current="page" className="font-medium text-content">
+                                {property.name}
+                            </li>
+                        </ol>
+                    </nav>
 
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                            <div>
-                                <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2">{typedProperty.name}</h1>
-                                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                                    <span className="material-icons-outlined text-primary text-xl shrink-0" aria-hidden="true">location_on</span>
-                                    {typedProperty.address}
-                                </p>
-                            </div>
-                            <div className="flex flex-col items-start md:items-end border-t border-gray-200 dark:border-gray-800 md:border-t-0 pt-4 md:pt-0">
-                                <p className="text-3xl font-bold text-primary dark:text-primary">
-                                    {typedProperty.currency === 'NGN' ? '₦' : '$'}{typedProperty.price.toLocaleString()}
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold mt-1">Status: {typedProperty.status}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Gallery Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 sm:gap-4 mb-12 h-[350px] sm:h-[450px] md:h-[600px] rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-800">
-                        <div className="md:col-span-2 md:row-span-2 relative group cursor-pointer overflow-hidden">
-                            <img src={typedProperty.image} alt={`${typedProperty.name} main view`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                            {typedProperty.featured && <div className="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded uppercase tracking-wider shadow-md">Featured</div>}
-                        </div>
-                        {/* Additional images from the gallery */}
-                        {(typedProperty.images || []).slice(0, 4).map((img, i) => (
-                            <div key={i} className={`relative group cursor-pointer overflow-hidden hidden md:block ${i === 3 && (typedProperty.images?.length || 0) > 4 ? 'relative' : ''}`}>
-                                <img src={img} alt={`Gallery view ${i + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                {i === 3 && (typedProperty.images?.length || 0) > 4 && (
-                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
-                                        <span className="text-white font-bold">+{(typedProperty.images?.length || 0) - 4} More</span>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                        {/* Fallback if no gallery images */}
-                        {(!typedProperty.images || typedProperty.images.length === 0) && (
-                            <>
-                                <div className="relative group cursor-pointer overflow-hidden hidden md:block bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                    <span className="material-icons-outlined text-gray-300 text-4xl">image</span>
-                                </div>
-                                <div className="relative group cursor-pointer overflow-hidden hidden md:block bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                    <span className="material-icons-outlined text-gray-300 text-4xl">image</span>
-                                </div>
-                                <div className="relative group cursor-pointer overflow-hidden hidden md:block bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                    <span className="material-icons-outlined text-gray-300 text-4xl">image</span>
-                                </div>
-                                <div className="relative group cursor-pointer overflow-hidden hidden md:block bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                    <span className="material-icons-outlined text-gray-300 text-4xl">image</span>
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                        {/* Left Content */}
-                        <div className="lg:col-span-2 space-y-12">
-
-                            {/* Quick Stats */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 py-6 sm:py-8 border-y border-gray-200 dark:border-gray-800 bg-surface-light dark:bg-surface-dark rounded-2xl px-4 sm:px-6 shadow-sm">
-                                <div className="flex items-center gap-3 sm:gap-4">
-                                    <span className="material-icons-outlined text-primary text-3xl sm:text-4xl" aria-hidden="true">king_bed</span>
-                                    <div>
-                                        <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white font-display">{typedProperty.beds}</p>
-                                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">Bedrooms</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 sm:gap-4">
-                                    <span className="material-icons-outlined text-primary text-3xl sm:text-4xl" aria-hidden="true">bathtub</span>
-                                    <div>
-                                        <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white font-display">{typedProperty.baths}</p>
-                                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">Bathrooms</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 sm:gap-4">
-                                    <span className="material-icons-outlined text-primary text-3xl sm:text-4xl" aria-hidden="true">square_foot</span>
-                                    <div>
-                                        <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white font-display">{typedProperty.sqft}</p>
-                                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">Sq. Ft.</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 sm:gap-4">
-                                    <span className="material-icons-outlined text-primary text-3xl sm:text-4xl" aria-hidden="true">garage</span>
-                                    <div>
-                                        <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white font-display">2</p>
-                                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">Cars</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Description */}
-                            <div>
-                                <h2 className="font-display text-2xl sm:text-3xl font-bold mb-6 text-gray-900 dark:text-white flex items-center gap-3">
-                                    <span className="w-8 h-1 bg-secondary rounded-full" aria-hidden="true"></span> About This Property
-                                </h2>
-                                <div className="prose prose-base sm:prose-lg dark:prose-invert text-gray-600 dark:text-gray-300 max-w-none leading-relaxed whitespace-pre-wrap">
-                                    {typedProperty.description || `Experience the pinnacle of luxury living with "${typedProperty.name}". Designed for those who appreciate the finer things, this architectural masterpiece redefines modern living.`}
-                                </div>
-                            </div>
-
-                            {/* Amenities */}
-                            {(typedProperty.amenities || []).length > 0 && (
-                                <div>
-                                    <h2 className="font-display text-2xl sm:text-3xl font-bold mb-8 text-gray-900 dark:text-white flex items-center gap-3">
-                                        <span className="w-8 h-1 bg-secondary rounded-full" aria-hidden="true"></span> Premium Amenities
-                                    </h2>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                                        {typedProperty.amenities?.map((amenity, i) => (
-                                            <div key={i} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-800 shadow-sm hover:border-primary transition-colors">
-                                                <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
-                                                    <span className="material-icons-outlined" aria-hidden="true">
-                                                        {amenity.toLowerCase().includes('wifi') || amenity.toLowerCase().includes('internet') ? 'wifi' :
-                                                            amenity.toLowerCase().includes('gym') ? 'fitness_center' :
-                                                                amenity.toLowerCase().includes('pool') ? 'pool' :
-                                                                    amenity.toLowerCase().includes('smart') ? 'bolt' :
-                                                                        amenity.toLowerCase().includes('security') ? 'security' :
-                                                                            amenity.toLowerCase().includes('kit') ? 'kitchen' : 'check_circle'}
-                                                    </span>
-                                                </div>
-                                                <span className="font-bold text-gray-700 dark:text-gray-200 text-xs sm:text-sm">{amenity}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                    <header className="mb-9 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            {isSold ? (
+                                <Chip variant="outline" className="mb-4">Sold — shown for reference</Chip>
+                            ) : (
+                                <Eyebrow tone="brand">{property.status}</Eyebrow>
                             )}
-
-                            {/* Floor Plans */}
-                            {(typedProperty.floorPlans || []).length > 0 && (
-                                <div>
-                                    <h2 className="font-display text-2xl sm:text-3xl font-bold mb-8 text-gray-900 dark:text-white flex items-center gap-3">
-                                        <span className="w-8 h-1 bg-secondary rounded-full" aria-hidden="true"></span> Architectural Floor Plans
-                                    </h2>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        {typedProperty.floorPlans?.map((plan, i) => (
-                                            <div key={i} className="bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-md group">
-                                                <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
-                                                    <p className="font-bold text-sm text-gray-900 dark:text-white">{plan.label}</p>
-                                                </div>
-                                                <div className="aspect-[4/3] overflow-hidden cursor-zoom-in">
-                                                    <img src={plan.image} alt={plan.label} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                            <h1 className="mt-2 text-balance font-display text-[clamp(2.125rem,4.6vw,3.625rem)] font-bold leading-[1.04] tracking-[-0.03em] text-content">
+                                {property.name}
+                            </h1>
+                            <p className="mt-3 flex items-start gap-2 text-body-lg text-content-muted">
+                                <IconMapPin size={20} className="mt-1 shrink-0" />
+                                {property.address}
+                            </p>
+                        </div>
+                        <div className="shrink-0 md:text-right">
+                            <p className="font-display text-[clamp(1.5rem,2.4vw,2.125rem)] font-bold tracking-[-0.02em] text-brand-600">
+                                {price}
+                            </p>
+                            {property.priceLabel && (
+                                <p className="mt-1 text-body-sm text-content-muted">{property.priceLabel}</p>
                             )}
                         </div>
+                    </header>
 
-                        {/* Right Sidebar - Sticky Form */}
-                        <div className="lg:col-span-1 hidden lg:block">
-                            <div className="sticky top-24 space-y-6">
-                                <PropertyContactForm propertyName={typedProperty.name} />
+                    {/* Gallery. When the record has no extra images the main
+                        photograph runs full width — the previous version padded
+                        the grid with four identical empty placeholder tiles. */}
+                    <div
+                        className={`mb-12 grid gap-2 overflow-hidden rounded-showcase border border-hairline/[0.06] shadow-ambient sm:gap-3 ${
+                            gallery.length > 0 ? 'md:grid-cols-4 md:grid-rows-2' : ''
+                        }`}
+                    >
+                        <div
+                            className={`relative aspect-[16/10] md:aspect-auto ${
+                                gallery.length > 0 ? 'md:col-span-2 md:row-span-2' : ''
+                            }`}
+                        >
+                            <img
+                                src={property.image}
+                                alt={`${property.name} — exterior view from the approach`}
+                                className="h-full w-full object-cover"
+                                fetchPriority="high"
+                            />
+                        </div>
+                        {gallery.slice(0, 4).map((img, i) => {
+                            const overflow = gallery.length - 4;
+                            return (
+                                <div key={img} className="relative hidden md:block">
+                                    <img
+                                        src={img}
+                                        alt={`${property.name} — interior and grounds, view ${i + 2}`}
+                                        className="h-full w-full object-cover"
+                                        loading="lazy"
+                                    />
+                                    {i === 3 && overflow > 0 && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/55 font-semibold text-white">
+                                            +{overflow} more
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="grid gap-12 lg:grid-cols-3">
+                        <div className="space-y-12 lg:col-span-2">
+                            <dl className="grid grid-cols-2 gap-6 rounded-surface border border-hairline/10 bg-surface p-6 shadow-soft sm:grid-cols-4">
+                                {stats.map(({ icon: Glyph, value, label }) => (
+                                    <div key={label} className="flex items-center gap-3">
+                                        <Glyph size={24} className="shrink-0 text-brand-600" />
+                                        <div>
+                                            <dd className="font-display text-body-lg font-semibold text-content">
+                                                {value}
+                                            </dd>
+                                            <dt className="text-label font-semibold uppercase text-content-muted">
+                                                {label}
+                                            </dt>
+                                        </div>
+                                    </div>
+                                ))}
+                            </dl>
+
+                            {property.description && (
+                                <section>
+                                    <SectionHeading>About this property</SectionHeading>
+                                    <div className="max-w-[42rem] whitespace-pre-wrap text-body text-content-muted">
+                                        {property.description}
+                                    </div>
+                                </section>
+                            )}
+
+                            {(property.amenities?.length ?? 0) > 0 && (
+                                <section>
+                                    <SectionHeading>What the property includes</SectionHeading>
+                                    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                        {property.amenities?.map((amenity) => (
+                                            <li
+                                                key={amenity}
+                                                className="flex items-center gap-3 rounded-pill border border-hairline/10 bg-surface px-4 py-3"
+                                            >
+                                                {/* One mark for every entry. Guessing a
+                                                    pictogram per amenity string produced
+                                                    icons that contradicted the label. */}
+                                                <IconCheck size={18} className="shrink-0 text-brand-600" />
+                                                <span className="text-body-sm font-medium text-content">
+                                                    {amenity}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </section>
+                            )}
+
+                            {(property.floorPlans?.length ?? 0) > 0 && (
+                                <section>
+                                    <SectionHeading>Floor plans</SectionHeading>
+                                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                        {property.floorPlans?.map((plan) => (
+                                            <figure
+                                                key={plan.label}
+                                                className="overflow-hidden rounded-surface border border-hairline/10 bg-surface shadow-soft"
+                                            >
+                                                <figcaption className="border-b border-hairline/10 px-4 py-3 text-body-sm font-semibold text-content">
+                                                    {plan.label}
+                                                </figcaption>
+                                                <img
+                                                    src={plan.image}
+                                                    alt={`Floor plan: ${plan.label}`}
+                                                    className="aspect-[4/3] w-full bg-surface-2 object-contain p-4"
+                                                    loading="lazy"
+                                                />
+                                            </figure>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            <section>
+                                <SectionHeading>Documentation and process</SectionHeading>
+                                <div className="space-y-6">
+                                    {ASSURANCES.map(({ icon: Glyph, title, body }) => (
+                                        <div key={title} className="flex items-start gap-4">
+                                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-brand-600/10 text-brand-600">
+                                                <Glyph size={24} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-display text-body-lg font-semibold text-content">
+                                                    {title}
+                                                </h3>
+                                                <p className="mt-1.5 max-w-[38rem] text-body text-content-muted">
+                                                    {body}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        </div>
+
+                        {/* The form is in the flow on mobile and sticky from lg
+                            up. It was previously hidden below lg, which left
+                            small screens with no way to enquire at all. */}
+                        <div className="lg:col-span-1">
+                            <div className="lg:sticky lg:top-[calc(var(--nav-h)+1.5rem)]">
+                                <PropertyContactForm propertyName={property.name} isSold={isSold} />
                             </div>
                         </div>
                     </div>
