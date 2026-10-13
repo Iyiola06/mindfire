@@ -1,0 +1,85 @@
+# Mindfire Homes · 10-year anniversary film
+
+A 30-second celebration film in two formats, built entirely from code using [PLAYBOOK.md](PLAYBOOK.md):
+real listing photos and live screens from mindfirehomes.com, an original Afro-house beat synthesized in
+numpy, and every frame rendered as a pure function of time. There is no stock footage and no licensed
+music, so you can re-render after any change.
+
+| Output | Spec | Use |
+| --- | --- | --- |
+| `out/mindfire_10yr_16x9.mp4` | 1920×1080, 30 fps, H.264 + AAC | YouTube, website, LinkedIn, office screens |
+| `out/mindfire_10yr_9x16.mp4` | 1080×1920, 30 fps | Instagram Reels, TikTok, Shorts, WhatsApp Status |
+| `out/*_noverse.mp4` | same, without the scripture | Platforms or partners where you'd rather not quote scripture |
+| `audio/beat_120.wav` + 4 stems + `cues.json` | 48 kHz stereo | Remixing in Resolve / Fairlight |
+| `resolve/mindfire_10yr.lua` | Resolve 18+ | Builds the project with both timelines, stems and markers |
+
+## Storyboard (120 BPM, 1 bar = 2 s, 15 bars = 30 s)
+
+| Time | Scene | On screen | Sound |
+| --- | --- | --- | --- |
+| 0–4 s | Hook | "Ten years ago, we made one promise: **Check the title** before we sell the home." A title deed slides in and **VERIFIED** stamps onto it at 3.0 s | Low-passed groove opens up, riser, stamp, drop-out at 3.5 s |
+| 4–6 s | 10 | Giant bronze **10**, "YEARS", logo lockup, "redefining modern living", confetti | Impact, pad swell, short riser |
+| 6–14 s | A decade of homes | Real listing photos and live site screens (desktop and phone matched) cutting on the beat, then the photo wall "A decade of homes in Abuja." | Full drop, whoosh on every cut |
+| 14–20 s | The Mindfire way | The five practices from the About page stamp in one per bar, then "Diligence is the product." | Thinner groove, stamp + rising ding on each |
+| 20–26 s | Thank you | "To every family who trusted us with a home — thank you." then **Psalm 127:1 (KJV)**: "Except the LORD build the house, they labour in vain that build it." | Impact, half-time breakdown under the verse, snare roll, drop-out at 25.5 s |
+| 26–30 s | Next ten | Logo, "Celebrating 10 years", **Here's to the next ten.**, `mindfirehomes.com`, `hello@mindfirehomes.com` | Impact + confetti, URL ding, final hit at 29 s, fade |
+
+Psalm 127:1 is there on purpose: it is a verse about building houses, quoted from the public-domain King
+James Version. Render with `verse=0` to replace it with "Your trust is our foundation."
+
+## Claims check (every word on screen is sourced)
+
+| On screen | Source |
+| --- | --- |
+| Listing names, places, For sale / Sold | Live `/properties` pages, scraped into `captures/manifest.json` |
+| "Every listing title-checked and visited by our team" | Live `/properties` page copy |
+| The five practices, "Diligence is the product." | `app/about/page.tsx` (`HOW_WE_WORK`, section heading) |
+| "Abuja · verified titles" | Home page eyebrow |
+| "redefining modern living" | `public/logo.svg` |
+| `hello@mindfirehomes.com` | `lib/contact.ts` |
+| **"10 years", "Ten years ago", "A decade of homes"** | **You. Nothing in the repo or on the site states the founding year (see below)** |
+
+### ⚠ Owner action before posting
+
+`app/about/page.tsx` notes that an earlier version of the site said "Founded in 2015" and that this was
+removed because nothing evidenced it. If the business started in 2015, the 10th anniversary was 2025; if it
+started in 2016, it is this year. The film deliberately shows **no year**, only "10 years", so it is correct
+either way once you confirm the decade. When you have the date, also add it to `MILESTONES` in
+`app/about/page.tsx` so the site and the film tell the same story.
+
+## Re-run everything
+
+```bash
+cd promo
+npm i                                   # playwright-core only
+pip install numpy                       # ffmpeg with libx264 must be on PATH (or set FFMPEG=...)
+node capture.mjs                        # live site -> captures/ (screens, photos, manifest.json)
+python beat.py                          # -> audio/beat_120.wav, stems, cues.json
+node render.mjs stills h                # QA contact sheet -> out/stills/sheet_h.jpg
+node render.mjs stills v
+node render.mjs video h                 # ~3 min each
+node render.mjs video v
+node render.mjs video h verse=0         # optional cut without the scripture
+node render.mjs video v verse=0
+```
+
+Open `scenes/promo.html?t=17.2` (add `&v=1` for vertical) in Chrome to inspect any single frame. Chrome needs
+`--allow-file-access-from-files` for the local captures, or serve the folder with `npx http-server promo`.
+
+On another machine, set `CHROME=/path/to/chrome` if Chromium isn't at `/opt/pw-browsers/...`.
+
+## What to change for the next version
+
+- **Add the founder story or team.** Drop real photos into `captures/photos/` and add cuts to `CUTS` in `scenes/promo.html`.
+- **New listings appear automatically.** `capture.mjs` reads `/properties` live; add the new photo paths to `CUTS` / `WALL`.
+- **Milestones.** Once you can evidence them (homes handed over, families housed), add a counter scene in the 20–26 s slot. Only use numbers you can show a buyer.
+- **Music.** Edit `CHORDS`, `BPM` (keep `bar × 15 = 30 s`) or the section ranges in `beat.py`, then re-render.
+
+## Gotchas hit in this build
+
+| Problem | Fix |
+| --- | --- |
+| Chromium rejected `decode()` on a second ~1170×10000 capture in the same page | Phone screens are captured at 2× (not 3×) and 3 screens tall; the preload decodes one image at a time with a retry |
+| Developer flyers (Skylands/Nibeco artwork) are among Project Elysian's photos | Kept out of the montage and wall; Elysian appears only as its live listing page |
+| The logo is a raster trace (`public/logo.svg`, 150 KB) | The mark is redrawn as three clean polygons in `scenes/promo.html` (`MARK`) and is never rotated |
+| `xstack` needs at least 2 inputs | A single still skips tiling |

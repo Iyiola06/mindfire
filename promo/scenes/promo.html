@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mindfire Homes — 10 years</title>
+<!-- Inter is the site's own face (app/layout.tsx). Montserrat is used only for the
+     wordmark, whose geometric capitals it matches. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400&family=Montserrat:wght@300;700&display=block" rel="stylesheet">
+<style>
+  /* Brand tokens: app/globals.css (site) + colours sampled from public/logo.svg. */
+  :root {
+    --deep: #0A1817;
+    --deep-2: #0F2422;
+    --brand-700: #00544D;
+    --brand-600: #006960;
+    --brand-500: #00897B;
+    --bronze: #C98A4A;
+    --bronze-hi: #EBC08A;
+    --logo-teal: #4A877C;
+    --logo-green: #02A658;
+    --logo-slate: #4C5A62;
+    --paper: #F2F5F4;
+    --ink: #1A1A1A;
+    --muted: #5A6268;
+  }
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  #stage { position: relative; overflow: hidden; background: var(--deep); font-family: Inter, system-ui, sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+  #cam { position: absolute; inset: 0; }
+  .abs { position: absolute; }
+  .scene { position: absolute; inset: 0; }
+  .eyebrow { font-weight: 600; text-transform: uppercase; letter-spacing: 0.3em; font-size: 22px; }
+  .display { font-weight: 700; letter-spacing: -0.035em; line-height: 1.02; }
+  .line { position: absolute; white-space: nowrap; transform-origin: left center; will-change: transform, opacity; }
+  .center { text-align: center; transform-origin: center center; }
+  .glow { position: absolute; border-radius: 50%; pointer-events: none; }
+  .card { position: absolute; overflow: hidden; border-radius: 30px; box-shadow: 0 50px 90px -35px rgba(0,0,0,.65); background: #222; }
+  .card img, .fill { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .browser { position: absolute; border-radius: 18px; overflow: hidden; background: #fff; box-shadow: 0 60px 120px -40px rgba(0,0,0,.7); }
+  .browser .bar { height: 46px; background: #ECEFEE; display: flex; align-items: center; gap: 9px; padding: 0 18px; box-sizing: border-box; }
+  .browser .dot { width: 13px; height: 13px; border-radius: 50%; }
+  .browser .url { margin-left: 18px; flex: 1; height: 28px; border-radius: 14px; background: #fff; color: #5A6268; font-size: 15px; display: flex; align-items: center; padding-left: 16px; }
+  .browser .view, .phone .view { position: relative; overflow: hidden; }
+  .browser .view img, .phone .view img { position: absolute; left: 0; top: 0; width: 100%; display: block; }
+  .phone { position: absolute; border-radius: 52px; background: #0B0B0B; padding: 14px; box-sizing: border-box; box-shadow: 0 60px 120px -40px rgba(0,0,0,.75); }
+  .phone .view { border-radius: 40px; width: 100%; height: 100%; background: #fff; }
+  .phone .view img { top: 58px; }
+  .phone .notch { position: absolute; top: 24px; left: 50%; width: 110px; height: 30px; margin-left: -55px; border-radius: 16px; background: #0B0B0B; z-index: 2; }
+  .pill { display: inline-flex; align-items: center; gap: 10px; border-radius: 999px; font-weight: 600; }
+  .confetti { position: absolute; left: 0; top: 0; will-change: transform; }
+  .grain { position: absolute; inset: -50%; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+  .vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45) 100%); }
+  .row { position: absolute; display: flex; align-items: center; gap: 26px; }
+  .num { flex: none; width: 66px; height: 66px; border-radius: 18px; background: rgba(0,105,96,.09); color: var(--brand-600); font-weight: 700; font-size: 24px; display: flex; align-items: center; justify-content: center; }
+  .check { flex: none; width: 54px; height: 54px; border-radius: 50%; background: var(--brand-600); display: flex; align-items: center; justify-content: center; margin-left: auto; }
+  .ring { position: absolute; border-radius: 50%; border: 3px solid var(--brand-500); pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="stage"><div id="cam"></div></div>
+<script>
+/* ───────────────────────────────────────────────────────────────────────────
+   Mindfire Homes · 10 years. Every frame is render(t): no CSS animation, no timers.
+   ?t=12.3 shows one frame · ?v=1 vertical 1080x1920 · ?verse=0 drops the scripture.
+   Every timing below matches promo/audio/cues.json (written by beat.py).
+   ─────────────────────────────────────────────────────────────────────────── */
+const Q = new URLSearchParams(location.search);
+const V = Q.get('v') === '1';
+const VERSE = Q.get('verse') !== '0';
+const W = V ? 1080 : 1920, H = V ? 1920 : 1080;
+const C = '../captures/';
+
+// ── facts: every string here is on the live site or in the repo ─────────────
+// Listings as https://www.mindfirehomes.com/properties prints them (captures/manifest.json).
+const L3 = { title: '4-bedroom duplex + chalet', place: 'Sun City Estate, Abuja', status: 'For sale' };
+const L5 = { title: '4-bedroom penthouse', place: 'Jahi, Abuja', status: 'For sale' };
+const L1 = { title: 'Project Elysian', place: 'Nibeco Gardens', status: 'Sold' };
+// app/about/page.tsx → HOW_WE_WORK, verbatim titles.
+const WAY = [
+  'We check the title first',
+  'We put the documents in your hands',
+  'We only list where infrastructure exists',
+  'We take you to the site',
+  'We put the terms in writing before you commit',
+];
+const URL_TEXT = 'mindfirehomes.com';
+const EMAIL = 'hello@mindfirehomes.com';               // lib/contact.ts
+const TAGLINE = 'redefining modern living';            // public/logo.svg
+
+// ── cues (seconds) ──────────────────────────────────────────────────────────
+const T = {
+  hook: [0.25, 1.0, 2.0, 2.5], stamp: 3.0, dropout: 3.5,
+  logo: 4.0, tagline: 5.0, drop: 6.0, wall: 13.0,
+  way: 14.0, stamps: [14.5, 15.5, 16.5, 17.5, 18.5], wayOutro: 19.0,
+  thanks: 20.0, thanksLines: [20.0, 20.5, 21.0], verse: 22.0, verseOut: 25.4,
+  cta: 26.0, url: 26.5, contact: 27.5, final: 29.0, end: 30.0,
+};
+const IMPACTS = [[4.0, 1], [6.0, .6], [20.0, .45], [26.0, 1], [29.0, .5]];
+const FLASHES = [[4.0, .85], [6.0, .35], [26.0, .7], [29.0, .25]];
+
+// ── helpers ─────────────────────────────────────────────────────────────────
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, p) => a + (b - a) * p;
+const eOutExpo = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
+const eOutBack = (p) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * (p - 1) ** 3 + c1 * (p - 1) ** 2; };
+const eInOut = (p) => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+function slam(t, at, dur = 0.22) { const p = seg(t, at, at + dur); return { o: clamp(p * 3), s: lerp(1.35, 1, eOutExpo(p)), p }; }
+window.pending = [];
+function setSrc(img, src) {
+  if (img.getAttribute('src') === src) return;
+  img.src = src;
+  window.pending.push(img.decode().catch(() => new Promise((r) => setTimeout(r, 300)).then(() => img.decode()).catch(() => console.warn('decode failed', src))));
+}
+function show(el, on) { el.style.display = on ? '' : 'none'; }
+function el(tag, cls, css, html, parent) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (css) Object.assign(e.style, css);
+  if (html != null) e.innerHTML = html;
+  (parent || cam).appendChild(e);
+  return e;
+}
+const px = (n) => `${n}px`;
+const box = (x, y, w, h) => ({ left: px(x), top: px(y), width: w == null ? undefined : px(w), height: h == null ? undefined : px(h) });
+function rand(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+
+const stage = document.getElementById('stage');
+stage.style.width = px(W); stage.style.height = px(H);
+const cam = document.getElementById('cam');
+
+// The mark, redrawn as clean vectors from public/logo.svg (a raster trace). Never rotated.
+const MARK = `<svg viewBox="0 0 224 204" width="100%" height="100%" aria-hidden="true">
+  <polygon points="98,88 223,0 223,203 67,203 67,108" fill="#02A658"/>
+  <polygon points="0,17 98,88 98,190 0,190" fill="#4A877C"/>
+  <polygon points="67,108 98,88 130,108 130,190 67,190" fill="#4C5A62"/></svg>`;
+function lockup(h, onDark, withTag = false) {
+  const word = onDark ? '#FFFFFF' : '#4C5A62';
+  const homes = onDark ? '#2FC27B' : '#1E8A57';
+  return `<div style="display:flex;align-items:center;gap:${h * .22}px">
+    <div style="width:${h * 1.1}px;height:${h}px">${MARK}</div>
+    <div style="font-family:Montserrat,Inter,sans-serif;line-height:.92">
+      <div style="font-weight:700;font-size:${h * .56}px;color:${word};letter-spacing:-.01em">MINDFIRE</div>
+      <div style="font-weight:300;font-size:${h * .4}px;color:${homes};letter-spacing:.06em">HOMES</div>
+      ${withTag ? `<div style="font-weight:300;font-size:${h * .13}px;color:${onDark ? 'rgba(255,255,255,.6)' : '#8A8B8D'};letter-spacing:.5em;margin-top:${h * .12}px">${TAGLINE}</div>` : ''}
+    </div></div>`;
+}
+const CHECK_SVG = (s, c = '#fff') => `<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const PIN_SVG = (s, c) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" fill="none" stroke="${c}" stroke-width="2"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="${c}" stroke-width="2"/></svg>`;
+
+// ── background: brand glows, grain, vignette ────────────────────────────────
+const bg = el('div', 'abs', { inset: 0, background: 'var(--deep)' });
+const glows = [
+  ['0,137,123', .55], ['2,166,88', .28], ['201,138,74', .30],
+].map(([rgb, a]) => el('div', 'glow', { width: px(W * 1.1), height: px(W * 1.1), background: `radial-gradient(circle, rgba(${rgb},${a}) 0%, rgba(${rgb},0) 62%)` }, null, bg));
+const paper = el('div', 'abs', { inset: 0, background: 'linear-gradient(180deg,#F2F5F4 0%,#FAFAFA 100%)' }, null, bg);
+const paperGlow = el('div', 'glow', { width: px(W * 1.2), height: px(W * 1.2), background: 'radial-gradient(circle, rgba(0,137,123,.16) 0%, rgba(0,137,123,0) 60%)' }, null, paper);
+
+// ── scene 1: hook (0-4 s) ───────────────────────────────────────────────────
+const S1 = el('div', 'scene');
+const HOOK_L = V
+  ? { x: 90, y: 560, size: 84, big: 112, gap: 112, doc: [260, 1200, 560, 400] }
+  : { x: 160, y: 250, size: 96, big: 128, gap: 128, doc: [1250, 300, 520, 440] };
+const hookEyebrow = el('div', 'line eyebrow', { ...box(HOOK_L.x, HOOK_L.y - 80), color: 'var(--bronze-hi)' }, 'Mindfire Homes · Abuja', S1);
+const hookLines = [
+  ['Ten years ago,', '#fff', HOOK_L.size],
+  ['we made one promise:', '#fff', HOOK_L.size],
+  ['Check the title', 'var(--bronze-hi)', HOOK_L.big],
+  ['before we sell the home.', '#fff', HOOK_L.size],
+].map(([txt, col, size], i) => {
+  const y = HOOK_L.y + i * HOOK_L.gap + (i >= 2 ? 24 : 0) + (i === 3 ? 22 : 0);
+  return el('div', 'line display', { ...box(HOOK_L.x, y), color: col, fontSize: px(size), fontWeight: i === 2 ? 800 : 700 }, txt, S1);
+});
+// Title deed card + VERIFIED stamp
+const [dx, dy, dw, dh] = HOOK_L.doc;
+const deed = el('div', 'abs', { ...box(dx, dy, dw, dh), background: '#FBF8F1', borderRadius: '18px', boxShadow: '0 40px 80px -30px rgba(0,0,0,.7)', padding: '40px 44px', boxSizing: 'border-box', color: '#3A3A3A' },
+  `<div class="eyebrow" style="font-size:16px;color:#8A7A5A;letter-spacing:.32em">Certificate of occupancy</div>
+   <div style="height:3px;background:#E3D9C3;margin:18px 0 26px"></div>
+   ${[92, 78, 86, 64, 80, 54].map((w) => `<div style="height:14px;width:${w}%;background:#ECE4D2;border-radius:7px;margin-bottom:20px"></div>`).join('')}
+   <div style="position:absolute;right:44px;bottom:40px;width:120px;height:3px;background:#C9BEA6"></div>`, S1);
+const stampEl = el('div', 'abs', { left: px(dw * .30), top: px(dh * .36), padding: '14px 26px', border: '6px solid #C2433A', borderRadius: '14px', color: '#C2433A', fontWeight: 800, fontSize: '44px', letterSpacing: '.12em', transformOrigin: 'center', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '12px' },
+  `${CHECK_SVG(44, '#C2433A')}VERIFIED`, deed);
+
+// ── scene 2: ten (4-6 s) ────────────────────────────────────────────────────
+const S2 = el('div', 'scene');
+const TEN_L = V
+  ? { ten: [0, 250, W, 620], tenSize: 640, years: [0, 900], lock: [0, 1080], lockH: 150, tag: [0, 1300], align: 'center' }
+  : { ten: [140, 175, 820, 700], tenSize: 640, years: [1000, 300], lock: [1000, 470], lockH: 150, tag: [1000, 690], align: 'left' };
+const ten = el('div', 'abs', { ...box(...TEN_L.ten), fontSize: px(TEN_L.tenSize), fontWeight: 800, letterSpacing: '-.07em', lineHeight: px(TEN_L.ten[3]), textAlign: V ? 'center' : 'right', background: 'linear-gradient(180deg,#F6D3A2 0%,#C98A4A 55%,#9A6431 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', transformOrigin: 'center' }, '10', S2);
+const years = el('div', 'abs eyebrow', { left: px(TEN_L.years[0]), top: px(TEN_L.years[1]), width: V ? px(W) : undefined, textAlign: TEN_L.align, fontSize: '96px', fontWeight: 300, color: '#fff', whiteSpace: 'nowrap' }, 'Years', S2);
+const tenLock = el('div', 'abs', { left: px(TEN_L.lock[0]), top: px(TEN_L.lock[1]), width: V ? px(W) : undefined, display: 'flex', justifyContent: V ? 'center' : 'flex-start' }, lockup(TEN_L.lockH, true), S2);
+const tagline = el('div', 'abs', { left: px(TEN_L.tag[0]), top: px(TEN_L.tag[1]), width: V ? px(W) : undefined, textAlign: TEN_L.align, fontFamily: 'Montserrat', fontWeight: 300, fontSize: '30px', letterSpacing: '.55em', color: 'rgba(255,255,255,.75)', whiteSpace: 'nowrap' }, '', S2);
+const tagChars = [...TAGLINE].map((ch) => el('span', null, null, ch === ' ' ? '&nbsp;' : ch, tagline));
+
+// ── confetti (bursts at 4.0 and 26.0) ───────────────────────────────────────
+const CONF_COLORS = ['#02A658', '#4A877C', '#C98A4A', '#EBC08A', '#FFFFFF', '#00897B'];
+function burst(at, seed, n) {
+  const r = rand(seed);
+  return { at, parts: Array.from({ length: n }, () => {
+    const d = el('div', 'confetti', { width: px(10 + r() * 14), height: px(16 + r() * 18), background: CONF_COLORS[Math.floor(r() * CONF_COLORS.length)], borderRadius: '3px' });
+    const ang = -Math.PI / 2 + (r() - .5) * 2.2;
+    const sp = (V ? 1900 : 1500) * (.45 + r() * .75);
+    return { d, x0: W / 2 + (r() - .5) * W * .5, y0: H + 40, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, rs: (r() - .5) * 1400, sk: r() * 40 - 20, ph: r() * 6.28 };
+  }) };
+}
+const bursts = [burst(4.0, 4, 70), burst(26.0, 26, 90)];
+const confLayer = el('div', 'abs', { inset: 0, pointerEvents: 'none' });
+bursts.forEach((b) => b.parts.forEach((p) => confLayer.appendChild(p.d)));
+
+// ── scene 3: montage (6-14 s) ───────────────────────────────────────────────
+const CUTS = [
+  { t: 6.0, kind: 'photo', src: 'photos/prop-3_01.jpg', ...L3 },
+  { t: 7.0, kind: 'photo', src: 'photos/prop-5_01.jpg', ...L5 },
+  { t: 8.0, kind: 'screen', src: 'screens/home_desktop_light.jpg', mobile: 'screens/home_mobile_light.jpg', title: 'Abuja · verified titles', place: URL_TEXT, status: 'Live' },
+  { t: 9.0, kind: 'photo', src: 'photos/prop-3_02.jpg', ...L3 },
+  { t: 9.5, kind: 'photo', src: 'photos/prop-5_04.jpg', ...L5 },
+  { t: 10.0, kind: 'screen', src: 'screens/properties_desktop_light.jpg', mobile: 'screens/properties_mobile_light.jpg', title: 'Every listing title-checked', place: 'and visited by our team', status: 'Live' },
+  { t: 10.5, kind: 'photo', src: 'photos/prop-5_02.jpg', ...L5 },
+  { t: 11.0, kind: 'photo', src: 'photos/prop-3_04.jpg', ...L3 },
+  { t: 11.5, kind: 'screen', src: 'screens/listing_prop-5.jpg', mobile: 'screens/listing_prop-5_mobile.jpg', ...L5 },
+  { t: 12.0, kind: 'photo', src: 'photos/prop-5_03.jpg', ...L5 },
+  { t: 12.5, kind: 'screen', src: 'screens/listing_prop-1.jpg', mobile: 'screens/listing_prop-1_mobile.jpg', ...L1 },
+];
+const WALL = ['photos/prop-3_01.jpg', 'photos/prop-5_01.jpg', 'photos/prop-3_02.jpg', 'photos/prop-5_04.jpg', 'photos/prop-5_05.jpg', 'photos/prop-5_02.jpg', 'photos/prop-3_04.jpg', 'photos/prop-5_03.jpg', 'photos/prop-3_05.jpg', 'photos/prop-3_03.jpg', 'photos/prop-5_05.jpg', 'photos/prop-3_01.jpg'];
+
+const M = V
+  ? { card: [120, 330, 840, 1050], label: [100, 1430, 880], browser: [60, 470, 960, 600], phone: [650, 850, 330, 700], slabel: [80, 1170, 540], eyebrow: [80, 250], seal: [W - 80, 250] }
+  : { card: [1120, 140, 640, 800], label: [140, 520, 860], browser: [120, 160, 1180, 760], phone: [1420, 130, 330, 690], slabel: [1390, 845, 470], eyebrow: [140, 70], seal: [W - 140, 70] };
+const S3 = el('div', 'scene');
+const mBg = el('img', 'abs', { inset: '-8%', width: '116%', height: '116%', objectFit: 'cover', filter: 'blur(48px) brightness(.38) saturate(1.2)' }, null, S3);
+const mShade = el('div', 'abs', { inset: 0, background: V ? 'linear-gradient(180deg,rgba(10,24,23,.2),rgba(10,24,23,.75))' : 'linear-gradient(90deg,rgba(10,24,23,.85) 0%,rgba(10,24,23,.35) 60%,rgba(10,24,23,.2))' }, null, S3);
+const card = el('div', 'card', box(...M.card), '<img>', S3);
+const cardImg = card.querySelector('img');
+const browser = el('div', 'browser', box(...M.browser),
+  `<div class="bar"><span class="dot" style="background:#FF5F57"></span><span class="dot" style="background:#FEBC2E"></span><span class="dot" style="background:#28C840"></span><div class="url">🔒&nbsp;&nbsp;${URL_TEXT}</div></div><div class="view" style="height:${M.browser[3] - 46}px"><img></div>`, S3);
+const browserImg = browser.querySelector('img');
+const phone = el('div', 'phone', box(...M.phone), '<div class="notch"></div><div class="view"><img></div>', S3);
+const phoneImg = phone.querySelector('img');
+function labelBlock(parent, x, y, w, big) {
+  const b = el('div', 'abs', { left: px(x), top: px(y), width: px(w) }, null, parent);
+  const pill = el('div', 'pill', { padding: '10px 22px', fontSize: '20px', letterSpacing: '.18em', textTransform: 'uppercase', background: 'rgba(255,255,255,.12)', border: '1.5px solid rgba(255,255,255,.25)', color: '#fff' }, '', b);
+  const title = el('div', 'display', { fontSize: px(big), marginTop: '26px', color: '#fff' }, '', b);
+  const place = el('div', null, { fontSize: px(big * .44), marginTop: '18px', color: 'rgba(255,255,255,.72)', display: 'flex', alignItems: 'center', gap: '12px' }, '', b);
+  return { b, pill, title, place };
+}
+const pLabel = labelBlock(S3, ...M.label, V ? 70 : 84);
+const sLabel = labelBlock(S3, ...M.slabel, V ? 52 : 44);
+const mEyebrow = el('div', 'line eyebrow', { left: px(M.eyebrow[0]), top: px(M.eyebrow[1]), color: 'var(--bronze-hi)', fontSize: V ? '22px' : '22px' }, 'A decade of homes · Abuja', S3);
+const seal = el('div', 'abs pill', { right: px(W - M.seal[0]), top: px(M.seal[1] - 14), padding: '10px 22px', background: 'linear-gradient(180deg,#EBC08A,#C98A4A)', color: '#2A1A08', fontSize: '22px', letterSpacing: '.2em', fontWeight: 700 }, '10 YEARS', S3);
+// wall
+const wall = el('div', 'abs', { inset: 0 }, null, S3);
+const WG = V ? { cols: 3, rows: 4, w: 300, h: 375, gap: 24 } : { cols: 5, rows: 2, w: 330, h: 412, gap: 24 };
+const wx0 = (W - (WG.cols * WG.w + (WG.cols - 1) * WG.gap)) / 2, wy0 = (H - (WG.rows * WG.h + (WG.rows - 1) * WG.gap)) / 2;
+const tiles = [];
+for (let r = 0; r < WG.rows; r++) for (let c = 0; c < WG.cols; c++) {
+  const i = r * WG.cols + c;
+  const t = el('div', 'card', { ...box(wx0 + c * (WG.w + WG.gap), wy0 + r * (WG.h + WG.gap), WG.w, WG.h), borderRadius: '22px' }, `<img src="${C}${WALL[i % WALL.length]}">`, wall);
+  tiles.push(t);
+}
+const wallShade = el('div', 'abs', { inset: 0, background: 'radial-gradient(ellipse at center, rgba(10,24,23,.88) 0%, rgba(10,24,23,.55) 55%, rgba(10,24,23,.25) 100%)' }, null, wall);
+const wallHead = el('div', 'abs display center', { left: 0, width: px(W), top: px(V ? 760 : 380), fontSize: px(V ? 96 : 132), color: '#fff' }, 'A decade of homes<br><span style="color:var(--bronze-hi)">in Abuja.</span>', wall);
+
+// ── scene 4: the Mindfire way (14-20 s), light ──────────────────────────────
+const S4 = el('div', 'scene');
+const WL = V
+  ? { eyebrow: [80, 290], head: [80, 340, 920], headSize: 88, rows: [80, 720, 920], rowGap: 160, title: 38, outro: [80, 1560] }
+  : { eyebrow: [140, 250], head: [140, 300, 640], headSize: 84, rows: [880, 170, 900], rowGap: 150, title: 36, outro: [140, 700] };
+const bigTen = el('div', 'abs', { left: px(V ? 380 : 1000), top: px(V ? 1180 : 380), fontSize: px(V ? 900 : 900), fontWeight: 800, letterSpacing: '-.07em', lineHeight: 1, color: 'transparent', WebkitTextStroke: '3px rgba(0,105,96,.07)', whiteSpace: 'nowrap' }, '10', S4);
+const wEyebrow = el('div', 'line eyebrow', { left: px(WL.eyebrow[0]), top: px(WL.eyebrow[1]), color: 'var(--brand-600)' }, 'The Mindfire way', S4);
+const wHead = el('div', 'abs display', { left: px(WL.head[0]), top: px(WL.head[1]), width: px(WL.head[2]), fontSize: px(WL.headSize), color: 'var(--ink)' }, 'What we do on every property.', S4);
+const rows = WAY.map((txt, i) => {
+  const r = el('div', 'row', { left: px(WL.rows[0]), top: px(WL.rows[1] + i * WL.rowGap), width: px(WL.rows[2]) },
+    `<div class="num">${String(i + 1).padStart(2, '0')}</div><div style="font-size:${WL.title}px;font-weight:600;color:var(--ink);letter-spacing:-.015em;line-height:1.15;flex:1">${txt}</div><div class="check">${CHECK_SVG(30)}</div>`, S4);
+  const ring = el('div', 'ring', null, null, r);
+  return { r, chk: r.querySelector('.check'), ring };
+});
+const wOutro = el('div', 'abs pill', { left: px(WL.outro[0]), top: px(WL.outro[1]), padding: '18px 34px', background: 'var(--brand-600)', color: '#fff', fontSize: px(V ? 40 : 36), boxShadow: '0 14px 30px -12px rgba(0,105,96,.55)' }, 'Diligence is the product.', S4);
+
+// ── scene 5: thank you + Psalm 127:1 (20-26 s) ──────────────────────────────
+const S5 = el('div', 'scene');
+const mosaic = el('div', 'abs', { inset: 0 }, null, S5);
+const MCOLS = V ? 4 : 6, MW = V ? 300 : 340, MH = MW * 1.25, MG = 22;
+const mcols = [];
+for (let c = 0; c < MCOLS; c++) {
+  const col = el('div', 'abs', { left: px(c * (MW + MG) - (V ? 70 : 90)), top: 0, width: px(MW) }, null, mosaic);
+  for (let k = 0; k < 6; k++) el('div', 'card', { position: 'relative', width: px(MW), height: px(MH), marginBottom: px(MG), borderRadius: '22px' }, `<img src="${C}${WALL[(c * 3 + k) % 11]}">`, col);
+  mcols.push(col);
+}
+const mosaicShade = el('div', 'abs', { inset: 0, background: 'radial-gradient(ellipse at center, rgba(10,24,23,.93) 0%, rgba(10,24,23,.78) 60%, rgba(10,24,23,.6) 100%)' }, null, S5);
+const TL = V ? { y: 620, size: 76, big: 190, gap: 100 } : { y: 260, size: 80, big: 200, gap: 104 };
+const thanksLines = [
+  ['To every family', '#fff', TL.size],
+  ['who trusted us with a home —', '#fff', TL.size],
+  ['thank you.', 'var(--bronze-hi)', TL.big],
+].map(([txt, col, size], i) => el('div', 'abs display center', { left: 0, width: px(W), top: px(TL.y + i * TL.gap + (i === 2 ? 30 : 0)), fontSize: px(size), color: col, fontWeight: i === 2 ? 800 : 700, whiteSpace: 'nowrap' }, txt, S5));
+if (V) thanksLines[1].innerHTML = 'who trusted us<br>with a home —';
+if (V) { thanksLines[2].style.top = px(TL.y + 2 * TL.gap + 130); }
+const verse = el('div', 'abs', { left: 0, width: px(W), top: px(V ? 640 : 300), textAlign: 'center' }, null, S5);
+const verseRef = el('div', 'eyebrow', { color: 'var(--bronze-hi)', fontSize: '24px' }, VERSE ? 'Psalm 127:1' : 'Ten years on', verse);
+const VERSE_LINES = VERSE
+  ? (V ? ['Except the LORD', 'build the house,', 'they labour in vain', 'that build it.'] : ['Except the LORD build the house,', 'they labour in vain that build it.'])
+  : (V ? ['Your trust', 'is our', 'foundation.'] : ['Your trust', 'is our foundation.']);
+const verseWords = [];
+const verseBody = el('div', null, { marginTop: '44px', fontSize: px(V ? 92 : 96), fontWeight: 300, fontStyle: 'italic', letterSpacing: '-.02em', lineHeight: 1.18, color: '#fff' }, null, verse);
+VERSE_LINES.forEach((ln) => {
+  const d = el('div', null, null, null, verseBody);
+  ln.split(' ').forEach((w, i) => { const s = el('span', null, { display: 'inline-block', marginRight: '.26em' }, w, d); verseWords.push(s); });
+});
+const verseFoot = el('div', 'eyebrow', { marginTop: '54px', color: 'rgba(255,255,255,.55)', fontSize: '20px' }, 'King James Version', verse);
+if (!VERSE) verseFoot.textContent = '';
+
+// ── scene 6: CTA (26-30 s) ──────────────────────────────────────────────────
+const S6 = el('div', 'scene');
+const CL = V
+  ? { lock: 330, lockH: 140, eyebrow: 640, head: 700, headSize: 136, url: 1100, urlSize: 50, contact: 1250 }
+  : { lock: 120, lockH: 120, eyebrow: 380, head: 430, headSize: 140, url: 660, urlSize: 46, contact: 790 };
+const cLock = el('div', 'abs', { left: 0, width: px(W), top: px(CL.lock), display: 'flex', justifyContent: 'center' }, lockup(CL.lockH, true), S6);
+const cEyebrow = el('div', 'abs eyebrow center', { left: 0, width: px(W), top: px(CL.eyebrow), color: 'var(--bronze-hi)', fontSize: '24px' }, 'Celebrating 10 years', S6);
+const cHead = el('div', 'abs display center', { left: 0, width: px(W), top: px(CL.head), fontSize: px(CL.headSize), color: '#fff', fontWeight: 800 }, V ? 'Here’s to<br>the next <span style="color:var(--bronze-hi)">ten.</span>' : 'Here’s to the next <span style="color:var(--bronze-hi)">ten.</span>', S6);
+const cUrlWrap = el('div', 'abs', { left: 0, width: px(W), top: px(CL.url), display: 'flex', justifyContent: 'center' }, null, S6);
+const cUrl = el('div', 'pill', { padding: `${CL.urlSize * .42}px ${CL.urlSize * .9}px`, background: 'var(--brand-600)', color: '#fff', fontSize: px(CL.urlSize), boxShadow: '0 14px 40px -12px rgba(0,137,123,.8)', letterSpacing: '-.01em' }, URL_TEXT, cUrlWrap);
+const cContact = el('div', 'abs center', { left: 0, width: px(W), top: px(CL.contact), fontSize: px(V ? 36 : 32), color: 'rgba(255,255,255,.75)', lineHeight: 1.5 }, V ? `Speak with an advisor<br><b style="color:#fff;font-weight:600">${EMAIL}</b>` : `Speak with an advisor &nbsp;·&nbsp; <b style="color:#fff;font-weight:600">${EMAIL}</b>`, S6);
+
+// ── overlays ────────────────────────────────────────────────────────────────
+cam.appendChild(confLayer);
+const grain = el('div', 'grain', null, null, stage);
+const vignette = el('div', 'vignette', null, null, stage);
+const flash = el('div', 'abs', { inset: 0, background: '#fff', pointerEvents: 'none' }, null, stage);
+const fadeOut = el('div', 'abs', { inset: 0, background: '#000', pointerEvents: 'none' }, null, stage);
+
+// ── render ──────────────────────────────────────────────────────────────────
+function renderBackground(t, light) {
+  show(paper, light);
+  const pts = [[.25, .3, .21, .9], [.8, .7, .17, 1.7], [.6, .15, .13, 3.1]];
+  glows.forEach((g, i) => {
+    const [bx, by, a, ph] = pts[i];
+    const x = W * (bx + .08 * Math.sin(t * .35 + ph)) - W * .55, y = H * (by + .06 * Math.cos(t * .3 + ph)) - W * .55;
+    g.style.transform = `translate(${x}px,${y}px)`;
+    g.style.opacity = t < 4 ? lerp(.35, 1, seg(t, 0, 3.5)) : 1;
+  });
+  paperGlow.style.transform = `translate(${W * .55 - W * .6 + 80 * Math.sin(t * .5)}px,${-W * .5}px)`;
+  grain.style.transform = `translate(${(Math.floor(t * 30) * 37) % 120 - 60}px,${(Math.floor(t * 30) * 53) % 120 - 60}px)`;
+  grain.style.opacity = light ? .04 : .07;
+  vignette.style.opacity = light ? .25 : 1;
+}
+
+function renderHook(t) {
+  const out = seg(t, T.dropout, 3.95);
+  const eb = seg(t, .05, .5);
+  hookEyebrow.style.opacity = eb * (1 - out);
+  hookEyebrow.style.transform = `translateY(${(1 - eOutExpo(eb)) * 20}px)`;
+  hookLines.forEach((ln, i) => {
+    const s = slam(t, T.hook[i]);
+    const dim = i < 2 ? lerp(1, .38, seg(t, 2.0, 2.3)) : 1;
+    ln.style.opacity = s.o * dim * (1 - out);
+    ln.style.transform = `scale(${s.s * lerp(1, .94, eInOut(out))}) translateY(${-out * 30}px)`;
+    ln.style.filter = out > 0 ? `blur(${out * 10}px)` : 'none';
+  });
+  // deed slides in at 2.0, VERIFIED lands on the 3.0 stamp
+  const dp = eOutExpo(seg(t, 1.9, 2.4));
+  deed.style.opacity = dp * (1 - out);
+  deed.style.transform = `translate(${V ? 0 : (1 - dp) * 120}px,${V ? (1 - dp) * 120 : 0}px) rotate(${lerp(6, 2, dp)}deg) scale(${lerp(1, .92, out)})`;
+  const sp = seg(t, T.stamp, T.stamp + .14);
+  stampEl.style.opacity = t >= T.stamp ? 1 : 0;
+  stampEl.style.transform = `rotate(-9deg) scale(${lerp(2.4, 1, eOutExpo(sp))})`;
+}
+
+function renderTen(t) {
+  const p = seg(t, T.logo, T.logo + .55);
+  const exit = eInOut(seg(t, 5.7, 6.0));
+  const exitS = lerp(1, 1.18, exit), exitO = 1 - exit;
+  ten.style.opacity = clamp(p * 4) * exitO;
+  ten.style.transform = `scale(${lerp(1.6, 1, eOutExpo(p)) * exitS})`;
+  const yp = seg(t, 4.12, 4.6);
+  years.style.opacity = yp * exitO;
+  years.style.letterSpacing = `${lerp(.9, .3, eOutExpo(yp))}em`;
+  const lp = eOutExpo(seg(t, 4.3, 4.8));
+  tenLock.style.opacity = lp * exitO;
+  tenLock.style.transform = `translateY(${(1 - lp) * 40}px) scale(${exitS})`;
+  tagChars.forEach((c, i) => { c.style.opacity = seg(t, T.tagline + i * .022, T.tagline + i * .022 + .2) * exitO; });
+}
+
+function activeCut(t) { let c = CUTS[0]; for (const k of CUTS) if (t >= k.t) c = k; return c; }
+function fillLabel(lb, cut) {
+  lb.pill.innerHTML = cut.kind === 'screen' && cut.status === 'Live' ? `<span style="width:10px;height:10px;border-radius:50%;background:#2FC27B;display:inline-block"></span>${cut.status}` : cut.status;
+  lb.title.textContent = cut.title;
+  lb.place.innerHTML = `${PIN_SVG(28, 'rgba(255,255,255,.72)')}<span>${cut.place}</span>`;
+}
+function renderMontage(t) {
+  const inWall = t >= T.wall;
+  show(wall, inWall);
+  const cut = activeCut(t);
+  const idx = CUTS.indexOf(cut);
+  const next = CUTS[idx + 1];
+  const dur = (next ? next.t : T.wall) - cut.t;
+  const local = t - cut.t;
+  const ent = eOutExpo(seg(local, 0, dur >= 1 ? .3 : .18));
+  const photo = cut.kind === 'photo';
+  show(card, photo && !inWall); show(pLabel.b, photo && !inWall);
+  show(browser, !photo && !inWall); show(phone, !photo && !inWall && !!cut.mobile); show(sLabel.b, !photo && !inWall);
+  setSrc(mBg, C + (photo ? cut.src : (cut.mobile || cut.src)));
+  if (photo) {
+    setSrc(cardImg, C + cut.src);
+    card.style.transform = `translateY(${(1 - ent) * 70}px) scale(${lerp(.95, 1, ent)})`;
+    card.style.opacity = clamp(ent * 2);
+    cardImg.style.transform = `scale(${lerp(1.12, 1.0, seg(local, 0, dur))}) translateY(${lerp(-10, 10, seg(local, 0, dur))}px)`;
+    if (pLabel.title.textContent !== cut.title || pLabel.pill.textContent !== cut.status) fillLabel(pLabel, cut);
+    const s = slam(t, cut.t + .02, .2);
+    pLabel.b.style.opacity = s.o; pLabel.b.style.transform = `translateX(${(1 - eOutExpo(s.p)) * -40}px)`;
+  } else {
+    setSrc(browserImg, C + cut.src);
+    const bw = M.browser[2];
+    const imgH = bw * (SIZES[cut.src] ? SIZES[cut.src][1] / SIZES[cut.src][0] : 1);
+    const maxScroll = Math.max(0, imgH - (M.browser[3] - 46));
+    browserImg.style.transform = `translateY(${-Math.min(maxScroll, lerp(0, 160, seg(local, .1, dur)))}px)`;
+    browser.style.transform = `translateY(${(1 - ent) * 80}px) scale(${lerp(.94, 1, ent)})`;
+    browser.style.opacity = clamp(ent * 2);
+    if (cut.mobile) {
+      setSrc(phoneImg, C + cut.mobile);
+      phoneImg.style.transform = `translateY(${-lerp(0, 260, seg(local, .1, dur))}px)`;
+      const pe = eOutExpo(seg(local, .08, .08 + (dur >= 1 ? .32 : .2)));
+      phone.style.transform = `translateY(${(1 - pe) * 160}px)`;
+      phone.style.opacity = clamp(pe * 2);
+    }
+    if (sLabel.title.textContent !== cut.title || sLabel.place.textContent !== cut.place) fillLabel(sLabel, cut);
+    const s = slam(t, cut.t + .04, .2);
+    sLabel.b.style.opacity = s.o; sLabel.b.style.transform = `translateY(${(1 - eOutExpo(s.p)) * 24}px)`;
+  }
+  mEyebrow.style.opacity = inWall ? 0 : seg(t, 6.05, 6.4);
+  seal.style.opacity = inWall ? 0 : seg(t, 6.1, 6.4);
+  if (inWall) {
+    tiles.forEach((tl, i) => {
+      const p = eOutBack(seg(t, T.wall + i * .045, T.wall + i * .045 + .3));
+      tl.style.opacity = seg(t, T.wall + i * .045, T.wall + i * .045 + .12);
+      tl.style.transform = `scale(${lerp(.7, 1, p)})`;
+    });
+    const hp = slam(t, T.wall + .25, .25);
+    wallHead.style.opacity = hp.o; wallHead.style.transform = `scale(${hp.s})`;
+    wallShade.style.opacity = seg(t, T.wall + .1, T.wall + .4);
+    const ex = eInOut(seg(t, 13.75, 14.0));
+    wall.style.opacity = 1 - ex; wall.style.transform = `scale(${lerp(1, 1.08, ex)})`;
+  }
+}
+
+function renderWay(t) {
+  const enter = eOutExpo(seg(t, T.way, T.way + .4));
+  const exit = eInOut(seg(t, 19.75, 20.0));
+  S4.style.opacity = 1 - exit;
+  wEyebrow.style.opacity = enter; wEyebrow.style.transform = `translateY(${(1 - enter) * 20}px)`;
+  const hs = slam(t, T.way + .05, .3);
+  wHead.style.opacity = hs.o; wHead.style.transform = `translateY(${(1 - eOutExpo(hs.p)) * 40}px)`;
+  bigTen.style.transform = `translateY(${lerp(40, -40, seg(t, 14, 20))}px)`;
+  rows.forEach(({ r, chk, ring }, i) => {
+    const at = T.stamps[i];
+    const rp = eOutExpo(seg(t, at - .22, at + .1));
+    r.style.opacity = rp; r.style.transform = `translateX(${(1 - rp) * 60}px)`;
+    const cp = seg(t, at, at + .16);
+    chk.style.transform = `scale(${t < at ? 0 : lerp(2.2, 1, eOutBack(cp))})`;
+    chk.style.opacity = t < at ? 0 : 1;
+    const rg = seg(t, at, at + .5);
+    const cr = chk.getBoundingClientRect(), rr = r.getBoundingClientRect();
+    const sz = 54 + rg * 90;
+    Object.assign(ring.style, { width: px(sz), height: px(sz), left: px(cr.left - rr.left + 27 - sz / 2), top: px(cr.top - rr.top + 27 - sz / 2), opacity: t < at ? 0 : (1 - rg) * .8 });
+  });
+  const op = eOutBack(seg(t, T.wayOutro, T.wayOutro + .35));
+  wOutro.style.opacity = seg(t, T.wayOutro, T.wayOutro + .1);
+  wOutro.style.transform = `scale(${lerp(.6, 1, op)})`;
+}
+
+function renderThanks(t) {
+  mcols.forEach((col, c) => {
+    const dir = c % 2 ? 1 : -1;
+    col.style.transform = `translateY(${(dir > 0 ? -MH * 1.2 : -MH * .4) + dir * (t - 20) * 60}px)`;
+  });
+  const toVerse = eInOut(seg(t, T.verse, T.verse + .4));
+  mosaicShade.style.opacity = 1;
+  mosaic.style.opacity = lerp(.55, .25, toVerse);
+  const fadeIn = seg(t, 20, 20.15);
+  S5.style.opacity = fadeIn;
+  thanksLines.forEach((ln, i) => {
+    const s = slam(t, T.thanksLines[i], i === 2 ? .3 : .22);
+    ln.style.opacity = s.o * (1 - toVerse);
+    ln.style.transform = `scale(${s.s * lerp(1, .96, toVerse)})`;
+  });
+  const out = eInOut(seg(t, T.verseOut, 25.85));
+  verse.style.opacity = (t >= T.verse ? 1 : 0) * (1 - out);
+  verse.style.transform = `scale(${lerp(1, 1.04, out)})`;
+  verse.style.filter = out > 0 ? `blur(${out * 8}px)` : 'none';
+  verseRef.style.opacity = seg(t, T.verse + .1, T.verse + .45);
+  verseWords.forEach((w, i) => {
+    const a = T.verse + .3 + i * (VERSE ? .1 : .25);
+    const p = seg(t, a, a + .45);
+    w.style.opacity = p; w.style.transform = `translateY(${(1 - eOutExpo(p)) * 22}px)`;
+    w.style.filter = p < 1 ? `blur(${(1 - p) * 6}px)` : 'none';
+  });
+  verseFoot.style.opacity = seg(t, 24.2, 24.7) * .9;
+  mosaic.style.opacity = parseFloat(mosaic.style.opacity) * (1 - out);
+}
+
+function renderCta(t) {
+  const lp = eOutExpo(seg(t, T.cta + .1, T.cta + .5));
+  cLock.style.opacity = lp; cLock.style.transform = `translateY(${(1 - lp) * -30}px)`;
+  cEyebrow.style.opacity = seg(t, T.cta + .2, T.cta + .5);
+  const hs = slam(t, T.cta, .28);
+  const pulse = t >= T.final ? 1 + .035 * Math.exp(-(t - T.final) * 6) * Math.cos((t - T.final) * 18) : 1;
+  cHead.style.opacity = hs.o; cHead.style.transform = `scale(${hs.s * pulse})`;
+  const up = eOutBack(seg(t, T.url, T.url + .35));
+  cUrl.style.opacity = seg(t, T.url, T.url + .08); cUrl.style.transform = `scale(${lerp(.5, 1, up) * pulse})`;
+  const cp = eOutExpo(seg(t, T.contact, T.contact + .4));
+  cContact.style.opacity = cp; cContact.style.transform = `translateY(${(1 - cp) * 20}px)`;
+}
+
+function renderConfetti(t) {
+  const g = V ? 2600 : 2100;
+  bursts.forEach((b) => {
+    const dt = t - b.at;
+    const on = dt >= 0 && dt < 2.4 && !(t >= 6 && t < 26);
+    b.parts.forEach((p) => {
+      p.d.style.display = on ? '' : 'none';
+      if (!on) return;
+      const drag = 1 - Math.exp(-dt * 2.2);
+      const x = p.x0 + p.vx * drag / 2.2 + Math.sin(dt * 5 + p.ph) * 18;
+      const y = p.y0 + p.vy * drag / 2.2 + .5 * g * dt * dt * .35;
+      p.d.style.transform = `translate(${x}px,${y}px) rotate(${p.rs * dt}deg) skewX(${p.sk}deg) scaleY(${Math.cos(dt * 9 + p.ph)})`;
+      p.d.style.opacity = 1 - seg(dt, 1.8, 2.4);
+    });
+  });
+}
+
+function render(t) {
+  window.pending = [];
+  const light = t >= T.way && t < T.thanks;
+  renderBackground(t, light);
+  show(S1, t < T.logo); show(S2, t >= T.logo && t < T.drop); show(S3, t >= T.drop && t < T.way);
+  show(S4, light); show(S5, t >= T.thanks && t < T.cta); show(S6, t >= T.cta);
+  if (t < T.logo) renderHook(t);
+  else if (t < T.drop) renderTen(t);
+  else if (t < T.way) renderMontage(t);
+  else if (t < T.thanks) renderWay(t);
+  else if (t < T.cta) renderThanks(t);
+  else renderCta(t);
+  renderConfetti(t);
+  // camera shake on impacts
+  let sx = 0, sy = 0;
+  for (const [at, amp] of IMPACTS) {
+    const d = t - at;
+    if (d >= 0 && d < .5) { const k = amp * 16 * Math.exp(-d * 9); sx += k * Math.sin(d * 70); sy += k * Math.cos(d * 55); }
+  }
+  cam.style.transform = `translate(${sx}px,${sy}px)`;
+  let f = 0;
+  for (const [at, a] of FLASHES) { const d = t - at; if (d >= 0 && d < .35) f = Math.max(f, a * (1 - d / .35) ** 2); }
+  flash.style.opacity = f;
+  fadeOut.style.opacity = eInOut(seg(t, 29.45, 30));
+  return Promise.all(window.pending);
+}
+window.render = render;
+const SIZES = {};
+
+window.ready = (async () => {
+  const fonts = ['300 20px Inter', 'italic 300 20px Inter', '400 20px Inter', '600 20px Inter', '700 20px Inter', '800 20px Inter', '300 20px Montserrat', '700 20px Montserrat'];
+  await Promise.all(fonts.map((f) => document.fonts.load(f)));
+  await document.fonts.ready;
+  const srcs = new Set([...CUTS.flatMap((c) => [c.src, c.mobile].filter(Boolean)), ...WALL]);
+  // One at a time: Chromium rejects decode() when several very tall captures decode at once.
+  for (const s of srcs) {
+    for (let tries = 0; tries < 3 && !SIZES[s]; tries++) {
+      const i = new Image(); i.src = C + s;
+      try { await i.decode(); SIZES[s] = [i.naturalWidth, i.naturalHeight]; } catch (e) { await new Promise((r) => setTimeout(r, 200)); }
+    }
+    if (!SIZES[s]) console.warn('missing', s);
+  }
+  await Promise.all([...document.images].map((i) => i.decode().catch(() => {})));
+  return true;
+})();
+const qt = Q.get('t');
+window.ready.then(() => render(qt != null ? parseFloat(qt) : 0));
+</script>
+</body>
+</html>

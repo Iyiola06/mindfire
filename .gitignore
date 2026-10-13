@@ -41,3 +41,11 @@ prisma/migrations/dev.db*
 
 # Per-machine Claude Code permissions. launch.json is shared; this is not.
 .claude/settings.local.json
+
+# Anniversary film: generated media (re-create with the scripts in promo/)
+promo/node_modules/
+promo/captures/
+promo/captures.tmp/
+promo/out/
+promo/audio/*.wav
+promo/package-lock.json

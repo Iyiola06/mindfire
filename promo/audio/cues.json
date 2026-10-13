@@ -1,0 +1,44 @@
+{
+  "bpm": 120,
+  "bar_seconds": 2.0,
+  "hook_stamp": 3.0,
+  "riser": 2.0,
+  "logo_impact": 4.0,
+  "tagline": 5.0,
+  "drop": 6.0,
+  "montage_cuts": [
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    9.5,
+    10.0,
+    10.5,
+    11.0,
+    11.5,
+    12.0,
+    12.5
+  ],
+  "wall": 13.0,
+  "way_scene": 14.0,
+  "stamps": [
+    14.5,
+    15.5,
+    16.5,
+    17.5,
+    18.5
+  ],
+  "way_outro": 19.0,
+  "thanks_hit": 20.0,
+  "thank_you": 21.0,
+  "verse": 22.0,
+  "snare_roll": [
+    24.0,
+    25.5
+  ],
+  "dropout": 25.5,
+  "cta_hit": 26.0,
+  "url_ding": 26.5,
+  "contact": 27.5,
+  "final_hit": 29.0
+}
