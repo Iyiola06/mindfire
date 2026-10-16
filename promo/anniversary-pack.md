@@ -68,7 +68,7 @@ For ten years, that has meant five things on every property:
 
 In a decade, we have:
 - Helped 1,000+ proud property owners secure their homes and land, since 2016
-- Sold homes in communities like Project Elysian at Nibeco Gardens
+- Built a portfolio that includes Project Elysian at Nibeco Gardens
 - Offered flexible payment plans, agreed in writing before commitment
 
 Our services, from land to keys:

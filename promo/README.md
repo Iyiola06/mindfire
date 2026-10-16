@@ -31,7 +31,7 @@ realistic grade, editorial serif type, 2.39:1 letterbox that opens on the title.
 | 6–9 s | "The real risk in buying property is rarely the price. *It's the title.*" |
 | 9–12 s | "Since 2016 · So we made one promise: *check the title first.*" |
 | 12–15 s | Letterbox opens: logo, **Ten Years**, 2016 — 2026, gold dust, light leak |
-| 15–24 s | A decade of homes: Project Elysian (Nibeco Gardens, sold), Jahi penthouse, Sun City duplex |
+| 15–24 s | A decade of homes: Project Elysian (Nibeco Gardens), Jahi penthouse, Sun City duplex. No sale-status labels (owner request) |
 | 24–27 s | **1,000+** proud property owners (counter) |
 | 27–33 s | "From land *to keys.*" The six services |
 | 33–36 s | "Every title, checked. Every document, shared. Every term, *in writing.*" |
@@ -74,7 +74,7 @@ James Version. Render with `verse=0` to replace it with "Your trust is our found
 
 | On screen | Source |
 | --- | --- |
-| Listing names, places, For sale / Sold | Live `/properties` pages, scraped into `captures/manifest.json` |
+| Listing names and places | Live `/properties` pages, scraped into `captures/manifest.json` (sale status deliberately not shown) |
 | "Every listing title-checked and visited by our team" | Live `/properties` page copy |
 | The five practices, "Diligence is the product." | `app/about/page.tsx` (`HOW_WE_WORK`, section heading) |
 | "Abuja · verified titles" | Home page eyebrow |

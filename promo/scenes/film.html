@@ -164,13 +164,12 @@ const portNum = el('div', 'abs eyebrow', { right: px(V ? 70 : 120), top: px(V ? 
 const PL = V
   ? { text: { left: 70, top: 1340, width: 940, align: 'center' }, title: 92 }
   : { text: { left: 1150, top: 360, width: 660, align: 'left' }, title: 104 };
-function caption(eye, title, detail, status) {
+function caption(eye, title, detail) {
   const b = el('div', 'abs', { left: px(PL.text.left), top: px(PL.text.top), width: px(PL.text.width), textAlign: PL.text.align }, null, port);
   const blk = { b, parts: [] };
   blk.parts.push(el('div', 'eyebrow', { fontSize: '17px' }, eye, b));
   blk.parts.push(el('div', 'serif', { fontSize: px(PL.title), lineHeight: 1.02, marginTop: '26px' }, title, b));
   blk.parts.push(el('div', 'serif', { fontSize: px(PL.title * .4), fontStyle: 'italic', color: 'rgba(255,255,255,.78)', marginTop: '14px' }, detail, b));
-  blk.parts.push(el('div', null, { marginTop: '34px' }, `<span class="pill" style="font-size:17px;padding:12px 26px">${status}</span>`, b));
   return blk;
 }
 // Chapter 1: Project Elysian, the three renders from the listing, shown as a triptych
@@ -179,7 +178,7 @@ const SL = [ // source rects in captures/photos/prop-1_01.jpg (1440x1800): x, y,
 ];
 const TRI = V ? { x: 40, y: 330, h: 900, gap: 20 } : { x: 130, y: 170, h: 760, gap: 22 };
 const triW = (TRI.h * 0.36);
-const elysian = { lead: 'photos/prop-1_01.jpg', cards: [], cap: caption('Nibeco Gardens', 'Project Elysian', '4-bedroom fully detached homes', 'Sold') };
+const elysian = { lead: 'photos/prop-1_01.jpg', cards: [], cap: caption('Nibeco Gardens', 'Project Elysian', '4-bedroom fully detached homes') };
 SL.forEach(([sx, sy, sw, sh], i) => {
   const w = V ? (W - 2 * TRI.x - 2 * TRI.gap) / 3 : triW * (i === 1 ? 1.12 : 1);
   const h = TRI.h * (i === 1 ? 1 : .9);
@@ -198,8 +197,8 @@ function pairChapter(lead, detail, cap) {
   const b = el('div', 'card', { left: px(G.b[0]), top: px(G.b[1]), width: px(G.b[2]), height: px(G.b[3]) }, `<img src="${C}${detail}">`, port);
   return { lead, cards: [{ e: a, img: a.querySelector('img'), delay: 0 }, { e: b, img: b.querySelector('img'), delay: .3 }], cap };
 }
-const jahi = pairChapter('photos/prop-5_01.jpg', 'photos/prop-5_04.jpg', caption('Jahi, Abuja', '4-bedroom penthouse', 'with a private elevator', 'For sale'));
-const suncity = pairChapter('photos/prop-3_01.jpg', 'photos/prop-3_02.jpg', caption('Sun City Estate, Abuja', '4-bedroom duplex', 'with a 3-bedroom chalet', 'For sale'));
+const jahi = pairChapter('photos/prop-5_01.jpg', 'photos/prop-5_04.jpg', caption('Jahi, Abuja', '4-bedroom penthouse', 'with a private elevator'));
+const suncity = pairChapter('photos/prop-3_01.jpg', 'photos/prop-3_02.jpg', caption('Sun City Estate, Abuja', '4-bedroom duplex', 'with a 3-bedroom chalet'));
 const CHAPTERS = [{ a: 15, ...elysian }, { a: 18, ...jahi }, { a: 21, ...suncity }];
 
 // ── 6. 1,000+ (24-27) · 7. services (27-33) ─────────────────────────────────
@@ -300,6 +299,7 @@ function renderPortfolio(t) {
   let cur = CHAPTERS[0];
   CHAPTERS.forEach((ch) => { if (t >= ch.a) cur = ch; });
   if (portBg.getAttribute('src') !== C + cur.lead) { portBg.src = C + cur.lead; window.pending.push(portBg.decode().catch(() => {})); }
+  portBg.style.filter = cur === CHAPTERS[0] ? 'blur(60px) brightness(.26) saturate(0)' : 'blur(60px) brightness(.32) saturate(1.15)';
   portNum.textContent = `0${CHAPTERS.indexOf(cur) + 1} / 03`;
   CHAPTERS.forEach((ch) => {
     const local = t - ch.a;

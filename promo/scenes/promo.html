@@ -385,6 +385,8 @@ function renderTen(t) {
 function activeCut(t) { let c = CUTS[0]; for (const k of CUTS) if (t >= k.t) c = k; return c; }
 function fillLabel(lb, cut) {
   lb.pill.innerHTML = cut.kind === 'screen' && cut.status === 'Live' ? `<span style="width:10px;height:10px;border-radius:50%;background:#2FC27B;display:inline-block"></span>${cut.status}` : cut.status;
+  // Sale status is not shown: the film celebrates the portfolio, it does not advertise stock.
+  lb.pill.style.display = cut.status === 'Live' ? '' : 'none';
   lb.title.textContent = cut.title;
   lb.place.innerHTML = `${PIN_SVG(28, 'rgba(255,255,255,.72)')}<span>${cut.place}</span>`;
 }
