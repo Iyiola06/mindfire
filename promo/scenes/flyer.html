@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mindfire Homes — 10 years flyer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400&family=Montserrat:wght@300;700&display=block" rel="stylesheet">
+<style>
+  /* Same tokens as scenes/promo.html (app/globals.css + public/logo.svg). */
+  :root { --deep: #0A1817; --brand-600: #006960; --brand-500: #00897B; --bronze: #C98A4A; --bronze-hi: #EBC08A; }
+  html, body { margin: 0; background: #000; }
+  #f { position: relative; overflow: hidden; background: var(--deep); color: #fff; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .bgimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .shade { position: absolute; inset: 0; }
+  .col { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; text-align: center; }
+  .eyebrow { font-weight: 600; text-transform: uppercase; letter-spacing: .32em; color: var(--bronze-hi); }
+  .ten { font-weight: 800; letter-spacing: -.07em; line-height: .86; background: linear-gradient(180deg,#F6D3A2 0%,#C98A4A 55%,#9A6431 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 18px 40px rgba(0,0,0,.45)); }
+  .col > *:not(.ten) { text-shadow: 0 2px 18px rgba(0,0,0,.45); }
+  .years { font-weight: 300; text-transform: uppercase; letter-spacing: .42em; margin-right: -.42em; }
+  .panel { background: rgba(10,24,23,.62); border: 1.5px solid rgba(255,255,255,.14); border-radius: 30px; backdrop-filter: blur(14px); box-sizing: border-box; text-align: left; }
+  .check { display: flex; align-items: center; gap: 22px; font-weight: 600; letter-spacing: -.01em; }
+  .tick { flex: none; border-radius: 50%; background: var(--brand-600); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 4px rgba(0,137,123,.25); }
+  .pill { display: inline-flex; align-items: center; gap: 14px; border-radius: 999px; font-weight: 600; background: var(--brand-600); box-shadow: 0 14px 40px -12px rgba(0,137,123,.8); }
+  .verse { font-weight: 300; font-style: italic; color: rgba(255,255,255,.62); }
+</style>
+</head>
+<body>
+<div id="f"></div>
+<script>
+/* ?f=status (1080x1920, WhatsApp/IG Status) | ?f=feed (1080x1350, groups/feed)
+   ?bg=../captures/photos/x.jpg  your estate background (any path or URL)
+   ?phone=+2349012345678         adds the WhatsApp line (leave out until it is real)
+   ?verse=0                      drops Psalm 127:1
+   Every claim below is on mindfirehomes.com; see promo/anniversary-pack.md. */
+const Q = new URLSearchParams(location.search);
+const FEED = Q.get('f') === 'feed';
+const W = 1080, H = FEED ? 1350 : 1920;
+const BG = Q.get('bg') || '../captures/photos/prop-3_01.jpg';
+const PHONE = Q.get('phone');
+const VERSE = Q.get('verse') !== '0';
+const CHECKS = [                         // app/page.tsx CREDIBILITY + app/about/page.tsx
+  'Title checked before every listing',
+  'Every document in your hands',
+  'Flexible payment plans, in writing',
+  'We take you to the site',
+];
+const L = FEED
+  ? { pad: '60px 80px 50px', lock: 84, eye: 20, ten: 250, years: 46, gapTop: 22, panel: '26px 36px', chk: 29, tick: 40, chkGap: 14, thanks: 36, slogan: 44, url: 34, mail: 24, verse: 20, pos: '50% 62%' }
+  : { pad: '160px 80px 210px', lock: 110, eye: 24, ten: 340, years: 58, gapTop: 48, panel: '34px 44px', chk: 34, tick: 48, chkGap: 20, thanks: 44, slogan: 54, url: 44, mail: 28, verse: 24, pos: '50% 55%' };
+
+const MARK = `<svg viewBox="0 0 224 204" width="100%" height="100%"><polygon points="98,88 223,0 223,203 67,203 67,108" fill="#02A658"/><polygon points="0,17 98,88 98,190 0,190" fill="#4A877C"/><polygon points="67,108 98,88 130,108 130,190 67,190" fill="#4C5A62"/></svg>`;
+const lockup = (h) => `<div style="display:flex;align-items:center;gap:${h * .22}px;text-align:left">
+  <div style="width:${h * 1.1}px;height:${h}px">${MARK}</div>
+  <div style="font-family:Montserrat,Inter,sans-serif;line-height:.92">
+    <div style="font-weight:700;font-size:${h * .56}px;letter-spacing:-.01em">MINDFIRE</div>
+    <div style="font-weight:300;font-size:${h * .4}px;color:#2FC27B;letter-spacing:.06em">HOMES</div>
+  </div></div>`;
+const TICK = (s) => `<svg width="${s * .58}" height="${s * .58}" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+const f = document.getElementById('f');
+f.style.width = W + 'px'; f.style.height = H + 'px';
+f.innerHTML = `
+  <img class="bgimg" src="${BG}" style="filter:saturate(1.08) brightness(1.02);object-position:${L.pos}">
+  <div class="shade" style="background:linear-gradient(180deg,rgba(10,24,23,.94) 0%,rgba(10,24,23,.62) ${FEED ? 34 : 30}%,rgba(10,24,23,.12) ${FEED ? 46 : 44}%,rgba(10,24,23,.18) ${FEED ? 52 : 52}%,rgba(10,24,23,.9) ${FEED ? 66 : 64}%,rgba(10,24,23,.98) 100%)"></div>
+  <div class="shade" style="background:radial-gradient(circle at 50% ${FEED ? 30 : 28}%,rgba(201,138,74,.28) 0%,rgba(201,138,74,0) 42%)"></div>
+  <div class="col" style="padding:${L.pad}">
+    ${lockup(L.lock)}
+    <div class="eyebrow" style="font-size:${L.eye}px;margin-top:${L.gapTop}px">Celebrating</div>
+    <div class="ten" style="font-size:${L.ten}px;margin-top:${FEED ? 6 : 14}px">10</div>
+    <div class="years" style="font-size:${L.years}px;margin-top:${FEED ? 8 : 18}px">Years strong</div>
+    <div class="eyebrow" style="font-size:${L.eye * .85}px;margin-top:${FEED ? 14 : 26}px;color:rgba(255,255,255,.75);letter-spacing:.5em;font-weight:400;text-transform:none;font-family:Montserrat">redefining modern living</div>
+    <div style="flex:1;min-height:${FEED ? 120 : 200}px"></div>
+    <div class="panel" style="padding:${L.panel};width:100%">
+      ${CHECKS.map((c, i) => `<div class="check" style="font-size:${L.chk}px;${i ? `margin-top:${L.chkGap}px` : ''}"><span class="tick" style="width:${L.tick}px;height:${L.tick}px">${TICK(L.tick)}</span>${c}</div>`).join('')}
+    </div>
+    <div style="font-size:${L.thanks}px;font-weight:700;letter-spacing:-.02em;margin-top:${FEED ? 30 : 54}px">Thank you for trusting us.</div>
+    <div style="font-size:${L.slogan}px;font-weight:800;letter-spacing:-.03em;color:var(--bronze-hi);margin-top:${FEED ? 6 : 12}px">Secure assets, not excuses.</div>
+    <div class="pill" style="font-size:${L.url}px;padding:${L.url * .42}px ${L.url * .95}px;margin-top:${FEED ? 28 : 48}px">mindfirehomes.com</div>
+    <div style="font-size:${L.mail}px;color:rgba(255,255,255,.82);margin-top:${FEED ? 16 : 24}px">hello@mindfirehomes.com${PHONE ? ` &nbsp;·&nbsp; WhatsApp ${PHONE}` : ''}</div>
+    ${VERSE ? `<div class="verse" style="font-size:${L.verse}px;margin-top:${FEED ? 18 : 34}px">“Except the LORD build the house, they labour in vain that build it.”<br><span style="font-style:normal;font-weight:600;letter-spacing:.3em;font-size:.8em;color:rgba(235,192,138,.8)">PSALM 127:1</span></div>` : ''}
+  </div>`;
+window.ready = (async () => {
+  await Promise.all(['300 20px Inter', '400 20px Inter', '600 20px Inter', '700 20px Inter', '800 20px Inter', 'italic 300 20px Inter', '300 20px Montserrat', '700 20px Montserrat'].map((x) => document.fonts.load(x)));
+  await document.fonts.ready;
+  await Promise.all([...document.images].map((i) => i.decode().catch(() => console.warn('missing image', i.src))));
+  return true;
+})();
+</script>
+</body>
+</html>

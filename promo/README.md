@@ -13,6 +13,12 @@ music, so you can re-render after any change.
 | `audio/beat_120.wav` + 4 stems + `cues.json` | 48 kHz stereo | Remixing in Resolve / Fairlight |
 | `resolve/mindfire_10yr.lua` | Resolve 18+ | Builds the project with both timelines, stems and markers |
 
+## Flyer and anniversary copy
+
+- `anniversary-pack.md`: long-form, social and WhatsApp copy, with a claim-by-claim audit. Every unproven number is a `[FILL]` slot, not a guess.
+- `node flyer.mjs` writes `out/flyer_status.png` (1080×1920, WhatsApp/Instagram Status) and `out/flyer_feed.png` (1080×1350, groups and feed).
+  Options: `bg=path/to/estate.jpg` (your own background), `phone=+234...` (adds the WhatsApp line), `verse=0`.
+
 ## Storyboard (120 BPM, 1 bar = 2 s, 15 bars = 30 s)
 
 | Time | Scene | On screen | Sound |
