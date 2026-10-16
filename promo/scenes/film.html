@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mindfire Homes — Ten Years</title>
+<!-- Cormorant Garamond for the film's headlines (luxury, editorial); Inter (the site's face)
+     for small caps; Montserrat only inside the wordmark, matching public/logo.svg. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@400;500;600&family=Montserrat:wght@300;700&display=block" rel="stylesheet">
+<style>
+  :root { --deep: #0B1312; --gold: #D9B27A; --gold-hi: #F1D6A6; --brand-600: #006960; }
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  #stage { position: relative; overflow: hidden; background: var(--deep); color: #fff; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  #cam { position: absolute; inset: 0; }
+  .abs { position: absolute; }
+  .layer { position: absolute; inset: 0; overflow: hidden; }
+  .layer img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: center; will-change: transform; filter: contrast(1.04) saturate(1.06) brightness(.97); }
+  .serif { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: -.005em; }
+  .eyebrow { font-family: Inter, sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: .42em; color: var(--gold); }
+  .gold { color: var(--gold-hi); font-style: italic; font-weight: 400; }
+  .center { left: 0; right: 0; text-align: center; }
+  .mask { display: block; overflow: hidden; padding: .06em 0 .14em; margin: -.06em 0 -.14em; }
+  .mask > span { display: inline-block; will-change: transform, opacity; }
+  .shadow { text-shadow: 0 2px 30px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.35); }
+  .card { position: absolute; overflow: hidden; border-radius: 6px; box-shadow: 0 50px 100px -40px rgba(0,0,0,.8); background: #1a1a1a; }
+  .card img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; filter: contrast(1.05) saturate(1.06) brightness(1.0); will-change: transform; }
+  .slice { position: absolute; overflow: hidden; border-radius: 4px; box-shadow: 0 50px 100px -40px rgba(0,0,0,.8); }
+  .slice img { position: absolute; will-change: transform; }
+  .hair { position: absolute; height: 1px; background: linear-gradient(90deg, rgba(217,178,122,0), var(--gold) 50%, rgba(217,178,122,0)); }
+  .pill { display: inline-block; border: 1px solid rgba(217,178,122,.6); color: var(--gold-hi); border-radius: 999px; font-family: Inter; font-weight: 500; letter-spacing: .32em; text-transform: uppercase; }
+  .dust { position: absolute; left: 0; top: 0; border-radius: 50%; background: radial-gradient(circle, rgba(255,226,170,1) 0%, rgba(255,226,170,0) 70%); will-change: transform, opacity; }
+  .grain { position: absolute; inset: -50%; pointer-events: none; opacity: .045; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+</style>
+</head>
+<body>
+<div id="stage"><div id="cam"></div></div>
+<script>
+/* ───────────────────────────────────────────────────────────────────────────
+   Mindfire Homes · Ten Years (2016-2026). A 45 s brand film; every frame is render(t).
+   ?t=17.2 one frame · ?v=1 vertical. Timings match audio/cues_film.json (score.py).
+   Copy: owner-supplied facts (2016, 1,000+, the six services, @mindfirehomes, Nibeco
+   Gardens) and the live site (listings, the title-first practice). Stock photography
+   from lib/media.ts is atmosphere only and is never captioned as a Mindfire project.
+   ─────────────────────────────────────────────────────────────────────────── */
+const Q = new URLSearchParams(location.search);
+const V = Q.get('v') === '1';
+const W = V ? 1080 : 1920, H = V ? 1920 : 1080;
+const C = '../captures/';
+const STOCK = {
+  A: 'stock/photo-1600585154340-be6161a56a0c.jpg', // dusk house under a tree
+  B: 'stock/photo-1545324418-cc1a3fa10c00.jpg',    // apartment block rising into blue sky (portrait)
+  Cv: 'stock/photo-1600596542815-ffad4c1539a9.jpg', // white villa, pool
+  D: 'stock/photo-1600607687939-ce8a6c25118c.jpg', // living room
+  E: 'stock/photo-1613977257363-707ba9348227.jpg', // white villa, garden pool
+};
+const SERVICES = [
+  'Estate development', 'Land banking & sales', 'Building & construction',
+  'Property investment advisory', 'Documentation & title perfection', 'Facility management & after-sales',
+];
+
+// ── helpers ─────────────────────────────────────────────────────────────────
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, p) => a + (b - a) * p;
+const eOut = (p) => 1 - Math.pow(1 - p, 3);
+const eOutQuint = (p) => 1 - Math.pow(1 - p, 5);
+const eInOut = (p) => (p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+const px = (n) => `${n}px`;
+function rand(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+window.pending = [];
+function el(tag, cls, css, html, parent) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (css) Object.assign(e.style, css);
+  if (html != null) e.innerHTML = html;
+  (parent || cam).appendChild(e);
+  return e;
+}
+function show(e, on) { e.style.display = on ? '' : 'none'; }
+
+const stage = document.getElementById('stage');
+stage.style.width = px(W); stage.style.height = px(H);
+const cam = document.getElementById('cam');
+
+/* A text block whose lines rise out of a mask. Lines: [html, extraCss]. */
+function textBlock(lines, css, parent) {
+  const b = el('div', 'abs serif shadow', css, null, parent);
+  const spans = lines.map(([html, lc]) => {
+    const m = el('span', 'mask', lc || null, null, b);
+    return el('span', null, null, html, m);
+  });
+  return { b, spans };
+}
+/* Line i rises at times[i]; the whole block fades out over [outA, outB]. */
+function playBlock(blk, t, times, outA, outB, dur = 1.1) {
+  const out = eInOut(seg(t, outA, outB));
+  blk.b.style.opacity = 1 - out;
+  blk.b.style.filter = out > 0 ? `blur(${out * 6}px)` : 'none';
+  blk.spans.forEach((s, i) => {
+    const p = eOutQuint(seg(t, times[i], times[i] + dur));
+    s.style.transform = `translateY(${(1 - p) * 105}%)`;
+    s.style.opacity = clamp(p * 1.6);
+  });
+}
+
+// ── the wordmark (mark redrawn from public/logo.svg; never rotated) ─────────
+const MARK = `<svg viewBox="0 0 224 204" width="100%" height="100%"><polygon points="98,88 223,0 223,203 67,203 67,108" fill="#02A658"/><polygon points="0,17 98,88 98,190 0,190" fill="#4A877C"/><polygon points="67,108 98,88 130,108 130,190 67,190" fill="#4C5A62"/></svg>`;
+const lockup = (h) => `<div style="display:inline-flex;align-items:center;gap:${h * .22}px">
+  <div style="width:${h * 1.1}px;height:${h}px">${MARK}</div>
+  <div style="font-family:Montserrat,Inter,sans-serif;line-height:.92;text-align:left">
+    <div style="font-weight:700;font-size:${h * .56}px;letter-spacing:-.01em;color:#fff">MINDFIRE</div>
+    <div style="font-weight:300;font-size:${h * .4}px;color:#2FC27B;letter-spacing:.06em">HOMES</div></div></div>`;
+
+// ── full-bleed shots (cross-dissolve, slow camera) ──────────────────────────
+// a: start, b: end (hidden after), fi: fade-in, fo: fade-out to dark (0 = cut under the next shot)
+// s: [scale from, to], x/y: object-position % from -> to
+const SHOTS = [
+  { src: STOCK.A, a: 0.0, b: 6.9, fi: 2.2, fo: 0, s: [1.04, 1.13], x: [50, 46], y: [60, 52] },
+  { src: STOCK.Cv, a: 6.0, b: 9.9, fi: 0.9, fo: 0, s: [1.10, 1.03], x: [40, 58], y: [50, 50] },
+  { src: STOCK.E, a: 9.0, b: 12.2, fi: 0.9, fo: 0.9, s: [1.03, 1.12], x: [50, 50], y: [55, 45] },
+  { src: STOCK.B, a: 24.0, b: 33.2, fi: 0.7, fo: 0, s: [1.06, 1.12], x: [50, 50], y: [96, 8] },
+  { src: STOCK.D, a: 33.0, b: 36.9, fi: 0.9, fo: 0, s: [1.03, 1.10], x: [56, 44], y: [55, 55] },
+  { src: STOCK.A, a: 36.0, b: 39.9, fi: 0.9, fo: 0, s: [1.14, 1.20], x: [62, 56], y: [52, 48] },
+  { src: STOCK.Cv, a: 39.0, b: 41.4, fi: 0.9, fo: 0.9, s: [1.03, 1.08], x: [55, 50], y: [45, 50] },
+];
+const shotLayer = el('div', 'layer');
+SHOTS.forEach((s) => { s.layer = el('div', 'layer', null, `<img src="${C}${s.src}">`, shotLayer); s.img = s.layer.querySelector('img'); });
+// realistic grade: warm highlights, deep cool shadows, no heavy LUT
+const grade = el('div', 'layer', { background: 'linear-gradient(180deg, rgba(255,178,102,.10), rgba(255,178,102,0) 45%, rgba(8,24,22,.28) 100%)', mixBlendMode: 'soft-light' });
+const textShade = el('div', 'layer', { background: 'radial-gradient(ellipse 70% 60% at center, rgba(5,10,10,.72) 0%, rgba(5,10,10,.46) 60%, rgba(5,10,10,.3) 100%)' });
+
+// ── 1. open (0-6) · 2. problem (6-9) · 3. origin (9-12) ─────────────────────
+const HS = V ? 78 : 84;
+const open = textBlock([[`Every home`], [`begins with <span class="gold">a promise.</span>`]],
+  { left: 0, right: 0, top: px(H / 2 - HS * 1.05), textAlign: 'center', fontSize: px(HS), lineHeight: 1.08 });
+const probEye = el('div', 'abs eyebrow center shadow', { top: px(H / 2 - HS * 1.9), fontSize: px(V ? 17 : 18) }, 'Abuja');
+const problem = textBlock(
+  V ? [['The real risk in buying'], ['property here'], ['is rarely the price.'], [`<span class="gold" style="font-size:1.35em">It’s the title.</span>`]]
+    : [['The real risk in buying property'], ['is rarely the price.'], [`<span class="gold" style="font-size:1.35em">It’s the title.</span>`]],
+  { left: 0, right: 0, top: px(H / 2 - HS * (V ? 1.9 : 1.4)), textAlign: 'center', fontSize: px(HS * .92), lineHeight: 1.1 });
+const origEye = el('div', 'abs eyebrow center shadow', { top: px(H / 2 - HS * 1.6), fontSize: px(V ? 17 : 18) }, 'Since 2016');
+const origin = textBlock([['So we made one promise:'], [`<span class="gold" style="font-size:1.3em">check the title first.</span>`]],
+  { left: 0, right: 0, top: px(H / 2 - HS * 0.9), textAlign: 'center', fontSize: px(HS * .92), lineHeight: 1.12 });
+
+// ── 4. title (12-15) ────────────────────────────────────────────────────────
+const titleL = el('div', 'layer');
+const leak = el('div', 'abs', { width: px(W * 1.6), height: px(W * 1.6), borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,186,110,.55) 0%, rgba(255,140,60,.18) 30%, rgba(255,140,60,0) 60%)', mixBlendMode: 'screen', pointerEvents: 'none' });
+const TT = V ? { lock: 600, ten: 760, tenSize: 150, hair: 980, dates: 958, tag: 1050 } : { lock: 230, ten: 380, tenSize: 168, hair: 640, dates: 618, tag: 712 };
+const tLock = el('div', 'abs center', { top: px(TT.lock) }, lockup(V ? 96 : 100), titleL);
+const tTen = el('div', 'abs center serif', { top: px(TT.ten), fontSize: px(TT.tenSize), lineHeight: 1, letterSpacing: '.02em' }, 'Ten <span class="gold">Years</span>', titleL);
+tTen.style.fontWeight = 300;
+const hairL = el('div', 'hair', { top: px(TT.hair), right: px(W / 2 + (V ? 170 : 200)), width: px(V ? 260 : 420) }, null, titleL);
+const hairR = el('div', 'hair', { top: px(TT.hair), left: px(W / 2 + (V ? 170 : 200)), width: px(V ? 260 : 420) }, null, titleL);
+const tDates = el('div', 'abs eyebrow center', { top: px(TT.dates), fontSize: px(V ? 30 : 32), letterSpacing: '.38em', color: 'var(--gold-hi)', fontWeight: 400 }, '2016 &nbsp;—&nbsp; 2026', titleL);
+const tTag = el('div', 'abs center', { top: px(TT.tag), fontFamily: 'Montserrat', fontWeight: 300, fontSize: px(V ? 24 : 26), letterSpacing: '.55em', color: 'rgba(255,255,255,.72)' }, 'redefining modern living', titleL);
+
+// ── 5. portfolio (15-24): three editorial chapters ──────────────────────────
+const port = el('div', 'layer');
+const portBg = el('img', 'abs', { inset: '-6%', width: '112%', height: '112%', objectFit: 'cover', filter: 'blur(60px) brightness(.32) saturate(1.15)' }, null, port);
+const portEye = el('div', 'abs eyebrow', { left: px(V ? 70 : 120), top: px(V ? 230 : 84), fontSize: '16px' }, 'A decade of homes', port);
+const portNum = el('div', 'abs eyebrow', { right: px(V ? 70 : 120), top: px(V ? 230 : 84), fontSize: '16px', letterSpacing: '.3em' }, '', port);
+const PL = V
+  ? { text: { left: 70, top: 1340, width: 940, align: 'center' }, title: 92 }
+  : { text: { left: 1150, top: 360, width: 660, align: 'left' }, title: 104 };
+function caption(eye, title, detail, status) {
+  const b = el('div', 'abs', { left: px(PL.text.left), top: px(PL.text.top), width: px(PL.text.width), textAlign: PL.text.align }, null, port);
+  const blk = { b, parts: [] };
+  blk.parts.push(el('div', 'eyebrow', { fontSize: '17px' }, eye, b));
+  blk.parts.push(el('div', 'serif', { fontSize: px(PL.title), lineHeight: 1.02, marginTop: '26px' }, title, b));
+  blk.parts.push(el('div', 'serif', { fontSize: px(PL.title * .4), fontStyle: 'italic', color: 'rgba(255,255,255,.78)', marginTop: '14px' }, detail, b));
+  blk.parts.push(el('div', null, { marginTop: '34px' }, `<span class="pill" style="font-size:17px;padding:12px 26px">${status}</span>`, b));
+  return blk;
+}
+// Chapter 1: Project Elysian, the three renders from the listing, shown as a triptych
+const SL = [ // source rects in captures/photos/prop-1_01.jpg (1440x1800): x, y, w, h
+  [66, 400, 412, 1140], [480, 238, 476, 1317], [960, 390, 412, 1140],
+];
+const TRI = V ? { x: 40, y: 330, h: 900, gap: 20 } : { x: 130, y: 170, h: 760, gap: 22 };
+const triW = (TRI.h * 0.36);
+const elysian = { lead: 'photos/prop-1_01.jpg', cards: [], cap: caption('Nibeco Gardens', 'Project Elysian', '4-bedroom fully detached homes', 'Sold') };
+SL.forEach(([sx, sy, sw, sh], i) => {
+  const w = V ? (W - 2 * TRI.x - 2 * TRI.gap) / 3 : triW * (i === 1 ? 1.12 : 1);
+  const h = TRI.h * (i === 1 ? 1 : .9);
+  const x = V ? TRI.x + i * (w + TRI.gap) : TRI.x + [0, triW + TRI.gap, triW * 2.12 + TRI.gap * 2][i];
+  const y = TRI.y + (TRI.h - h) / 2;
+  const s = el('div', 'slice', { left: px(x), top: px(y), width: px(w), height: px(h) }, `<img src="${C}photos/prop-1_01.jpg">`, port);
+  const k = Math.max(w / sw, h / sh) * 1.04;  // cover the slot with the slice, a touch of overscan
+  const img = s.querySelector('img');
+  Object.assign(img.style, { width: px(1440 * k), height: px(1800 * k), left: px(-(sx + sw / 2) * k + w / 2), top: px(-(sy + sh / 2) * k + h / 2) });
+  elysian.cards.push({ e: s, img, delay: i * 0.22 });
+});
+// Chapters 2 and 3: two real listings, a lead photo and a detail photo each
+function pairChapter(lead, detail, cap) {
+  const G = V ? { a: [70, 330, 620, 775], b: [600, 760, 410, 512] } : { a: [130, 150, 560, 700], b: [610, 430, 400, 500] };
+  const a = el('div', 'card', { left: px(G.a[0]), top: px(G.a[1]), width: px(G.a[2]), height: px(G.a[3]) }, `<img src="${C}${lead}">`, port);
+  const b = el('div', 'card', { left: px(G.b[0]), top: px(G.b[1]), width: px(G.b[2]), height: px(G.b[3]) }, `<img src="${C}${detail}">`, port);
+  return { lead, cards: [{ e: a, img: a.querySelector('img'), delay: 0 }, { e: b, img: b.querySelector('img'), delay: .3 }], cap };
+}
+const jahi = pairChapter('photos/prop-5_01.jpg', 'photos/prop-5_04.jpg', caption('Jahi, Abuja', '4-bedroom penthouse', 'with a private elevator', 'For sale'));
+const suncity = pairChapter('photos/prop-3_01.jpg', 'photos/prop-3_02.jpg', caption('Sun City Estate, Abuja', '4-bedroom duplex', 'with a 3-bedroom chalet', 'For sale'));
+const CHAPTERS = [{ a: 15, ...elysian }, { a: 18, ...jahi }, { a: 21, ...suncity }];
+
+// ── 6. 1,000+ (24-27) · 7. services (27-33) ─────────────────────────────────
+const statL = el('div', 'layer');
+const sEye = el('div', 'abs eyebrow center shadow', { top: px(H / 2 - (V ? 270 : 255)), fontSize: '18px' }, 'Since 2016', statL);
+const sNum = el('div', 'abs center serif shadow', { top: px(H / 2 - (V ? 170 : 160)), fontSize: px(V ? 230 : 250), lineHeight: 1, fontWeight: 300, letterSpacing: '-.01em', fontVariantNumeric: 'lining-nums' }, '0', statL);
+const sCap = el('div', 'abs center serif shadow', { top: px(H / 2 + (V ? 100 : 120)), fontSize: px(V ? 50 : 54), fontStyle: 'italic', color: 'var(--gold-hi)' }, 'proud property owners', statL);
+const servL = el('div', 'layer');
+const servShade = el('div', 'layer', { background: 'rgba(8,14,13,.72)', backdropFilter: 'blur(18px)' }, null, servL);
+const SV = V ? { eye: 380, head: 430, list: 700, rowH: 132, cols: 1, colW: 900, x0: 90 } : { eye: 190, head: 240, list: 455, rowH: 128, cols: 2, colW: 840, x0: 130 };
+const servEye = el('div', 'abs eyebrow center', { top: px(SV.eye), fontSize: '17px' }, 'One company · every step', servL);
+const servHead = textBlock([[`From land <span class="gold">to keys.</span>`]], { left: 0, right: 0, top: px(SV.head), textAlign: 'center', fontSize: px(V ? 96 : 100) }, servL);
+const servRows = SERVICES.map((s, i) => {
+  const col = SV.cols === 2 ? Math.floor(i / 3) : 0, row = SV.cols === 2 ? i % 3 : i;
+  const r = el('div', 'abs', { left: px(SV.x0 + col * (SV.colW + 0)), top: px(SV.list + row * SV.rowH), width: px(SV.colW), display: 'flex', alignItems: 'baseline', gap: '26px' }, null, servL);
+  el('div', 'eyebrow', { fontSize: '18px', letterSpacing: '.2em', minWidth: '40px' }, String(i + 1).padStart(2, '0'), r);
+  el('div', 'serif', { fontSize: px(V ? 54 : 52), lineHeight: 1.1, whiteSpace: 'nowrap' }, s, r);
+  const line = el('div', 'abs', { left: '66px', right: px(SV.cols === 2 ? 60 : 0), top: px(SV.rowH * .62), height: '1px', background: 'rgba(217,178,122,.25)', transformOrigin: 'left' }, null, r);
+  return { r, line };
+});
+
+// ── 8. promise (33-36) · 9. thanks (36-39) · 10. next ten (39-41) ───────────
+const promise = textBlock([['Every title, checked.'], ['Every document, shared.'], [`Every term, <span class="gold">in writing.</span>`]],
+  { left: 0, right: 0, top: px(H / 2 - HS * 1.75), textAlign: 'center', fontSize: px(HS * (V ? 1.0 : 1.05)), lineHeight: 1.16 });
+const thanks = textBlock(
+  V ? [['To every family'], ['who trusted us'], ['with a home —'], [`<span class="gold" style="font-size:1.7em">thank you.</span>`]]
+    : [['To every family who trusted us'], ['with a home —'], [`<span class="gold" style="font-size:1.7em">thank you.</span>`]],
+  { left: 0, right: 0, top: px(H / 2 - HS * (V ? 2.2 : 1.75)), textAlign: 'center', fontSize: px(HS), lineHeight: 1.12 });
+const nextTen = textBlock(V ? [['Here’s to'], [`the next <span class="gold">ten.</span>`]] : [[`Here’s to the next <span class="gold">ten.</span>`]],
+  { left: 0, right: 0, top: px(H / 2 - (V ? 140 : 75)), textAlign: 'center', fontSize: px(V ? 120 : 130), lineHeight: 1.05, fontWeight: 300 });
+
+// ── 11. end card (41-45) ────────────────────────────────────────────────────
+const endL = el('div', 'layer');
+const EC = V ? { lock: 600, line: 810, hair: 1012, dates: 990, web: 1100, slogan: 1200 } : { lock: 250, line: 452, hair: 584, dates: 562, web: 676, slogan: 760 };
+const eLock = el('div', 'abs center', { top: px(EC.lock) }, lockup(V ? 112 : 118), endL);
+const eLine = el('div', 'abs center serif', { top: px(EC.line), fontSize: px(V ? 50 : 54), fontStyle: 'italic' }, V ? 'Ten years of<br>redefining modern living.' : 'Ten years of redefining modern living.', endL);
+if (V) { eLine.style.lineHeight = 1.15; }
+const eHairL = el('div', 'hair', { top: px(EC.hair), right: px(W / 2 + 190), width: px(V ? 200 : 300) }, null, endL);
+const eHairR = el('div', 'hair', { top: px(EC.hair), left: px(W / 2 + 190), width: px(V ? 200 : 300) }, null, endL);
+const eDates = el('div', 'abs eyebrow center', { top: px(EC.dates), fontSize: '28px', fontWeight: 400, letterSpacing: '.38em', color: 'var(--gold-hi)' }, '2016 &nbsp;—&nbsp; 2026', endL);
+const eWeb = el('div', 'abs center', { top: px(EC.web), fontSize: px(V ? 34 : 32), fontWeight: 500, letterSpacing: '.12em' }, V ? 'mindfirehomes.com<br><span style="color:rgba(255,255,255,.7)">@mindfirehomes</span>' : 'mindfirehomes.com &nbsp;<span style="color:var(--gold)">·</span>&nbsp; <span style="color:rgba(255,255,255,.75)">@mindfirehomes</span>', endL);
+if (V) { eWeb.style.lineHeight = 1.6; }
+const eSlogan = el('div', 'abs eyebrow center', { top: px(EC.slogan + (V ? 40 : 0)), fontSize: '18px', color: 'var(--gold)' }, 'Secure assets, not excuses.', endL);
+
+// ── dust, letterbox, light leak, grain, vignette, fade ──────────────────────
+const dustL = el('div', 'layer', { pointerEvents: 'none' });
+const r = rand(10);
+const DUST = Array.from({ length: 70 }, () => ({ d: el('div', 'dust', null, null, dustL), x: r() * W, y: r() * H, s: 4 + r() * 10, vy: 12 + r() * 30, vx: (r() - .5) * 14, ph: r() * 6.28, tw: .6 + r() * 1.6 }));
+DUST.forEach((p) => { p.d.style.width = px(p.s); p.d.style.height = px(p.s); });
+cam.appendChild(leak);
+const LB = V ? 0 : Math.round((H - W / 2.39) / 2);
+const lbTop = el('div', 'abs', { left: 0, right: 0, top: 0, height: px(LB), background: '#000' }, null, stage);
+const lbBot = el('div', 'abs', { left: 0, right: 0, bottom: 0, height: px(LB), background: '#000' }, null, stage);
+const grain = el('div', 'grain', null, null, stage);
+const vignette = el('div', 'abs', { inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at center, rgba(0,0,0,0) 50%, rgba(0,0,0,.5) 100%)' }, null, stage);
+const black = el('div', 'abs', { inset: 0, background: '#000', pointerEvents: 'none' }, null, stage);
+
+// ── render ──────────────────────────────────────────────────────────────────
+function renderShots(t) {
+  SHOTS.forEach((s) => {
+    const on = t >= s.a && t < s.b;
+    show(s.layer, on);
+    if (!on) return;
+    const p = seg(t, s.a, s.b);
+    const fin = eInOut(seg(t, s.a, s.a + s.fi));
+    const fout = s.fo ? eInOut(seg(t, s.b - s.fo, s.b)) : 0;
+    s.layer.style.opacity = fin * (1 - fout);
+    s.img.style.transform = `scale(${lerp(s.s[0], s.s[1], p)})`;
+    s.img.style.objectPosition = `${lerp(s.x[0], s.x[1], p)}% ${lerp(s.y[0], s.y[1], p)}%`;
+  });
+  // text needs more shade over photos; the stat and services scenes bring their own
+  const textOn = t < 12 || (t >= 33 && t < 41);
+  textShade.style.opacity = textOn ? 1 : (t >= 24 && t < 27 ? .8 : 0);
+}
+
+function renderTitle(t) {
+  const on = t >= 12 && t < 15.2;
+  show(titleL, on);
+  if (!on) return;
+  const out = eInOut(seg(t, 14.5, 15.1));
+  titleL.style.opacity = 1 - out;
+  titleL.style.transform = `scale(${lerp(1, 1.03, out)})`;
+  const lp = eOut(seg(t, 12.15, 13.0));
+  tLock.style.opacity = lp; tLock.style.transform = `translateY(${(1 - lp) * 18}px)`;
+  const tp = eOutQuint(seg(t, 12.4, 13.6));
+  tTen.style.opacity = tp; tTen.style.letterSpacing = `${lerp(.22, .02, tp)}em`; tTen.style.filter = `blur(${(1 - tp) * 10}px)`;
+  const hp = eOutQuint(seg(t, 12.8, 14.0));
+  [hairL, hairR].forEach((h, i) => { h.style.transform = `scaleX(${hp})`; h.style.transformOrigin = i ? 'left' : 'right'; h.style.opacity = hp; });
+  tDates.style.opacity = eOut(seg(t, 13.0, 13.8));
+  tTag.style.opacity = eOut(seg(t, 13.4, 14.2)) * .9;
+}
+
+function renderPortfolio(t) {
+  const on = t >= 15 && t < 24.6;
+  show(port, on);
+  if (!on) return;
+  port.style.opacity = eInOut(seg(t, 15, 15.6)) * (1 - eInOut(seg(t, 23.9, 24.6)));
+  let cur = CHAPTERS[0];
+  CHAPTERS.forEach((ch) => { if (t >= ch.a) cur = ch; });
+  if (portBg.getAttribute('src') !== C + cur.lead) { portBg.src = C + cur.lead; window.pending.push(portBg.decode().catch(() => {})); }
+  portNum.textContent = `0${CHAPTERS.indexOf(cur) + 1} / 03`;
+  CHAPTERS.forEach((ch) => {
+    const local = t - ch.a;
+    const on2 = local > -0.01 && local < 3.55;
+    ch.cards.forEach((c) => show(c.e, on2)); show(ch.cap.b, on2);
+    if (!on2) return;
+    const out = eInOut(seg(local, 2.75, 3.4));
+    ch.cards.forEach((c) => {
+      const p = eOutQuint(seg(local, c.delay, c.delay + 1.2));
+      c.e.style.opacity = clamp(p * 1.5) * (1 - out);
+      c.e.style.clipPath = `inset(${(1 - p) * 100}% 0 0 0)`;
+      c.e.style.transform = `translate(${-out * 40}px, ${(1 - p) * 50}px)`;
+      c.img.style.transform = `scale(${lerp(1.12, 1.02, seg(local, 0, 3.4))})`;
+    });
+    ch.cap.parts.forEach((pt, i) => {
+      const p = eOutQuint(seg(local, .35 + i * .16, 1.35 + i * .16));
+      pt.style.opacity = p * (1 - out);
+      pt.style.transform = `translateY(${(1 - p) * 26}px)`;
+    });
+  });
+}
+
+function renderStatServices(t) {
+  show(statL, t >= 24 && t < 27.4);
+  if (t >= 24 && t < 27.4) {
+    const out = eInOut(seg(t, 26.8, 27.4));
+    statL.style.opacity = eInOut(seg(t, 24.1, 24.7)) * (1 - out);
+    sEye.style.opacity = eOut(seg(t, 24.2, 24.8));
+    const cp = eOut(seg(t, 24.3, 25.6));
+    const n = Math.round(1000 * cp);
+    sNum.innerHTML = n.toLocaleString('en-US') + `<span class="gold" style="opacity:${seg(t, 25.55, 25.8)}">+</span>`;
+    sNum.style.transform = `scale(${lerp(.94, 1, cp)})`;
+    sCap.style.opacity = eOut(seg(t, 25.6, 26.2));
+    sCap.style.transform = `translateY(${(1 - eOut(seg(t, 25.6, 26.4))) * 16}px)`;
+  }
+  const son = t >= 27 && t < 33.3;
+  show(servL, son);
+  if (son) {
+    servL.style.opacity = eInOut(seg(t, 27, 27.6)) * (1 - eInOut(seg(t, 32.6, 33.3)));
+    servEye.style.opacity = eOut(seg(t, 27.1, 27.7));
+    playBlock(servHead, t, [27.2], 99, 100);
+    servRows.forEach(({ r, line }, i) => {
+      const a = 27.9 + i * .42;
+      const p = eOutQuint(seg(t, a, a + 1.0));
+      r.style.opacity = p; r.style.transform = `translateY(${(1 - p) * 22}px)`;
+      line.style.transform = `scaleX(${eOutQuint(seg(t, a + .2, a + 1.4))})`;
+    });
+  }
+}
+
+function renderEnd(t) {
+  const on = t >= 40.8;
+  show(endL, on);
+  if (!on) return;
+  endL.style.opacity = eInOut(seg(t, 40.8, 41.4));
+  const lp = eOut(seg(t, 41.1, 42.0));
+  eLock.style.opacity = lp; eLock.style.transform = `translateY(${(1 - lp) * 16}px)`;
+  eLine.style.opacity = eOut(seg(t, 41.5, 42.4));
+  const hp = eOutQuint(seg(t, 41.8, 43.0));
+  [eHairL, eHairR].forEach((h, i) => { h.style.transform = `scaleX(${hp})`; h.style.transformOrigin = i ? 'left' : 'right'; h.style.opacity = hp; });
+  eDates.style.opacity = eOut(seg(t, 41.8, 42.6));
+  eWeb.style.opacity = eOut(seg(t, 42.2, 43.0));
+  eSlogan.style.opacity = eOut(seg(t, 42.6, 43.4));
+}
+
+function renderAtmos(t) {
+  // gold dust in the title and the end card
+  const dOn = (t >= 12 && t < 15.2) || t >= 40.8;
+  const dA = t < 20 ? seg(t, 12, 12.8) * (1 - seg(t, 14.5, 15.2)) : seg(t, 40.8, 41.6);
+  show(dustL, dOn);
+  if (dOn) DUST.forEach((p) => {
+    const y = ((p.y - p.vy * t) % H + H) % H, x = p.x + p.vx * t + Math.sin(t * .6 + p.ph) * 14;
+    p.d.style.transform = `translate(${x}px,${y}px)`;
+    p.d.style.opacity = dA * (.35 + .65 * (.5 + .5 * Math.sin(t * p.tw + p.ph)));
+  });
+  // light leak sweeps across on the two big moments
+  const k1 = seg(t, 11.7, 14.6), k2 = seg(t, 40.6, 44.5);
+  const lk = Math.max(Math.sin(Math.PI * k1) * .55, Math.sin(Math.PI * k2) * .4);
+  const kp = t < 20 ? k1 : k2;
+  leak.style.opacity = lk;
+  leak.style.transform = `translate(${lerp(-W * 1.1, W * .1, kp)}px, ${-W * .55 + H * .2}px)`;
+  // letterbox: 2.39:1 through the opening, opens on the title
+  const lb = 1 - eInOut(seg(t, 12.0, 13.4));
+  lbTop.style.transform = `translateY(${-(1 - lb) * LB}px)`;
+  lbBot.style.transform = `translateY(${(1 - lb) * LB}px)`;
+  grain.style.transform = `translate(${(Math.floor(t * 24) * 37) % 130 - 65}px,${(Math.floor(t * 24) * 53) % 130 - 65}px)`;
+  black.style.opacity = Math.max(1 - eInOut(seg(t, 0, 1.4)), eInOut(seg(t, 44.0, 45.0)));
+}
+
+function render(t) {
+  window.pending = [];
+  renderShots(t);
+  playBlock(open, t, [0.8, 1.8], 5.0, 5.8);
+  show(open.b, t < 6);
+  show(probEye, t >= 6 && t < 9.3); show(problem.b, t >= 6 && t < 9.3);
+  probEye.style.opacity = eOut(seg(t, 6.2, 6.9)) * (1 - eInOut(seg(t, 8.6, 9.2)));
+  playBlock(problem, t, V ? [6.3, 6.65, 7.0, 7.8] : [6.4, 6.9, 7.8], 8.6, 9.2);
+  show(origEye, t >= 9 && t < 12); show(origin.b, t >= 9 && t < 12);
+  origEye.style.opacity = eOut(seg(t, 9.2, 9.9)) * (1 - eInOut(seg(t, 11.3, 11.9)));
+  playBlock(origin, t, [9.5, 10.5], 11.3, 11.9);
+  renderTitle(t);
+  renderPortfolio(t);
+  renderStatServices(t);
+  show(promise.b, t >= 33 && t < 36.1); playBlock(promise, t, [33.3, 34.0, 34.7], 35.4, 36.0);
+  show(thanks.b, t >= 36 && t < 39.1); playBlock(thanks, t, V ? [36.3, 36.6, 36.9, 37.4] : [36.3, 36.75, 37.4], 38.4, 39.0);
+  show(nextTen.b, t >= 39 && t < 41.1); playBlock(nextTen, t, V ? [39.2, 39.5] : [39.2], 40.4, 41.0, 1.3);
+  renderEnd(t);
+  renderAtmos(t);
+  return Promise.all(window.pending);
+}
+window.render = render;
+
+window.ready = (async () => {
+  const fonts = ['300 20px "Cormorant Garamond"', 'italic 300 20px "Cormorant Garamond"', 'italic 400 20px "Cormorant Garamond"', '400 20px "Cormorant Garamond"', '400 20px Inter', '500 20px Inter', '600 20px Inter', '300 20px Montserrat', '700 20px Montserrat'];
+  await Promise.all(fonts.map((f) => document.fonts.load(f)));
+  await document.fonts.ready;
+  // One at a time: Chromium can reject decode() when several large images decode at once.
+  for (const img of document.images) {
+    if (!img.getAttribute('src')) continue;
+    let ok = false;
+    for (let tries = 0; tries < 3 && !ok; tries++) {
+      try { await img.decode(); ok = true; } catch (e) { await new Promise((r) => setTimeout(r, 250)); }
+    }
+    if (!ok) console.warn('missing', img.getAttribute('src'));
+  }
+  return true;
+})();
+const qt = Q.get('t');
+window.ready.then(() => render(qt != null ? parseFloat(qt) : 0));
+</script>
+</body>
+</html>

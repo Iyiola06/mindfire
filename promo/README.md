@@ -13,11 +13,48 @@ music, so you can re-render after any change.
 | `audio/beat_120.wav` + 4 stems + `cues.json` | 48 kHz stereo | Remixing in Resolve / Fairlight |
 | `resolve/mindfire_10yr.lua` | Resolve 18+ | Builds the project with both timelines, stems and markers |
 
+## The brand film (UHD, 45 s): the main deliverable
+
+A slower, cinematic cut in the language of luxury-property films: piano-led score, slow camera moves,
+realistic grade, editorial serif type, 2.39:1 letterbox that opens on the title.
+
+| Output | Spec |
+| --- | --- |
+| `out/mindfire_10yr_film_uhd_16x9.mp4` | 3840×2160, 24 fps, H.264 High 5.1 + AAC 320k |
+| `out/mindfire_10yr_film_uhd_9x16.mp4` | 2160×3840, 24 fps |
+| `out/mindfire_10yr_film_1080_*.mp4` | 1080p downscales for WhatsApp and slow connections |
+| `audio/score_80.wav` + `score_stem_*.wav` + `cues_film.json` | Felt piano, strings, pulse, fx |
+
+| Time | Scene |
+| --- | --- |
+| 0–6 s | "Every home begins with a promise." Dusk house, letterbox |
+| 6–9 s | "The real risk in buying property is rarely the price. *It's the title.*" |
+| 9–12 s | "Since 2016 · So we made one promise: *check the title first.*" |
+| 12–15 s | Letterbox opens: logo, **Ten Years**, 2016 — 2026, gold dust, light leak |
+| 15–24 s | A decade of homes: Project Elysian (Nibeco Gardens, sold), Jahi penthouse, Sun City duplex |
+| 24–27 s | **1,000+** proud property owners (counter) |
+| 27–33 s | "From land *to keys.*" The six services |
+| 33–36 s | "Every title, checked. Every document, shared. Every term, *in writing.*" |
+| 36–39 s | "To every family who trusted us with a home — *thank you.*" |
+| 39–45 s | "Here's to the next *ten.*" End card: logo, 2016 — 2026, mindfirehomes.com · @mindfirehomes, "Secure assets, not excuses." |
+
+```bash
+node stock.mjs            # the site's editorial photography (lib/media.ts) at 3840 px
+python score.py           # -> audio/score_80.wav, stems, cues_film.json
+node film.mjs stills h    # QA sheet; also: stills v
+node film.mjs video h     # ~25 min at 4K; also: video v
+```
+
+The five full-frame photographs are the licensed stand-ins the website already uses (`lib/media.ts`).
+In the film they are atmosphere only and never captioned as a Mindfire project; every captioned
+property is a real listing. Swap in Mindfire's own drone or photo shoot by editing `STOCK` in
+`scenes/film.html`.
+
 ## Flyer and anniversary copy
 
 - `anniversary-pack.md`: long-form, social and WhatsApp copy, with a claim-by-claim audit. Every unproven number is a `[FILL]` slot, not a guess.
 - `node flyer.mjs` writes `out/flyer_status.png` (1080×1920, WhatsApp/Instagram Status) and `out/flyer_feed.png` (1080×1350, groups and feed).
-  Options: `bg=path/to/estate.jpg` (your own background), `phone=+234...` (adds the WhatsApp line), `verse=0`.
+  Options: `bg=path/to/estate.jpg` (your own background), `phone=+234...` (adds the WhatsApp line), `verse=1` (adds Psalm 127:1).
 
 ## Storyboard (120 BPM, 1 bar = 2 s, 15 bars = 30 s)
 

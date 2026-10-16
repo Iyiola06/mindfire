@@ -1,5 +1,9 @@
 # Mindfire Homes · 10th Anniversary Pack (claim-checked)
 
+> **Owner answers (Oct 2026):** founded **2016**; **1,000+** property owners; flagship **Nibeco Gardens**;
+> all six services offered; handle **@mindfirehomes**; no scripture in the film or flyer. These are the
+> owner's figures. Keep the signed agreements that back "1,000+" on file in case anyone asks.
+
 This keeps the voice and structure of the draft pack, with one rule: **every sentence must survive a buyer, a
 journalist or a regulator asking "show me."** Lines marked `[FILL]` are strong, but only once you put the real,
 documented number or name in. If you can't evidence a `[FILL]`, delete the line. Don't round it up.
@@ -63,13 +67,17 @@ For ten years, that has meant five things on every property:
 5. **We put the terms in writing before you commit.** Deposit, milestones, duration, every cost. Nothing appears later.
 
 In a decade, we have:
-- Helped `[FILL: exact number]` families and investors secure property in Abuja
-- `[FILL: named estates / developments, with locations]`
+- Helped 1,000+ proud property owners secure their homes and land, since 2016
+- Sold homes in communities like Project Elysian at Nibeco Gardens
 - Offered flexible payment plans, agreed in writing before commitment
 
-Our services: `[FILL: keep only what you deliver today, one named example each, e.g. "Property sales and
-advisory", "Title search and documentation", "Estate development: [estate name]", "Facility management:
-[estate name]"]`
+Our services, from land to keys:
+1. **Estate development**
+2. **Land banking & sales**
+3. **Building & construction**
+4. **Property investment advisory**
+5. **Documentation & title perfection**
+6. **Facility management & after-sales support**
 
 To every client, partner and team member who trusted us: thank you.
 
@@ -85,9 +93,9 @@ The next ten starts now. **Secure assets, not excuses.**
 
 **10 YEARS STRONG!**
 
-Mindfire Homes is 10! 🎉
+Mindfire Homes is 10! 🎉 (2016–2026)
 
-For a decade, we've been redefining modern living in Abuja, one verified title at a time.
+1,000+ proud property owners. For a decade, we've been redefining modern living in Abuja, one verified title at a time.
 
 ✅ Title checked with the land registry before we list
 ✅ Every document in your hands
@@ -100,7 +108,7 @@ Thank you for trusting us with your property goals. We're just getting started.
 
 **Secure assets, not excuses.**
 
-🌐 mindfirehomes.com · ✉️ hello@mindfirehomes.com
+🌐 mindfirehomes.com · ✉️ hello@mindfirehomes.com · @mindfirehomes
 #MindfireAt10 #MindfireHomes #AbujaRealEstate
 
 ---
@@ -109,9 +117,9 @@ Thank you for trusting us with your property goals. We're just getting started.
 
 🏠 MINDFIRE HOMES IS 10! 🎉
 
-10 years ago we made one promise: check the title *before* we sell the home.
+In 2016 we made one promise: check the title *before* we sell the home. 1,000+ property owners later,
 
-We've kept it on every property since.
+we've kept it on every property.
 
 ✅ Titles checked with the land registry before listing
 ✅ Full documents shared, not summarised
@@ -125,7 +133,7 @@ Ready to own property you can verify? Let's talk.
 
 🌐 www.mindfirehomes.com
 ✉️ hello@mindfirehomes.com
-📞 `[FILL: WhatsApp number]`
+📲 @mindfirehomes
 
 ---
 

@@ -1,6 +1,6 @@
 // Renders the 10-year flyer as PNGs.
 //   node promo/flyer.mjs                                   -> out/flyer_status.png (1080x1920), out/flyer_feed.png (1080x1350)
-//   node promo/flyer.mjs bg=/abs/path/estate.jpg phone=+234... verse=0
+//   node promo/flyer.mjs bg=/abs/path/estate.jpg phone=+234... verse=1
 import { chromium } from 'playwright-core';
 import path from 'node:path';
 import fs from 'node:fs';

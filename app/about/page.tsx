@@ -24,20 +24,16 @@ export const metadata: Metadata = {
 };
 
 /**
- * OWNER ACTION REQUIRED — company facts.
+ * Company facts, supplied by the owner for the 10th anniversary (October 2026).
+ * The earlier "Founded in 2015" line was wrong; the business started in 2016.
  *
- * The previous version of this page stated "Founded in 2015", "10+ Years
- * Experience", and "$500M Sales Volume". None of those figures exist anywhere
- * in this codebase or its data, so they have been removed rather than carried
- * forward. Supply the real values here and the milestones band renders itself.
- *
- * Every entry must be something the business can evidence if a buyer asks.
- * Leave the array empty rather than filling it with round numbers.
- *
- *   { value: '2015', label: 'Year founded' },
- *   { value: '84', label: 'Homes handed over' },
+ * Every entry must be something the business can evidence if a buyer asks:
+ * keep the signed sale agreements that back the owner count on file.
  */
-const MILESTONES: { value: string; label: string }[] = [];
+const MILESTONES: { value: string; label: string }[] = [
+    { value: '2016', label: 'Year founded' },
+    { value: '1,000+', label: 'Property owners' },
+];
 
 /**
  * OWNER ACTION REQUIRED — team.

@@ -31,14 +31,14 @@
 /* ?f=status (1080x1920, WhatsApp/IG Status) | ?f=feed (1080x1350, groups/feed)
    ?bg=../captures/photos/x.jpg  your estate background (any path or URL)
    ?phone=+2349012345678         adds the WhatsApp line (leave out until it is real)
-   ?verse=0                      drops Psalm 127:1
+   ?verse=1                      adds Psalm 127:1 (off by default, per the owner)
    Every claim below is on mindfirehomes.com; see promo/anniversary-pack.md. */
 const Q = new URLSearchParams(location.search);
 const FEED = Q.get('f') === 'feed';
 const W = 1080, H = FEED ? 1350 : 1920;
 const BG = Q.get('bg') || '../captures/photos/prop-3_01.jpg';
 const PHONE = Q.get('phone');
-const VERSE = Q.get('verse') !== '0';
+const VERSE = Q.get('verse') === '1';
 const CHECKS = [                         // app/page.tsx CREDIBILITY + app/about/page.tsx
   'Title checked before every listing',
   'Every document in your hands',
@@ -69,15 +69,16 @@ f.innerHTML = `
     <div class="eyebrow" style="font-size:${L.eye}px;margin-top:${L.gapTop}px">Celebrating</div>
     <div class="ten" style="font-size:${L.ten}px;margin-top:${FEED ? 6 : 14}px">10</div>
     <div class="years" style="font-size:${L.years}px;margin-top:${FEED ? 8 : 18}px">Years strong</div>
+    <div class="eyebrow" style="font-size:${L.eye * 1.1}px;margin-top:${FEED ? 12 : 22}px;letter-spacing:.4em;font-weight:500">2016 &nbsp;—&nbsp; 2026</div>
     <div class="eyebrow" style="font-size:${L.eye * .85}px;margin-top:${FEED ? 14 : 26}px;color:rgba(255,255,255,.75);letter-spacing:.5em;font-weight:400;text-transform:none;font-family:Montserrat">redefining modern living</div>
     <div style="flex:1;min-height:${FEED ? 120 : 200}px"></div>
     <div class="panel" style="padding:${L.panel};width:100%">
       ${CHECKS.map((c, i) => `<div class="check" style="font-size:${L.chk}px;${i ? `margin-top:${L.chkGap}px` : ''}"><span class="tick" style="width:${L.tick}px;height:${L.tick}px">${TICK(L.tick)}</span>${c}</div>`).join('')}
     </div>
-    <div style="font-size:${L.thanks}px;font-weight:700;letter-spacing:-.02em;margin-top:${FEED ? 30 : 54}px">Thank you for trusting us.</div>
+    <div style="font-size:${L.thanks}px;font-weight:700;letter-spacing:-.02em;margin-top:${FEED ? 26 : 46}px"><span style="color:var(--bronze-hi)">1,000+</span> proud property owners.<br>Thank you for trusting us.</div>
     <div style="font-size:${L.slogan}px;font-weight:800;letter-spacing:-.03em;color:var(--bronze-hi);margin-top:${FEED ? 6 : 12}px">Secure assets, not excuses.</div>
     <div class="pill" style="font-size:${L.url}px;padding:${L.url * .42}px ${L.url * .95}px;margin-top:${FEED ? 28 : 48}px">mindfirehomes.com</div>
-    <div style="font-size:${L.mail}px;color:rgba(255,255,255,.82);margin-top:${FEED ? 16 : 24}px">hello@mindfirehomes.com${PHONE ? ` &nbsp;·&nbsp; WhatsApp ${PHONE}` : ''}</div>
+    <div style="font-size:${L.mail}px;color:rgba(255,255,255,.82);margin-top:${FEED ? 16 : 24}px">hello@mindfirehomes.com &nbsp;·&nbsp; @mindfirehomes${PHONE ? ` &nbsp;·&nbsp; WhatsApp ${PHONE}` : ''}</div>
     ${VERSE ? `<div class="verse" style="font-size:${L.verse}px;margin-top:${FEED ? 18 : 34}px">“Except the LORD build the house, they labour in vain that build it.”<br><span style="font-style:normal;font-weight:600;letter-spacing:.3em;font-size:.8em;color:rgba(235,192,138,.8)">PSALM 127:1</span></div>` : ''}
   </div>`;
 window.ready = (async () => {
