@@ -157,3 +157,5 @@ On another machine, set `CHROME=/path/to/chrome` if Chromium isn't at `/opt/pw-b
 | Developer flyers (Skylands/Nibeco artwork) are among Project Elysian's photos | Kept out of the montage and wall; Elysian appears only as its live listing page |
 | The logo is a raster trace (`public/logo.svg`, 150 KB) | The mark is redrawn as three clean polygons in `scenes/promo.html` (`MARK`) and is never rotated |
 | `xstack` needs at least 2 inputs | A single still skips tiling |
+| A finger over the lens in the top corners of the site-visit photo | Cropped the top 250 px of `site-visit-villa` before upscaling; re-rendered 47.5–51.5 s with `film.mjs ... from=47.5 to=51.5` and spliced it in |
+| A 4K re-render takes ~45 min per orientation | `from=`/`to=` re-renders one section and splices it frame-accurately into the existing master |

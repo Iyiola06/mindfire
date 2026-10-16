@@ -3,6 +3,8 @@
 //   node promo/film.mjs stills v "13,20.5"
 //   node promo/film.mjs video h                  -> out/mindfire_10yr_film_uhd_16x9.mp4  (3840x2160, 24 fps)
 //   node promo/film.mjs video v                  -> out/mindfire_10yr_film_uhd_9x16.mp4  (2160x3840)
+//   node promo/film.mjs video v celebration from=47.5 to=51.5   re-render one section and splice it
+//                                into the existing video (much faster than a full 4K render)
 //   add  celebration  to any command for the 60 s cut built from the owner's photos
 //   (scenes/celebration.html + audio/score_celebration_80.wav -> out/mindfire_10yr_celebration_uhd_*.mp4)
 // The page is laid out at 1920x1080 (or 1080x1920) and screenshotted at deviceScaleFactor 2,
@@ -18,10 +20,11 @@ const CHROME = process.env.CHROME || '/opt/pw-browsers/chromium-1194/chrome-linu
 const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 const args = process.argv.slice(2);
 const CELEB = args.includes('celebration');
+const opt = Object.fromEntries(args.filter((a) => a.includes('=')).map((a) => a.split('=')));
 const FPS = 24, LEN = CELEB ? 60 : 45, DPR = 2;
 const SCENE = CELEB ? 'celebration' : 'film';
 
-const [mode = 'stills', orient = 'h', times] = args.filter((a) => a !== 'celebration');
+const [mode = 'stills', orient = 'h', times] = args.filter((a) => a !== 'celebration' && !a.includes('='));
 const V = orient === 'v';
 const W = V ? 1080 : 1920, H = V ? 1920 : 1080;
 const OUT = path.join(HERE, 'out');
@@ -58,6 +61,33 @@ if (mode === 'stills') {
         p.on('exit', (c) => (c === 0 ? res() : rej(new Error(`ffmpeg ${c}`))));
     });
     console.log('sheet ->', sheet);
+} else if (opt.from != null) {
+    // Re-render [from, to) and splice it into the existing master, frame-accurately.
+    const dst = path.join(OUT, `mindfire_10yr_${SCENE}_uhd_${V ? '9x16' : '16x9'}.mp4`);
+    const f0 = Math.round(+opt.from * FPS), f1 = Math.round(+opt.to * FPS);
+    const part = dst.replace(/\.mp4$/, '.part.mp4'), tmp = dst.replace(/\.mp4$/, '.splice.mp4');
+    const run = (argv, stdin) => new Promise((res, rej) => {
+        const p = spawn(FFMPEG, argv, { stdio: [stdin ? 'pipe' : 'ignore', 'inherit', 'inherit'] });
+        p.on('exit', (c) => (c === 0 ? res() : rej(new Error(`ffmpeg exited ${c}`))));
+        if (stdin) stdin(p);
+    });
+    await run(['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-',
+        '-vf', 'scale=in_range=pc:out_range=tv:in_color_matrix=bt601:out_color_matrix=bt709,format=yuv420p',
+        '-c:v', 'libx264', '-preset', 'slow', '-crf', '10', part], async (p) => {
+        for (let n = f0; n < f1; n++) {
+            const buf = await frame(n / FPS);
+            if (!p.stdin.write(buf)) await new Promise((r) => p.stdin.once('drain', r));
+        }
+        p.stdin.end();
+    });
+    await run(['-v', 'error', '-y', '-i', dst, '-i', part, '-filter_complex',
+        `[0:v]trim=end_frame=${f0},setpts=PTS-STARTPTS[a];[1:v]setpts=PTS-STARTPTS[b];[0:v]trim=start_frame=${f1},setpts=PTS-STARTPTS[c];[a][b][c]concat=n=3:v=1:a=0,format=yuv420p[v]`,
+        '-map', '[v]', '-map', '0:a', '-c:a', 'copy',
+        '-color_range', 'tv', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709',
+        '-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-profile:v', 'high', '-level', '5.1', '-tune', 'film', '-movflags', '+faststart', tmp]);
+    fs.renameSync(tmp, dst);
+    fs.rmSync(part);
+    console.log(`spliced ${opt.from}-${opt.to}s ->`, dst);
 } else {
     const dst = path.join(OUT, `mindfire_10yr_${SCENE}_uhd_${V ? '9x16' : '16x9'}.mp4`);
     const ff = spawn(FFMPEG, [
