@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mindfire Homes — Ten Years, a celebration</title>
+<!-- Cormorant Garamond for the film's headlines (luxury, editorial); Inter (the site's face)
+     for small caps; Montserrat only inside the wordmark, matching public/logo.svg. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@400;500;600&family=Montserrat:wght@300;700&display=block" rel="stylesheet">
+<style>
+  :root { --deep: #0B1312; --gold: #D9B27A; --gold-hi: #F1D6A6; --brand-600: #006960; }
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  #stage { position: relative; overflow: hidden; background: var(--deep); color: #fff; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  #cam { position: absolute; inset: 0; }
+  .abs { position: absolute; }
+  .layer { position: absolute; inset: 0; overflow: hidden; }
+  .layer img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: center; will-change: transform; filter: contrast(1.04) saturate(1.06) brightness(.97); }
+  .serif { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; letter-spacing: -.005em; }
+  .eyebrow { font-family: Inter, sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: .42em; color: var(--gold); }
+  .gold { color: var(--gold-hi); font-style: italic; font-weight: 400; }
+  .center { left: 0; right: 0; text-align: center; }
+  .mask { display: block; overflow: hidden; padding: .06em 0 .14em; margin: -.06em 0 -.14em; }
+  .mask > span { display: inline-block; will-change: transform, opacity; }
+  .shadow { text-shadow: 0 2px 30px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.35); }
+  .card { position: absolute; overflow: hidden; border-radius: 6px; box-shadow: 0 50px 100px -40px rgba(0,0,0,.8); background: #1a1a1a; }
+  .card img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; filter: contrast(1.05) saturate(1.06) brightness(1.0); will-change: transform; }
+  .slice { position: absolute; overflow: hidden; border-radius: 4px; box-shadow: 0 50px 100px -40px rgba(0,0,0,.8); }
+  .slice img { position: absolute; will-change: transform; }
+  .hair { position: absolute; height: 1px; background: linear-gradient(90deg, rgba(217,178,122,0), var(--gold) 50%, rgba(217,178,122,0)); }
+  .pill { display: inline-block; border: 1px solid rgba(217,178,122,.6); color: var(--gold-hi); border-radius: 999px; font-family: Inter; font-weight: 500; letter-spacing: .32em; text-transform: uppercase; }
+  .dust { position: absolute; left: 0; top: 0; border-radius: 50%; background: radial-gradient(circle, rgba(255,226,170,1) 0%, rgba(255,226,170,0) 70%); will-change: transform, opacity; }
+  .grain { position: absolute; inset: -50%; pointer-events: none; opacity: .045; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+</style>
+</head>
+<body>
+<div id="stage"><div id="cam"></div></div>
+<script>
+/* ───────────────────────────────────────────────────────────────────────────
+   Mindfire Homes · Ten Years (2016-2026) · a 60 s celebration built from the
+   company's own photographs: land, plans, construction, finished homes, estates.
+   Every frame is render(t). ?t=31.2 one frame · ?v=1 vertical.
+   Timings match audio/cues_celebration.json (python score.py celebration).
+   Facts are owner-supplied (2016, 1,000+, the six services, @mindfirehomes, Nibeco
+   Gardens) or from the live site. No property is captioned with a sale status, and
+   no project is named unless the owner named it.
+   ─────────────────────────────────────────────────────────────────────────── */
+const Q = new URLSearchParams(location.search);
+const V = Q.get('v') === '1';
+const W = V ? 1080 : 1920, H = V ? 1920 : 1080;
+const O = '../captures/owner/';        // owner photos, upscaled by owner.sh
+const ELYSIAN = '../captures/photos/prop-1_01.jpg';
+const SERVICES = [
+  ['Estate development', 'estate-night'],
+  ['Land banking & sales', 'land-by-the-rock'],
+  ['Building & construction', 'formwork-crew'],
+  ['Property investment advisory', 'villa-wide-clouds'],
+  ['Documentation & title perfection', 'layout-plan'],
+  ['Facility management & after-sales', 'estate-street'],
+];
+
+// ── helpers ─────────────────────────────────────────────────────────────────
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, p) => a + (b - a) * p;
+const eOut = (p) => 1 - Math.pow(1 - p, 3);
+const eOutQuint = (p) => 1 - Math.pow(1 - p, 5);
+const eInOut = (p) => (p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+const px = (n) => `${n}px`;
+const src = (name) => `${O}${name}.jpg`;
+function rand(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+window.pending = [];
+function el(tag, cls, css, html, parent) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (css) Object.assign(e.style, css);
+  if (html != null) e.innerHTML = html;
+  (parent || cam).appendChild(e);
+  return e;
+}
+function show(e, on) { e.style.display = on ? '' : 'none'; }
+const rect = ([x, y, w, h]) => ({ left: px(x), top: px(y), width: px(w), height: px(h) });
+
+const stage = document.getElementById('stage');
+stage.style.width = px(W); stage.style.height = px(H);
+const cam = document.getElementById('cam');
+
+function textBlock(lines, css, parent) {
+  const b = el('div', 'abs serif shadow', css, null, parent);
+  const spans = lines.map(([html, lc]) => el('span', null, null, html, el('span', 'mask', lc || null, null, b)));
+  return { b, spans };
+}
+function playBlock(blk, t, times, outA, outB, dur = 1.1) {
+  const out = eInOut(seg(t, outA, outB));
+  blk.b.style.opacity = 1 - out;
+  blk.b.style.filter = out > 0 ? `blur(${out * 6}px)` : 'none';
+  blk.spans.forEach((s, i) => {
+    const p = eOutQuint(seg(t, times[i], times[i] + dur));
+    s.style.transform = `translateY(${(1 - p) * 105}%)`;
+    s.style.opacity = clamp(p * 1.6);
+  });
+}
+
+const MARK = `<svg viewBox="0 0 224 204" width="100%" height="100%"><polygon points="98,88 223,0 223,203 67,203 67,108" fill="#02A658"/><polygon points="0,17 98,88 98,190 0,190" fill="#4A877C"/><polygon points="67,108 98,88 130,108 130,190 67,190" fill="#4C5A62"/></svg>`;
+const lockup = (h) => `<div style="display:inline-flex;align-items:center;gap:${h * .22}px">
+  <div style="width:${h * 1.1}px;height:${h}px">${MARK}</div>
+  <div style="font-family:Montserrat,Inter,sans-serif;line-height:.92;text-align:left">
+    <div style="font-weight:700;font-size:${h * .56}px;letter-spacing:-.01em;color:#fff">MINDFIRE</div>
+    <div style="font-weight:300;font-size:${h * .4}px;color:#2FC27B;letter-spacing:.06em">HOMES</div></div></div>`;
+
+// ── full-bleed shots ────────────────────────────────────────────────────────
+// In the vertical cut a landscape photo would be cropped to a sliver and blown up, so it
+// is shown as a full-width band over a blurred copy of itself (band: true).
+const SHOTS = [
+  { name: 'estate-night', a: 0.0, b: 6.9, fi: 2.2, fo: 0, s: [1.04, 1.13], x: [50, 46], y: [55, 50], band: true },
+  { name: 'layout-plan', a: 6.0, b: 9.9, fi: 0.9, fo: 0, s: [1.06, 1.14], x: [50, 54], y: [42, 50] },
+  { name: 'land-hill-haze', a: 9.0, b: 12.2, fi: 0.9, fo: 0.9, s: [1.03, 1.11], x: [50, 50], y: [60, 52], band: true },
+  { name: 'estate-street', a: 39.0, b: 42.3, fi: 0.7, fo: 0.6, s: [1.04, 1.12], x: [45, 55], y: [50, 50], band: true },
+  { name: 'render-townhouses', a: 51.0, b: 54.4, fi: 0.9, fo: 0.9, s: [1.03, 1.10], x: [40, 55], y: [50, 50], band: true },
+];
+const shotLayer = el('div', 'layer');
+SHOTS.forEach((s) => {
+  s.layer = el('div', 'layer', null, null, shotLayer);
+  const useBand = V && s.band;
+  if (useBand) {
+    el('img', null, { position: 'absolute', inset: '-8%', width: '116%', height: '116%', objectFit: 'cover', filter: 'blur(50px) brightness(.45) saturate(1.1)' }, null, s.layer).src = src(s.name);
+    s.bandBox = el('div', 'abs', { left: 0, width: px(W), top: px(H * .3), height: px(H * .42), overflow: 'hidden', boxShadow: '0 40px 90px -30px rgba(0,0,0,.7)' }, null, s.layer);
+    s.img = el('img', null, { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'contrast(1.04) saturate(1.06) brightness(.97)' }, null, s.bandBox);
+  } else {
+    s.img = el('img', null, { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'contrast(1.04) saturate(1.06) brightness(.97)' }, null, s.layer);
+  }
+  s.img.src = src(s.name);
+});
+const grade = el('div', 'layer', { background: 'linear-gradient(180deg, rgba(255,178,102,.10), rgba(255,178,102,0) 45%, rgba(8,24,22,.28) 100%)', mixBlendMode: 'soft-light' });
+const textShade = el('div', 'layer', { background: 'radial-gradient(ellipse 70% 60% at center, rgba(5,10,10,.72) 0%, rgba(5,10,10,.46) 60%, rgba(5,10,10,.3) 100%)' });
+
+// ── 0-12: open, problem, origin ─────────────────────────────────────────────
+const HS = V ? 78 : 84;
+const open = textBlock([[`Every home`], [`begins with <span class="gold">a promise.</span>`]],
+  { left: 0, right: 0, top: px(H / 2 - HS * 1.05), textAlign: 'center', fontSize: px(HS), lineHeight: 1.08 });
+const probEye = el('div', 'abs eyebrow center shadow', { top: px(H / 2 - HS * (V ? 2.4 : 1.9)), fontSize: '18px' }, 'Abuja');
+const problem = textBlock(
+  V ? [['The real risk in buying'], ['property here'], ['is rarely the price.'], [`<span class="gold" style="font-size:1.35em">It’s the title.</span>`]]
+    : [['The real risk in buying property'], ['is rarely the price.'], [`<span class="gold" style="font-size:1.35em">It’s the title.</span>`]],
+  { left: 0, right: 0, top: px(H / 2 - HS * (V ? 1.9 : 1.4)), textAlign: 'center', fontSize: px(HS * .92), lineHeight: 1.1 });
+const origEye = el('div', 'abs eyebrow center shadow', { top: px(H / 2 - HS * 1.6), fontSize: '18px' }, 'Since 2016');
+const origin = textBlock([['So we made one promise:'], [`<span class="gold" style="font-size:1.3em">check the title first.</span>`]],
+  { left: 0, right: 0, top: px(H / 2 - HS * 0.9), textAlign: 'center', fontSize: px(HS * .92), lineHeight: 1.12 });
+
+// ── 12-15: title ────────────────────────────────────────────────────────────
+const titleL = el('div', 'layer');
+const leak = el('div', 'abs', { width: px(W * 1.6), height: px(W * 1.6), borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,186,110,.55) 0%, rgba(255,140,60,.18) 30%, rgba(255,140,60,0) 60%)', mixBlendMode: 'screen', pointerEvents: 'none' });
+const TT = V ? { lock: 600, ten: 760, tenSize: 150, hair: 980, dates: 958, tag: 1050 } : { lock: 230, ten: 380, tenSize: 168, hair: 640, dates: 618, tag: 712 };
+const tLock = el('div', 'abs center', { top: px(TT.lock) }, lockup(V ? 96 : 100), titleL);
+const tTen = el('div', 'abs center serif', { top: px(TT.ten), fontSize: px(TT.tenSize), lineHeight: 1, letterSpacing: '.02em', fontWeight: 300 }, 'Ten <span class="gold">Years</span>', titleL);
+const hairL = el('div', 'hair', { top: px(TT.hair), right: px(W / 2 + (V ? 170 : 200)), width: px(V ? 260 : 420) }, null, titleL);
+const hairR = el('div', 'hair', { top: px(TT.hair), left: px(W / 2 + (V ? 170 : 200)), width: px(V ? 260 : 420) }, null, titleL);
+const tDates = el('div', 'abs eyebrow center', { top: px(TT.dates), fontSize: px(V ? 30 : 32), letterSpacing: '.38em', color: 'var(--gold-hi)', fontWeight: 400 }, '2016 &nbsp;—&nbsp; 2026', titleL);
+const tTag = el('div', 'abs center', { top: px(TT.tag), fontFamily: 'Montserrat', fontWeight: 300, fontSize: px(V ? 24 : 26), letterSpacing: '.55em', color: 'rgba(255,255,255,.72)' }, 'redefining modern living', titleL);
+
+// ── 15-39: eight editorial chapters ─────────────────────────────────────────
+const port = el('div', 'layer');
+const portBg = el('img', 'abs', { inset: '-6%', width: '112%', height: '112%', objectFit: 'cover' }, null, port);
+const portEye = el('div', 'abs eyebrow', { left: px(V ? 70 : 120), top: px(V ? 230 : 84), fontSize: '16px' }, 'A decade of work', port);
+const portNum = el('div', 'abs eyebrow', { right: px(V ? 70 : 120), top: px(V ? 230 : 84), fontSize: '16px', letterSpacing: '.3em' }, '', port);
+const CAP = V ? { left: 70, top: 1300, width: 940, align: 'center', title: 76 } : { left: 1150, top: 330, width: 700, align: 'left', title: 96 };
+function caption(eye, title, detail) {
+  const b = el('div', 'abs', { left: px(CAP.left), top: px(CAP.top), width: px(CAP.width), textAlign: CAP.align }, null, port);
+  const parts = [
+    el('div', 'eyebrow', { fontSize: '17px' }, eye, b),
+    el('div', 'serif', { fontSize: px(CAP.title), lineHeight: 1.04, marginTop: '24px' }, title, b),
+  ];
+  if (detail) parts.push(el('div', 'serif', { fontSize: px(CAP.title * .42), fontStyle: 'italic', color: 'rgba(255,255,255,.78)', marginTop: '16px' }, detail, b));
+  return { b, parts };
+}
+function card(name, h, v, delay = 0) {
+  const e = el('div', 'card', rect(V ? v : h), `<img src="${src(name)}">`, port);
+  return { e, img: e.querySelector('img'), delay };
+}
+const CHAPTERS = [
+  { a: 15, lead: 'site-inspection-field', cap: caption('Land banking & sales', 'We walk the land<br>with you.', 'every plot visited first'),
+    cards: [card('site-inspection-field', [110, 170, 880, 447], [60, 330, 960, 488]), card('land-by-the-rock', [800, 330, 290, 571], [650, 620, 340, 670], .3)] },
+  { a: 18, lead: 'layout-plan', cap: caption('Documentation & title perfection', 'Planned and<br>documented.', 'layouts, surveys and titles in order'),
+    cards: [card('layout-plan', [130, 150, 540, 720], [70, 330, 600, 800]), card('land-hill-haze', [560, 520, 520, 390], [420, 820, 600, 450], .3)] },
+  { a: 21, lead: 'formwork-crew', cap: caption('Building & construction', 'Built from<br>the ground up.', 'every stage open to inspection'),
+    cards: [card('formwork-crew', [110, 160, 800, 600], [60, 330, 960, 720]), card('formwork-cement', [500, 600, 560, 286], [400, 920, 620, 316], .3)] },
+  { a: 24, lead: 'red-roofs-scaffolding', cap: caption('Stage by stage', 'Raised<br>with care.', 'structure, roofing, finishing'),
+    cards: [card('block-shell-trusses', [130, 150, 430, 764], [70, 330, 480, 853]), card('red-roofs-scaffolding', [470, 480, 620, 315], [400, 820, 620, 315], .3)] },
+  { a: 27, lead: 'villa-after', beforeAfter: true, cap: caption('From scaffolding to handover', 'Finished to be<br>lived in.', 'ready for the keys'), cards: [] },
+  { a: 30, lead: null, elysian: true, cap: caption('Nibeco Gardens', 'Project Elysian', '4-bedroom fully detached homes'), cards: [] },
+  { a: 33, lead: 'estate-pool', cap: caption('Estate development', 'Communities,<br>not just houses.', 'roads, lighting and landscaping in place'),
+    cards: [card('estate-pool', [110, 160, 820, 547], [60, 330, 960, 640]), card('estate-two-villas', [520, 540, 560, 373], [380, 820, 640, 427], .3)] },
+  { a: 36, lead: 'interior-bedroom', cap: caption('Inside', 'Finished<br>with care.', 'inside and out'),
+    cards: [card('interior-glass-lift', [130, 150, 500, 750], [70, 330, 560, 840]), card('interior-bedroom', [540, 500, 560, 373], [440, 800, 580, 387], .3)] },
+];
+// Before / after: one card, the finished villa wipes across the villa under scaffolding.
+const BA = V ? [140, 320, 800, 980] : [330, 130, 660, 820];
+const baCard = el('div', 'card', rect(BA), `<img src="${src('villa-before')}"><img src="${src('villa-after')}">`, port);
+const [baBefore, baAfter] = baCard.querySelectorAll('img');
+const baLine = el('div', 'abs', { top: 0, bottom: 0, width: '2px', background: 'var(--gold)', boxShadow: '0 0 18px rgba(241,214,166,.9)' }, null, baCard);
+const baTagB = el('div', 'abs eyebrow', { left: '26px', top: '24px', fontSize: '14px', color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,.6)' }, 'Before', baCard);
+const baTagA = el('div', 'abs eyebrow', { right: '26px', top: '24px', fontSize: '14px', color: '#fff', textShadow: '0 1px 8px rgba(0,0,0,.6)' }, 'After', baCard);
+CHAPTERS[4].cards = [{ e: baCard, img: baBefore, delay: 0 }];
+// Project Elysian: the three renders from the listing, as a triptych
+const SL = [[66, 400, 412, 1140], [480, 238, 476, 1317], [960, 390, 412, 1140]];
+const TRI = V ? { x: 40, y: 330, h: 900, gap: 20 } : { x: 130, y: 170, h: 760, gap: 22 };
+const triW = TRI.h * 0.36;
+SL.forEach(([sx, sy, sw, sh], i) => {
+  const w = V ? (W - 2 * TRI.x - 2 * TRI.gap) / 3 : triW * (i === 1 ? 1.12 : 1);
+  const h = TRI.h * (i === 1 ? 1 : .9);
+  const x = V ? TRI.x + i * (w + TRI.gap) : TRI.x + [0, triW + TRI.gap, triW * 2.12 + TRI.gap * 2][i];
+  const y = TRI.y + (TRI.h - h) / 2;
+  const s = el('div', 'slice', rect([x, y, w, h]), `<img src="${ELYSIAN}">`, port);
+  const k = Math.max(w / sw, h / sh) * 1.04;
+  const img = s.querySelector('img');
+  Object.assign(img.style, { width: px(1440 * k), height: px(1800 * k), left: px(-(sx + sw / 2) * k + w / 2), top: px(-(sy + sh / 2) * k + h / 2) });
+  CHAPTERS[5].cards.push({ e: s, img, delay: i * 0.22, slice: true });
+});
+
+// ── 39-42: 1,000+ · 42-48: services ─────────────────────────────────────────
+const statL = el('div', 'layer');
+const sEye = el('div', 'abs eyebrow center shadow', { top: px(H / 2 - (V ? 270 : 255)), fontSize: '18px' }, 'Since 2016', statL);
+const sNum = el('div', 'abs center serif shadow', { top: px(H / 2 - (V ? 170 : 160)), fontSize: px(V ? 230 : 250), lineHeight: 1, fontWeight: 300, letterSpacing: '-.01em' }, '0', statL);
+const sCap = el('div', 'abs center serif shadow', { top: px(H / 2 + (V ? 100 : 120)), fontSize: px(V ? 50 : 54), fontStyle: 'italic', color: 'var(--gold-hi)' }, 'proud property owners', statL);
+const servL = el('div', 'layer', { background: 'var(--deep)' });
+const SV = V
+  ? { panel: [90, 300, 900, 520], eye: 880, head: 920, list: 1080, rowH: 76, x: 110, font: 42, align: 'center' }
+  : { panel: [110, 150, 700, 780], eye: 190, head: 232, list: 420, rowH: 88, x: 900, font: 46, align: 'left' };
+const servPanel = el('div', 'card', rect(SV.panel), null, servL);
+const servImgs = SERVICES.map(([, n]) => el('img', null, { opacity: 0 }, null, servPanel));
+servImgs.forEach((im, i) => { im.src = src(SERVICES[i][1]); });
+const servEye = el('div', 'abs eyebrow', V ? { left: 0, right: 0, textAlign: 'center', top: px(SV.eye), fontSize: '17px' } : { left: px(SV.x), top: px(SV.eye), fontSize: '17px' }, 'One company · every step', servL);
+const servHead = textBlock([[`From land <span class="gold">to keys.</span>`]], V ? { left: 0, right: 0, top: px(SV.head), textAlign: 'center', fontSize: '84px' } : { left: px(SV.x), top: px(SV.head), fontSize: '96px' }, servL);
+const servRows = SERVICES.map(([s], i) => {
+  const r = el('div', 'abs', { left: px(SV.x), top: px(SV.list + i * SV.rowH), width: px(V ? 860 : 900), display: 'flex', alignItems: 'baseline', gap: '26px' }, null, servL);
+  el('div', 'eyebrow', { fontSize: '17px', letterSpacing: '.2em', minWidth: '40px' }, String(i + 1).padStart(2, '0'), r);
+  const label = el('div', 'serif', { fontSize: px(SV.font), lineHeight: 1.1, whiteSpace: 'nowrap', transition: 'none' }, s, r);
+  const line = el('div', 'abs', { left: '66px', right: 0, top: px(SV.rowH * .7), height: '1px', background: 'rgba(217,178,122,.25)', transformOrigin: 'left' }, null, r);
+  return { r, label, line };
+});
+
+// ── 48-51: thanks · 51-54: next ten ─────────────────────────────────────────
+const thanksL = el('div', 'layer');
+el('img', null, { position: 'absolute', inset: '-8%', width: '116%', height: '116%', objectFit: 'cover', filter: 'blur(50px) brightness(.35) saturate(1.1)' }, null, thanksL).src = src('site-visit-villa');
+const tvCard = V
+  ? el('div', 'layer', null, `<img src="${src('site-visit-villa')}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`, thanksL)
+  : el('div', 'card', rect([1240, 110, 480, 853]), `<img src="${src('site-visit-villa')}">`, thanksL);
+const tvImg = tvCard.querySelector('img');
+if (V) el('div', 'layer', { background: 'radial-gradient(ellipse 80% 50% at 50% 42%, rgba(5,10,10,.7), rgba(5,10,10,.25))' }, null, thanksL);
+const thanks = textBlock(
+  V ? [['To every family'], ['who trusted us'], ['with a home —'], [`<span class="gold" style="font-size:1.7em">thank you.</span>`]]
+    : [['To every family'], ['who trusted us with a home —'], [`<span class="gold" style="font-size:1.7em">thank you.</span>`]],
+  V ? { left: 0, right: 0, top: px(H / 2 - HS * 2.6), textAlign: 'center', fontSize: px(HS), lineHeight: 1.12 }
+    : { left: '80px', width: '1080px', top: px(H / 2 - HS * 1.75), textAlign: 'center', fontSize: px(HS), lineHeight: 1.12 }, thanksL);
+const nextTen = textBlock(V ? [['Here’s to'], [`the next <span class="gold">ten.</span>`]] : [[`Here’s to the next <span class="gold">ten.</span>`]],
+  { left: 0, right: 0, top: px(H / 2 - (V ? 140 : 75)), textAlign: 'center', fontSize: px(V ? 120 : 130), lineHeight: 1.05, fontWeight: 300 });
+const nextEye = el('div', 'abs eyebrow center shadow', { top: px(H / 2 - (V ? 210 : 150)), fontSize: '18px' }, 'Coming next');
+
+// ── 54-60: end card ─────────────────────────────────────────────────────────
+const endL = el('div', 'layer');
+const EC = V ? { lock: 600, line: 810, hair: 1012, dates: 990, web: 1100, slogan: 1240 } : { lock: 250, line: 452, hair: 584, dates: 562, web: 676, slogan: 760 };
+const eLock = el('div', 'abs center', { top: px(EC.lock) }, lockup(V ? 112 : 118), endL);
+const eLine = el('div', 'abs center serif', { top: px(EC.line), fontSize: px(V ? 50 : 54), fontStyle: 'italic', lineHeight: 1.15 }, V ? 'Ten years of<br>redefining modern living.' : 'Ten years of redefining modern living.', endL);
+const eHairL = el('div', 'hair', { top: px(EC.hair), right: px(W / 2 + 190), width: px(V ? 200 : 300) }, null, endL);
+const eHairR = el('div', 'hair', { top: px(EC.hair), left: px(W / 2 + 190), width: px(V ? 200 : 300) }, null, endL);
+const eDates = el('div', 'abs eyebrow center', { top: px(EC.dates), fontSize: '28px', fontWeight: 400, letterSpacing: '.38em', color: 'var(--gold-hi)' }, '2016 &nbsp;—&nbsp; 2026', endL);
+const eWeb = el('div', 'abs center', { top: px(EC.web), fontSize: px(V ? 34 : 32), fontWeight: 500, letterSpacing: '.12em', lineHeight: 1.6 }, V ? 'mindfirehomes.com<br><span style="color:rgba(255,255,255,.7)">@mindfirehomes</span>' : 'mindfirehomes.com &nbsp;<span style="color:var(--gold)">·</span>&nbsp; <span style="color:rgba(255,255,255,.75)">@mindfirehomes</span>', endL);
+const eSlogan = el('div', 'abs eyebrow center', { top: px(EC.slogan), fontSize: '18px', color: 'var(--gold)' }, 'Secure assets, not excuses.', endL);
+
+// ── atmosphere: gold dust, gold confetti, letterbox, grain, vignette, fade ──
+const dustL = el('div', 'layer', { pointerEvents: 'none' });
+const r = rand(10);
+const DUST = Array.from({ length: 70 }, () => ({ d: el('div', 'dust', null, null, dustL), x: r() * W, y: r() * H, s: 4 + r() * 10, vy: 12 + r() * 30, vx: (r() - .5) * 14, ph: r() * 6.28, tw: .6 + r() * 1.6 }));
+DUST.forEach((p) => { p.d.style.width = px(p.s); p.d.style.height = px(p.s); });
+// Celebration: slow-falling gold leaf over the end card (deterministic, so every render matches)
+const leafL = el('div', 'layer', { pointerEvents: 'none' });
+const rl = rand(2026);
+const LEAF = Array.from({ length: 90 }, () => ({
+  d: el('div', 'abs', { left: 0, top: 0, width: px(8 + rl() * 12), height: px(12 + rl() * 16), borderRadius: '2px', background: `linear-gradient(135deg, ${['#F6D3A2', '#D9B27A', '#EBC08A', '#FFFFFF', '#C98A4A'][Math.floor(rl() * 5)]}, rgba(255,255,255,.35))`, willChange: 'transform, opacity' }, null, leafL),
+  x: rl() * W, y0: -60 - rl() * H * .9, vy: (V ? 200 : 140) + rl() * 120, sway: 20 + rl() * 50, ph: rl() * 6.28, spin: (rl() - .5) * 500,
+}));
+cam.appendChild(leak);
+const LB = V ? 0 : Math.round((H - W / 2.39) / 2);
+const lbTop = el('div', 'abs', { left: 0, right: 0, top: 0, height: px(LB), background: '#000' }, null, stage);
+const lbBot = el('div', 'abs', { left: 0, right: 0, bottom: 0, height: px(LB), background: '#000' }, null, stage);
+const grain = el('div', 'grain', null, null, stage);
+el('div', 'abs', { inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at center, rgba(0,0,0,0) 50%, rgba(0,0,0,.5) 100%)' }, null, stage);
+const black = el('div', 'abs', { inset: 0, background: '#000', pointerEvents: 'none' }, null, stage);
+
+// ── render ──────────────────────────────────────────────────────────────────
+function renderShots(t) {
+  SHOTS.forEach((s) => {
+    const on = t >= s.a && t < s.b;
+    show(s.layer, on);
+    if (!on) return;
+    const p = seg(t, s.a, s.b);
+    s.layer.style.opacity = eInOut(seg(t, s.a, s.a + s.fi)) * (1 - (s.fo ? eInOut(seg(t, s.b - s.fo, s.b)) : 0));
+    s.img.style.transform = `scale(${lerp(s.s[0], s.s[1], p)})`;
+    s.img.style.objectPosition = `${lerp(s.x[0], s.x[1], p)}% ${lerp(s.y[0], s.y[1], p)}%`;
+  });
+  textShade.style.opacity = t < 12 || (t >= 51 && t < 54.4) ? 1 : (t >= 39 && t < 42.3 ? .8 : 0);
+}
+
+function renderTitle(t) {
+  const on = t >= 12 && t < 15.2;
+  show(titleL, on);
+  if (!on) return;
+  const out = eInOut(seg(t, 14.5, 15.1));
+  titleL.style.opacity = 1 - out;
+  titleL.style.transform = `scale(${lerp(1, 1.03, out)})`;
+  const lp = eOut(seg(t, 12.15, 13.0));
+  tLock.style.opacity = lp; tLock.style.transform = `translateY(${(1 - lp) * 18}px)`;
+  const tp = eOutQuint(seg(t, 12.4, 13.6));
+  tTen.style.opacity = tp; tTen.style.letterSpacing = `${lerp(.22, .02, tp)}em`; tTen.style.filter = `blur(${(1 - tp) * 10}px)`;
+  const hp = eOutQuint(seg(t, 12.8, 14.0));
+  [hairL, hairR].forEach((h, i) => { h.style.transform = `scaleX(${hp})`; h.style.transformOrigin = i ? 'left' : 'right'; h.style.opacity = hp; });
+  tDates.style.opacity = eOut(seg(t, 13.0, 13.8));
+  tTag.style.opacity = eOut(seg(t, 13.4, 14.2)) * .9;
+}
+
+function renderChapters(t) {
+  const on = t >= 15 && t < 39.6;
+  show(port, on);
+  if (!on) return;
+  port.style.opacity = eInOut(seg(t, 15, 15.6)) * (1 - eInOut(seg(t, 38.9, 39.6)));
+  let cur = CHAPTERS[0];
+  CHAPTERS.forEach((ch) => { if (t >= ch.a) cur = ch; });
+  const idx = CHAPTERS.indexOf(cur);
+  const leadSrc = cur.lead ? src(cur.lead) : ELYSIAN;
+  if (portBg.getAttribute('src') !== leadSrc) { portBg.src = leadSrc; window.pending.push(portBg.decode().catch(() => {})); }
+  portBg.style.filter = cur.elysian ? 'blur(60px) brightness(.26) saturate(0)' : 'blur(60px) brightness(.32) saturate(1.1)';
+  portNum.textContent = `0${idx + 1} / 0${CHAPTERS.length}`;
+  CHAPTERS.forEach((ch) => {
+    const local = t - ch.a;
+    const vis = local > -0.01 && local < 3.55;
+    ch.cards.forEach((c) => show(c.e, vis)); show(ch.cap.b, vis);
+    if (!vis) return;
+    const out = eInOut(seg(local, 2.75, 3.4));
+    ch.cards.forEach((c) => {
+      const p = eOutQuint(seg(local, c.delay, c.delay + 1.2));
+      c.e.style.opacity = clamp(p * 1.5) * (1 - out);
+      c.e.style.clipPath = `inset(${(1 - p) * 100}% 0 0 0)`;
+      c.e.style.transform = `translate(${-out * 40}px, ${(1 - p) * 50}px)`;
+      c.img.style.transform = `scale(${lerp(1.12, 1.02, seg(local, 0, 3.4))})`;
+    });
+    if (ch.beforeAfter) {
+      const w = eInOut(seg(local, .9, 2.1));
+      baAfter.style.clipPath = `inset(0 ${(1 - w) * 100}% 0 0)`;
+      baAfter.style.transform = baBefore.style.transform;
+      baLine.style.left = `${w * 100}%`;
+      baLine.style.opacity = w > 0 && w < 1 ? 1 : 0;
+      baTagB.style.opacity = 1 - seg(w, .1, .4);
+      baTagA.style.opacity = seg(w, .6, .9);
+    }
+    ch.cap.parts.forEach((pt, i) => {
+      const p = eOutQuint(seg(local, .35 + i * .16, 1.35 + i * .16));
+      pt.style.opacity = p * (1 - out);
+      pt.style.transform = `translateY(${(1 - p) * 26}px)`;
+    });
+  });
+}
+
+function renderStatServices(t) {
+  const sOn = t >= 39 && t < 42.4;
+  show(statL, sOn);
+  if (sOn) {
+    statL.style.opacity = eInOut(seg(t, 39.1, 39.7)) * (1 - eInOut(seg(t, 41.8, 42.4)));
+    sEye.style.opacity = eOut(seg(t, 39.2, 39.8));
+    const cp = eOut(seg(t, 39.3, 40.6));
+    sNum.innerHTML = Math.round(1000 * cp).toLocaleString('en-US') + `<span class="gold" style="opacity:${seg(t, 40.55, 40.8)}">+</span>`;
+    sNum.style.transform = `scale(${lerp(.94, 1, cp)})`;
+    sCap.style.opacity = eOut(seg(t, 40.6, 41.2));
+    sCap.style.transform = `translateY(${(1 - eOut(seg(t, 40.6, 41.4))) * 16}px)`;
+  }
+  const on = t >= 42 && t < 48.3;
+  show(servL, on);
+  if (!on) return;
+  servL.style.opacity = eInOut(seg(t, 42, 42.6)) * (1 - eInOut(seg(t, 47.7, 48.3)));
+  servEye.style.opacity = eOut(seg(t, 42.1, 42.7));
+  playBlock(servHead, t, [42.2], 99, 100);
+  const pp = eOutQuint(seg(t, 42.1, 43.2));
+  servPanel.style.opacity = pp; servPanel.style.clipPath = `inset(${(1 - pp) * 100}% 0 0 0)`;
+  let active = 0;
+  servRows.forEach(({ r, label, line }, i) => {
+    const a = 42.6 + i * 0.85;
+    if (t >= a) active = i;
+    const p = eOutQuint(seg(t, a, a + 1.0));
+    r.style.opacity = p; r.style.transform = `translateY(${(1 - p) * 22}px)`;
+    line.style.transform = `scaleX(${eOutQuint(seg(t, a + .2, a + 1.4))})`;
+  });
+  servRows.forEach(({ label }, i) => { label.style.color = i === active ? 'var(--gold-hi)' : '#fff'; });
+  servImgs.forEach((im, i) => {
+    const a = 42.6 + i * 0.85;
+    const fin = eInOut(seg(t, a, a + .5)), fout = i < servImgs.length - 1 ? eInOut(seg(t, a + .85, a + 1.35)) : 0;
+    im.style.opacity = (i === 0 ? 1 : fin) * (1 - fout);  // the first photo is already up when the panel opens
+    im.style.transform = `scale(${lerp(1.1, 1.0, seg(t, a, a + 1.6))})`;
+  });
+}
+
+function renderThanks(t) {
+  const on = t >= 48 && t < 51.3;
+  show(thanksL, on); show(thanks.b, on);
+  if (!on) return;
+  thanksL.style.opacity = eInOut(seg(t, 48, 48.6)) * (1 - eInOut(seg(t, 50.7, 51.3)));
+  tvImg.style.transform = `scale(${lerp(1.04, 1.12, seg(t, 48, 51.3))})`;
+  if (!V) { const p = eOutQuint(seg(t, 48.1, 49.2)); tvCard.style.clipPath = `inset(${(1 - p) * 100}% 0 0 0)`; }
+  playBlock(thanks, t, V ? [48.3, 48.6, 48.9, 49.4] : [48.3, 48.75, 49.4], 50.5, 51.1);
+}
+
+function renderEnd(t) {
+  const on = t >= 53.8;
+  show(endL, on);
+  if (!on) return;
+  endL.style.opacity = eInOut(seg(t, 53.8, 54.4));
+  const lp = eOut(seg(t, 54.1, 55.0));
+  eLock.style.opacity = lp; eLock.style.transform = `translateY(${(1 - lp) * 16}px)`;
+  eLine.style.opacity = eOut(seg(t, 54.5, 55.4));
+  const hp = eOutQuint(seg(t, 54.8, 56.0));
+  [eHairL, eHairR].forEach((h, i) => { h.style.transform = `scaleX(${hp})`; h.style.transformOrigin = i ? 'left' : 'right'; h.style.opacity = hp; });
+  eDates.style.opacity = eOut(seg(t, 54.8, 55.6));
+  eWeb.style.opacity = eOut(seg(t, 55.2, 56.0));
+  eSlogan.style.opacity = eOut(seg(t, 55.6, 56.4));
+}
+
+function renderAtmos(t) {
+  const dOn = (t >= 12 && t < 15.2) || t >= 53.8;
+  const dA = t < 30 ? seg(t, 12, 12.8) * (1 - seg(t, 14.5, 15.2)) : seg(t, 53.8, 54.6);
+  show(dustL, dOn);
+  if (dOn) DUST.forEach((p) => {
+    const y = ((p.y - p.vy * t) % H + H) % H, x = p.x + p.vx * t + Math.sin(t * .6 + p.ph) * 14;
+    p.d.style.transform = `translate(${x}px,${y}px)`;
+    p.d.style.opacity = dA * (.35 + .65 * (.5 + .5 * Math.sin(t * p.tw + p.ph)));
+  });
+  const lOn = t >= 54;
+  show(leafL, lOn);
+  if (lOn) {
+    const dt = t - 54;
+    LEAF.forEach((p) => {
+      const y = p.y0 + p.vy * dt, x = p.x + Math.sin(dt * 1.6 + p.ph) * p.sway;
+      p.d.style.transform = `translate(${x}px,${y}px) rotate(${p.spin * dt}deg) scaleX(${Math.cos(dt * 3 + p.ph)})`;
+      p.d.style.opacity = .85 * seg(dt, 0, .6);
+    });
+  }
+  const k1 = seg(t, 11.7, 14.6), k2 = seg(t, 53.6, 58.5);
+  leak.style.opacity = Math.max(Math.sin(Math.PI * k1) * .55, Math.sin(Math.PI * k2) * .4);
+  leak.style.transform = `translate(${lerp(-W * 1.1, W * .1, t < 30 ? k1 : k2)}px, ${-W * .55 + H * .2}px)`;
+  const lb = 1 - eInOut(seg(t, 12.0, 13.4));
+  lbTop.style.transform = `translateY(${-(1 - lb) * LB}px)`;
+  lbBot.style.transform = `translateY(${(1 - lb) * LB}px)`;
+  grain.style.transform = `translate(${(Math.floor(t * 24) * 37) % 130 - 65}px,${(Math.floor(t * 24) * 53) % 130 - 65}px)`;
+  black.style.opacity = Math.max(1 - eInOut(seg(t, 0, 1.4)), eInOut(seg(t, 59.0, 60.0)));
+}
+
+function render(t) {
+  window.pending = [];
+  renderShots(t);
+  show(open.b, t < 6); playBlock(open, t, [0.8, 1.8], 5.0, 5.8);
+  show(probEye, t >= 6 && t < 9.3); show(problem.b, t >= 6 && t < 9.3);
+  probEye.style.opacity = eOut(seg(t, 6.2, 6.9)) * (1 - eInOut(seg(t, 8.6, 9.2)));
+  playBlock(problem, t, V ? [6.3, 6.65, 7.0, 7.8] : [6.4, 6.9, 7.8], 8.6, 9.2);
+  show(origEye, t >= 9 && t < 12); show(origin.b, t >= 9 && t < 12);
+  origEye.style.opacity = eOut(seg(t, 9.2, 9.9)) * (1 - eInOut(seg(t, 11.3, 11.9)));
+  playBlock(origin, t, [9.5, 10.5], 11.3, 11.9);
+  renderTitle(t);
+  renderChapters(t);
+  renderStatServices(t);
+  renderThanks(t);
+  show(nextTen.b, t >= 51 && t < 54.1); show(nextEye, t >= 51 && t < 54.1);
+  nextEye.style.opacity = eOut(seg(t, 51.2, 51.9)) * (1 - eInOut(seg(t, 53.4, 54.0)));
+  playBlock(nextTen, t, V ? [51.3, 51.6] : [51.3], 53.4, 54.0, 1.3);
+  renderEnd(t);
+  renderAtmos(t);
+  return Promise.all(window.pending);
+}
+window.render = render;
+
+window.ready = (async () => {
+  const fonts = ['300 20px "Cormorant Garamond"', 'italic 300 20px "Cormorant Garamond"', 'italic 400 20px "Cormorant Garamond"', '400 20px "Cormorant Garamond"', '400 20px Inter', '500 20px Inter', '600 20px Inter', '300 20px Montserrat', '700 20px Montserrat'];
+  await Promise.all(fonts.map((f) => document.fonts.load(f)));
+  await document.fonts.ready;
+  for (const img of document.images) {
+    if (!img.getAttribute('src')) continue;
+    let ok = false;
+    for (let tries = 0; tries < 3 && !ok; tries++) {
+      try { await img.decode(); ok = true; } catch (e) { await new Promise((r2) => setTimeout(r2, 250)); }
+    }
+    if (!ok) console.warn('missing', img.getAttribute('src'));
+  }
+  return true;
+})();
+const qt = Q.get('t');
+window.ready.then(() => render(qt != null ? parseFloat(qt) : 0));
+</script>
+</body>
+</html>

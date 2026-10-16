@@ -1,6 +1,7 @@
 """Original cinematic score for the Mindfire Homes 10-year brand film.
 
-    python promo/score.py   ->  promo/audio/score_80.wav, 4 stems, cues_film.json
+    python promo/score.py               ->  audio/score_80.wav, 4 stems, cues_film.json      (45 s film)
+    python promo/score.py celebration   ->  audio/score_celebration_80.wav, stems, cues_celebration.json (60 s)
 
 Felt piano + strings + a soft heartbeat pulse, D-flat major, 80 BPM: one bar is exactly 3 s,
 so 15 bars are the 45 s film and every scene starts on a bar line. Luxury-property films
@@ -9,6 +10,7 @@ to license.
 """
 import json
 import os
+import sys
 import wave
 
 import numpy as np
@@ -17,8 +19,9 @@ SR = 48_000
 BPM = 80
 BEAT = 60 / BPM          # 0.75 s
 BAR = 4 * BEAT           # 3.0 s
-BARS = 15
-LEN = BARS * BAR         # 45 s
+CUT = sys.argv[1] if len(sys.argv) > 1 else "film"
+BARS = 20 if CUT == "celebration" else 15
+LEN = BARS * BAR         # 45 s film, 60 s celebration
 N = int(LEN * SR)
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "audio")
@@ -49,6 +52,31 @@ CUES = {
     "title_hit": 12.0, "portfolio": [15.0, 18.0, 21.0], "stat": 24.0, "services": 27.0,
     "promise": 33.0, "thanks": 36.0, "next_ten": 39.0, "end_card": 41.0, "fade": 44.2,
 }
+SWELLS = []  # extra (time, length, level) swells into chapter changes
+
+if CUT == "celebration":
+    # 60 s: land -> plans -> build -> finish -> estates -> 1,000+ -> services -> thanks -> next ten
+    CHORDS = [DB, AB_C, BBM, GB, DB,                 # open, problem, origin, title
+              AB_C, BBM, GB, DB, AB_C, BBM,          # the journey (land to finish)
+              GB, EBM, AB_C,                         # estates, interiors, 1,000+
+              DB, AB_C,                              # services
+              BBM,                                   # thank you
+              ABSUS, DB, DB]                         # next ten, end card, ring out
+    SECTIONS = {
+        "open": (0, 2), "problem": (2, 4), "title": (4, 5),
+        "portfolio": (5, 11),   # 15-33 s  ostinato + pulse
+        "services": (11, 16),   # 33-48 s  brighter, fuller
+        "promise": (16, 17),    # 48-51 s  breakdown under the thank-you
+        "end": (17, 20),        # 51-60 s  next ten, end card, ring out
+    }
+    CUES = {
+        "bpm": BPM, "bar_seconds": BAR, "fps_suggested": 24,
+        "open_line": [0.8, 1.8], "problem": 6.0, "title_risk": 7.8, "origin": 9.0, "promise_line": 10.5,
+        "title_hit": 12.0, "portfolio": [15.0, 18.0, 21.0, 24.0, 27.0, 30.0], "estates": [33.0, 36.0],
+        "stat": 39.0, "services": 42.0, "thanks": 48.0, "next_ten": 51.0, "end_card": 54.0, "fade": 59.2,
+    }
+    SWELLS = [(24.0, 1.5, 0.45), (33.0, 2.0, 0.6), (42.0, 1.2, 0.45)]
+LAST = BARS - 1
 
 
 def hz(m):
@@ -177,10 +205,10 @@ for bar, ch in enumerate(CHORDS):
         # the title chord: rolled, wide, full
         for i, m in enumerate([root - 12, root, ch[1], ch[2], ch[3] + 12, ch[4] + 12, ch[2] + 24]):
             add(pno, piano(m, BAR * 0.9, 0.62), b0 + i * 0.035)
-    elif in_sec(bar, "promise") or bar == 14:
+    elif in_sec(bar, "promise") or bar == LAST:
         # breakdown: quarter-note arpeggio, softer
         for i, idx in enumerate([0, 2, 1, 3]):
-            if bar == 14 and i > 1:
+            if bar == LAST and i > 1:
                 break
             add(pno, piano(arp[idx], BEAT * 1.4, 0.38), b0 + i * BEAT)
     else:
@@ -190,23 +218,23 @@ for bar, ch in enumerate(CHORDS):
             vel = 0.34 + (0.08 if i % 4 == 0 else 0) + (0.06 if in_sec(bar, "services") else 0)
             add(pno, piano(arp[idx], E * 1.5, vel), b0 + i * E)
     # melody on top: a simple, singing line on chord tones
-    if in_sec(bar, "portfolio") or in_sec(bar, "services") or bar == 13:
+    if in_sec(bar, "portfolio") or in_sec(bar, "services") or (in_sec(bar, "end") and bar != LAST):
         top = ch[4] + 24 if ch[4] + 24 <= 89 else ch[4] + 12
         add(pno, piano(top, BEAT * 2.6, 0.5), b0)
         add(pno, piano(ch[3] + 24 if ch[3] + 24 <= 89 else ch[3] + 12, BEAT * 1.0, 0.42), b0 + 3 * BEAT)
 
     # strings
-    if bar >= 2 and bar != 14:
+    if bar >= 2 and bar != LAST:
         lvl = {"problem": .7, "title": 1.3, "portfolio": 1.0, "services": 1.25, "promise": .85, "end": 1.35}
         name = next(k for k, (a, b) in SECTIONS.items() if a <= bar < b)
         add(strs, strings(ch[1:], BAR + 0.15, lvl.get(name, 1.0)), b0)
         add(strs, cello(root - 12 if root > 44 else root, BAR + 0.1, lvl.get(name, 1.0)), b0)
-    if bar == 14:
+    if bar == LAST:
         add(strs, strings(DB[1:] + [DB[1] + 12], 3.2, 1.1, attack=0.3, release=2.4), b0)
         add(strs, cello(37, 3.2, 1.0), b0)
 
     # pulse: heartbeat on beats 1 and 3, shaker on the off-eighths
-    if in_sec(bar, "portfolio") or in_sec(bar, "services") or bar == 13:
+    if in_sec(bar, "portfolio") or in_sec(bar, "services") or (in_sec(bar, "end") and bar != LAST):
         for beat in (0, 2):
             add(perc, heartbeat(0.9 if beat == 0 else 0.6), b0 + beat * BEAT)
         for i in range(8):
@@ -223,6 +251,12 @@ add(fx, chime(80, 0.8), CUES["stat"] + 1.6)          # the counter lands on 1,00
 add(fx, swell(3.0, 0.9), CUES["next_ten"] - 3.0)
 add(fx, boom(0.9), CUES["next_ten"])
 add(fx, chime(85, 0.9), CUES["end_card"])
+for at, ln, lv in SWELLS:
+    add(fx, swell(ln, lv), at - ln)
+if CUT == "celebration":
+    # celebration bells over the end card: a rising D-flat pentatonic, one per beat
+    for i, m in enumerate([80, 82, 85, 87, 89, 92, 94, 97]):
+        add(fx, chime(m, 0.55), CUES["end_card"] + 0.75 * (i + 1))
 
 # ── mix ──────────────────────────────────────────────────────────────────────
 def reverb(x, secs, wet):
@@ -266,10 +300,11 @@ def write(path, x):
 
 
 os.makedirs(OUT, exist_ok=True)
-write(os.path.join(OUT, f"score_{BPM}.wav"), mix)
+TAG = "score_celebration" if CUT == "celebration" else "score"
+write(os.path.join(OUT, f"{TAG}_{BPM}.wav"), mix)
 for k, v in stems.items():
-    write(os.path.join(OUT, f"score_stem_{k}.wav"), v)
-with open(os.path.join(OUT, "cues_film.json"), "w") as f:
+    write(os.path.join(OUT, f"{TAG}_stem_{k}.wav"), v)
+with open(os.path.join(OUT, "cues_celebration.json" if CUT == "celebration" else "cues_film.json"), "w") as f:
     json.dump(CUES, f, indent=2)
 
 rms = [20 * np.log10(np.sqrt(np.mean(mix[int(s * SR):int((s + 1) * SR)] ** 2)) + 1e-9) for s in range(int(LEN))]

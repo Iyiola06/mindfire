@@ -13,7 +13,38 @@ music, so you can re-render after any change.
 | `audio/beat_120.wav` + 4 stems + `cues.json` | 48 kHz stereo | Remixing in Resolve / Fairlight |
 | `resolve/mindfire_10yr.lua` | Resolve 18+ | Builds the project with both timelines, stems and markers |
 
-## The brand film (UHD, 45 s): the main deliverable
+## The celebration film (UHD, 60 s): built from Mindfire's own photographs
+
+| Output | Spec |
+| --- | --- |
+| `out/mindfire_10yr_celebration_uhd_16x9.mp4` | 3840×2160, 24 fps |
+| `out/mindfire_10yr_celebration_uhd_9x16.mp4` | 2160×3840, 24 fps |
+| `out/mindfire_10yr_celebration_1080_*.mp4` | 1080p copies for WhatsApp |
+
+| Time | Scene |
+| --- | --- |
+| 0–12 s | Estate at night: "Every home begins with a promise" · the layout plan: "*It's the title*" · the land: "Since 2016 · *check the title first*" |
+| 12–15 s | **Ten Years**, 2016 — 2026 |
+| 15–39 s | Eight chapters: walking the land · planned and documented · built from the ground up · raised with care · before → after wipe · Project Elysian (Nibeco Gardens) · communities, not just houses · finished with care |
+| 39–42 s | **1,000+** proud property owners |
+| 42–48 s | "From land *to keys*": the six services, each with its own photo |
+| 48–51 s | "To every family who trusted us with a home — *thank you*" (the site visit) |
+| 51–54 s | "Coming next · Here's to the next *ten*" over the townhouse render |
+| 54–60 s | End card with falling gold leaf |
+
+```bash
+# owner photos go in captures/owner/src/<name>.jpg (names listed in scenes/celebration.html)
+bash owner.sh                          # 2x lanczos upscale of the WhatsApp-compressed originals
+python score.py celebration            # 60 s score, stems, cues_celebration.json
+node film.mjs stills h celebration     # QA sheet; also v
+node film.mjs video h celebration      # ~40 min at 4K; also v
+```
+
+The owner's photos arrived WhatsApp-compressed (~1 MP). They are shown as framed editorial cards,
+or as full-width bands in the vertical cut, so they never have to fill a 4K frame on their own.
+Camera originals would let the opening and stat scenes go full-bleed at native sharpness.
+
+## The brand film (UHD, 45 s)
 
 A slower, cinematic cut in the language of luxury-property films: piano-led score, slow camera moves,
 realistic grade, editorial serif type, 2.39:1 letterbox that opens on the title.

@@ -1,0 +1,32 @@
+{
+  "bpm": 80,
+  "bar_seconds": 3.0,
+  "fps_suggested": 24,
+  "open_line": [
+    0.8,
+    1.8
+  ],
+  "problem": 6.0,
+  "title_risk": 7.8,
+  "origin": 9.0,
+  "promise_line": 10.5,
+  "title_hit": 12.0,
+  "portfolio": [
+    15.0,
+    18.0,
+    21.0,
+    24.0,
+    27.0,
+    30.0
+  ],
+  "estates": [
+    33.0,
+    36.0
+  ],
+  "stat": 39.0,
+  "services": 42.0,
+  "thanks": 48.0,
+  "next_ten": 51.0,
+  "end_card": 54.0,
+  "fade": 59.2
+}
