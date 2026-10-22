@@ -65,4 +65,7 @@ export const mailtoHref = (subject: string) =>
  *
  *   { network: 'instagram', href: 'https://instagram.com/mindfirehomes' },
  */
-export const SOCIAL_LINKS: { network: 'facebook' | 'twitter' | 'instagram' | 'linkedin'; href: string }[] = [];
+export const SOCIAL_LINKS: { network: 'facebook' | 'twitter' | 'instagram' | 'linkedin'; href: string }[] = [
+    // Handle confirmed by the owner (@mindfirehomes).
+    { network: 'instagram', href: 'https://www.instagram.com/mindfirehomes/' },
+];
