@@ -146,6 +146,27 @@ export default function ContactPage() {
                                     </a>
                                 </div>
                             )}
+
+                            <figure className="overflow-hidden rounded-showcase border border-hairline/[0.06] bg-surface shadow-ambient">
+                                <div className="aspect-[4/3] overflow-hidden">
+                                    <img
+                                        src="/projects/handover-client-viewing.webp"
+                                        alt="Prospective buyers viewing a completed white residence from its forecourt"
+                                        className="h-full w-full object-cover object-[center_35%]"
+                                        loading="lazy"
+                                        decoding="async"
+                                    />
+                                </div>
+                                <figcaption className="p-6">
+                                    <p className="font-display text-body-lg font-semibold text-content">
+                                        See it before you commit.
+                                    </p>
+                                    <p className="mt-1.5 text-body-sm text-content-muted">
+                                        Every enquiry can become an accompanied site visit — land, mid-build, or
+                                        finished home.
+                                    </p>
+                                </figcaption>
+                            </figure>
                         </Reveal>
 
                         <Reveal delay={100} className="lg:col-span-3">

@@ -11,7 +11,7 @@ import { ButtonLink } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { supabase } from '@/lib/supabase';
-import { FEATURE_ELEVATION, INTERIOR_PORTRAIT } from '@/lib/media';
+import { BUILD_STAGES, FEATURE_ELEVATION, INTERIOR_PORTRAIT } from '@/lib/media';
 import { absoluteUrl, ORGANISATION_JSON_LD, SITE } from '@/lib/seo';
 import type { Property } from '@/types';
 import { IconArrowRight } from '@/components/icons';
@@ -314,6 +314,48 @@ export default async function HomePage() {
                             />
                         </div>
                     </Reveal>
+                </div>
+            </section>
+
+            {/* ── On site. One photograph per build stage; the full sequence
+                lives on the About page. ─────────────────────────────────── */}
+            <section className="border-t border-hairline/[0.06] bg-bg py-section">
+                <div className="mx-auto max-w-content px-gutter">
+                    <Reveal className="mb-[clamp(2.25rem,5vw,3.5rem)] flex flex-wrap items-end justify-between gap-5">
+                        <div className="max-w-[40rem]">
+                            <Eyebrow>On our sites</Eyebrow>
+                            <h2 className="mt-3 font-display text-[clamp(1.875rem,4.2vw,3.375rem)] font-bold leading-[1.05] tracking-[-0.03em] text-content">
+                                Built, not just sold.
+                            </h2>
+                            <p className="mt-4 text-body-lg text-content-muted">
+                                From walking the land to handing over the keys — our own photographs, from our
+                                own projects.
+                            </p>
+                        </div>
+                        <ButtonLink href="/about#our-work" variant="outline">
+                            See the full build story
+                        </ButtonLink>
+                    </Reveal>
+
+                    <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                        {BUILD_STAGES.map(({ title, photos: [photo] }, i) => (
+                            <Reveal as="li" key={title} delay={i * 60}>
+                                <figure className="relative aspect-[4/5] overflow-hidden rounded-surface bg-surface shadow-soft">
+                                    <img
+                                        src={photo.src}
+                                        alt={photo.alt}
+                                        className="h-full w-full object-cover"
+                                        loading="lazy"
+                                        decoding="async"
+                                    />
+                                    <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pb-3.5 pt-10 text-body-sm font-semibold text-white">
+                                        <span className="mr-2 text-white/70">{String(i + 1).padStart(2, '0')}</span>
+                                        {title}
+                                    </figcaption>
+                                </figure>
+                            </Reveal>
+                        ))}
+                    </ul>
                 </div>
             </section>
 

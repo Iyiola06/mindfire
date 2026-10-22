@@ -6,7 +6,7 @@ import { Reveal } from '@/components/motion/Reveal';
 import { ButtonLink } from '@/components/ui/Button';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { OFFICE } from '@/lib/contact';
-import { INTERIOR_PORTRAIT } from '@/lib/media';
+import { BUILD_STAGES, INTERIOR_PORTRAIT } from '@/lib/media';
 import { absoluteUrl, breadcrumbJsonLd, SITE } from '@/lib/seo';
 
 export const metadata: Metadata = {
@@ -107,7 +107,7 @@ export default function AboutPage() {
                         <div className="aspect-[4/5] overflow-hidden rounded-showcase shadow-elevated">
                             <img
                                 src={INTERIOR_PORTRAIT.src}
-                                alt="Completed residence with landscaped grounds and a covered entrance"
+                                alt={INTERIOR_PORTRAIT.alt}
                                 className="h-full w-full object-cover"
                                 loading="lazy"
                             />
@@ -182,6 +182,64 @@ export default function AboutPage() {
                                     </p>
                                 </div>
                             </Reveal>
+                        ))}
+                    </ol>
+                </div>
+            </section>
+
+            {/* Our work — the build sequence, in Mindfire's own photographs. */}
+            <section id="our-work" className="scroll-mt-nav bg-bg py-section">
+                <div className="mx-auto max-w-content px-gutter">
+                    <Reveal className="mb-[clamp(2.5rem,5vw,4rem)] max-w-[40rem]">
+                        <Eyebrow>Our work</Eyebrow>
+                        <h2 className="mt-3 font-display text-[clamp(1.875rem,4.2vw,3.375rem)] font-bold leading-[1.05] tracking-[-0.03em] text-content">
+                            From land to handover.
+                        </h2>
+                        <p className="mt-4 text-body-lg text-content-muted">
+                            Photographs from our own sites, not stock. This is what the work looks like at
+                            each stage — and every stage can be visited.
+                        </p>
+                    </Reveal>
+
+                    <ol className="space-y-[clamp(3rem,6vw,5rem)]">
+                        {BUILD_STAGES.map(({ title, body, photos }, i) => (
+                            <li key={title}>
+                                <Reveal className="mb-6 flex gap-[1.125rem]">
+                                    <span
+                                        aria-hidden="true"
+                                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-brand-600/[0.09] font-display text-body-sm font-bold text-brand-600"
+                                    >
+                                        {String(i + 1).padStart(2, '0')}
+                                    </span>
+                                    <div>
+                                        <h3 className="font-display text-body-lg font-semibold text-content">{title}</h3>
+                                        <p className="mt-1.5 max-w-[42rem] text-body-sm leading-[1.6] text-content-muted">
+                                            {body}
+                                        </p>
+                                    </div>
+                                </Reveal>
+
+                                <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                                    {photos.map(({ src, alt, caption }, j) => (
+                                        <Reveal as="li" key={src} delay={j * 60}>
+                                            <figure>
+                                                <div className="aspect-[4/5] overflow-hidden rounded-surface bg-surface shadow-soft">
+                                                    <img
+                                                        src={src}
+                                                        alt={alt}
+                                                        className="h-full w-full object-cover"
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                    />
+                                                </div>
+                                                <figcaption className="mt-2 text-body-sm text-content-muted">
+                                                    {caption}
+                                                </figcaption>
+                                            </figure>
+                                        </Reveal>
+                                    ))}
+                                </ul>
+                            </li>
                         ))}
                     </ol>
                 </div>
