@@ -4,7 +4,7 @@ import { OFFICE } from './contact'
 /**
  * Sender address for transactional mail.
  *
- * OWNER ACTION REQUIRED — `onboarding@resend.dev` is Resend's shared sandbox
+ * OWNER ACTION REQUIRED - `onboarding@resend.dev` is Resend's shared sandbox
  * sender. It works for testing and will only deliver to the account owner's own
  * address. Verify the mindfirehomes.com domain in Resend and set
  * `RESEND_FROM="Mindfire Homes <hello@mindfirehomes.com>"`.
@@ -35,7 +35,7 @@ export interface LeadNotification {
  *
  * Deliberately never throws. The lead row is already committed by the time
  * this runs, so a mail failure must not turn a successful submission into an
- * error for the visitor — it is logged and swallowed.
+ * error for the visitor - it is logged and swallowed.
  *
  * `Reply-To` is set to the enquirer, so replying from the inbox reaches them
  * directly rather than reaching Resend.
@@ -43,7 +43,7 @@ export interface LeadNotification {
 export async function notifyNewLead(lead: LeadNotification): Promise<void> {
     const resend = getResend()
     if (!resend) {
-        console.warn('notifyNewLead: RESEND_API_KEY is not set — no notification sent.')
+        console.warn('notifyNewLead: RESEND_API_KEY is not set, so no notification was sent.')
         return
     }
 
@@ -79,7 +79,7 @@ export async function notifyNewLead(lead: LeadNotification): Promise<void> {
             from: FROM,
             to: NOTIFY_TO,
             replyTo: lead.email,
-            subject: `New enquiry — ${lead.name} (${lead.propertyInterest})`,
+            subject: `New enquiry: ${lead.name} (${lead.propertyInterest})`,
             html,
         })
     } catch (error) {

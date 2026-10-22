@@ -27,7 +27,7 @@ const NAV_LINKS = [
 
 /**
  * The wordmark lockup, used at two scales in two places. `tone` exists because
- * the footer copy sits on near-black and the nav copy sits on glass — the
+ * the footer copy sits on near-black and the nav copy sits on glass - the
  * subtitle needs a different alpha in each, and hardcoding one produced an
  * illegible "HOMES" in the footer.
  */
@@ -69,7 +69,7 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Lock background scroll while the mobile drawer is open. Saving and
   // restoring the previous value rather than hardcoding 'unset' is what stops
-  // this and PropertiesList — which writes the same property — fighting, and
+  // this and PropertiesList - which writes the same property - fighting, and
   // it restores scroll if the component unmounts with the menu open.
   useEffect(() => {
     if (!mobileMenuOpen) return;
@@ -118,7 +118,7 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
         setNewsletterMessage(
           res.message === 'Already subscribed'
             ? 'You are already on the list.'
-            : 'Thanks — check your inbox to confirm.',
+            : 'Thanks! Check your inbox to confirm.',
         );
         setNewsletterEmail('');
       } else {
@@ -160,7 +160,7 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
         aria-label="Primary"
         className="fixed left-1/2 top-nav-inset z-50 flex h-nav-cap max-w-[calc(100vw-1.5rem)] -translate-x-1/2 items-center gap-4 whitespace-nowrap rounded-pill glass-capsule py-0 pl-4 pr-2 md:gap-6 md:pl-[18px] md:pr-3"
       >
-        <Link href="/" className="flex items-center gap-2.5" aria-label="Mindfire Homes — home">
+        <Link href="/" className="flex items-center gap-2.5" aria-label="Mindfire Homes home page">
           <Wordmark size="sm" tone="default" />
         </Link>
 
@@ -218,7 +218,7 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
       {/* Mobile nav sheet.
           `inert` while closed: the panel stays mounted for the slide
           transition, and without it every link inside remains in the tab order
-          off-screen — a keyboard user tabs into invisible controls. */}
+          off-screen - a keyboard user tabs into invisible controls. */}
       <div
         id="mobile-nav"
         ref={drawerRef}
@@ -270,7 +270,7 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
       </div>
 
       {/* Every route reserves the full capsule clearance. Nothing sits under
-          the nav at rest — the glass is there for what scrolls beneath it. */}
+          the nav at rest - the glass is there for what scrolls beneath it. */}
       <main id="main-content" className="flex w-full flex-1 flex-col overflow-x-hidden pt-nav">
         {children}
       </main>
@@ -288,7 +288,7 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
               </p>
 
               {/* Social icons render only for profiles that exist. The previous
-                  version shipped four `href="#"` links — controls that looked
+                  version shipped four `href="#"` links - controls that looked
                   functional and navigated nowhere. See SOCIAL_LINKS. */}
               {SOCIAL_LINKS.length > 0 && (
                 <ul className="flex gap-3">
@@ -375,7 +375,7 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
                     )}
                   </button>
                 </div>
-                {/* role="status" so the outcome is announced — the icon swap
+                {/* role="status" so the outcome is announced - the icon swap
                     inside the button is decorative and conveys nothing to AT. */}
                 <p role="status" className="mt-1 min-h-[1.25rem] text-body-sm">
                   {newsletterStatus === 'success' && <span className="text-brand-500">{newsletterMessage}</span>}

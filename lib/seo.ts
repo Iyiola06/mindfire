@@ -32,7 +32,7 @@ export const SITE = {
     shortName: 'Mindfire Homes',
     locale: 'en_NG',
     description:
-        'Legally verified homes and investment property in Abuja — documented titles, inspected construction, and payment terms agreed in writing before you commit.',
+        'Legally verified homes and investment property in Abuja, with documented titles, inspected construction, and payment terms agreed in writing before you commit.',
     /** Rendered by app/opengraph-image.tsx. */
     ogImage: '/opengraph-image',
 } as const
@@ -44,15 +44,15 @@ export const absoluteUrl = (path = '/') =>
 /**
  * Truncates at a word boundary for `<meta name="description">`.
  *
- * Google renders roughly 155–160 characters. Cutting mid-word — which a plain
- * `slice` does — produces a visible fragment in the result snippet.
+ * Google renders roughly 155–160 characters. Cutting mid-word - which a plain
+ * `slice` does - produces a visible fragment in the result snippet.
  */
 export const metaDescription = (text: string | null | undefined, max = 155) => {
     const clean = (text ?? '').replace(/\s+/g, ' ').trim()
     if (clean.length <= max) return clean
     const cut = clean.slice(0, max)
     const lastSpace = cut.lastIndexOf(' ')
-    return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[,.;:—-]$/, '')}…`
+    return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[,.;:\u2014-]$/, '')}…`
 }
 
 /**
@@ -60,7 +60,7 @@ export const metaDescription = (text: string | null | undefined, max = 155) => {
  *
  * `RealEstateAgent` rather than the generic `Organization`: it is the specific
  * type for this business and carries `areaServed`. Only fields the codebase can
- * actually evidence are included — there is no aggregate rating and no
+ * actually evidence are included - there is no aggregate rating and no
  * telephone until `OFFICE.phoneE164` is filled in. The founding year is the
  * owner's own figure.
  */

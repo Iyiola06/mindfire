@@ -22,7 +22,7 @@ const COLOURS = {
 } as const;
 
 /**
- * The small uppercase status marker — "Sold", "Featured", "New".
+ * The small uppercase status marker - "Sold", "Featured", "New".
  *
  * Distinct from `Chip`, which is body-sized and carries a fact rather than a
  * state. Badges are always uppercase and always short enough not to wrap.

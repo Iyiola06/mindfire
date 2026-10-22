@@ -55,7 +55,7 @@ const emptyForm = (): FormData => ({
 /**
  * These three were declared inside `PropertyManagement`, which meant React saw
  * a brand-new component type on every render and unmounted/remounted their
- * subtrees each time — the cause of the scroll-position loss the modal comment
+ * subtrees each time - the cause of the scroll-position loss the modal comment
  * refers to. At module scope the type is stable and the DOM is reused.
  */
 const CurrencyToggle: React.FC<{ value: 'USD' | 'NGN'; onChange: (c: 'USD' | 'NGN') => void }> = ({ value, onChange }) => (
@@ -455,7 +455,7 @@ export default function PropertyManagement({ initialProperties }: { initialPrope
                                         className="cursor-pointer rounded-control border-2 border-dashed border-hairline/15 bg-surface-2 p-4 text-center transition-colors duration-short ease-standard hover:border-brand-600">
                                         <IconImage size={22} className="mx-auto text-content-muted" />
                                         <p className="mt-1.5 text-body-sm font-medium text-content-muted">
-                                            {tempFiles.gallery.length > 0 ? `${tempFiles.gallery.length} new image(s) selected — click to change` : 'Click to add gallery images'}
+                                            {tempFiles.gallery.length > 0 ? `${tempFiles.gallery.length} new image(s) selected. Click to change` : 'Click to add gallery images'}
                                         </p>
                                         <input type="file" hidden multiple ref={galleryRef} accept="image/*" onChange={e => setTempFiles(t => ({ ...t, gallery: Array.from(e.target.files || []) }))} />
                                     </div>

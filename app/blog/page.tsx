@@ -13,16 +13,16 @@ import { IconFileText } from '@/components/icons';
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-    title: 'Journal — notes on buying property in Abuja',
+    title: 'Journal: notes on buying property in Abuja',
     description:
-        'Title verification, payment structures, district infrastructure, and what to check before you commit — what we have learned buying and selling in Abuja.',
+        'Title verification, payment structures, district infrastructure, and what to check before you commit. What we have learned buying and selling in Abuja.',
     alternates: { canonical: '/blog' },
     openGraph: {
         type: 'website',
         url: absoluteUrl('/blog'),
         title: `Journal | ${SITE.name}`,
         description:
-            'Notes on buying property in Abuja — title verification, payment structures, and district infrastructure.',
+            'Notes on buying property in Abuja: title verification, payment structures, and district infrastructure.',
     },
 };
 
@@ -66,7 +66,7 @@ export default async function BlogPage() {
             <PageHeader
                 eyebrow="Insights and market notes"
                 title="Journal"
-                lede="What we have learned buying and selling in Abuja — title verification, payment structures, district infrastructure, and the questions worth asking before you commit."
+                lede="What we have learned buying and selling in Abuja: title verification, payment structures, district infrastructure, and the questions worth asking before you commit."
             />
 
             <div className="bg-bg pb-section pt-section-sm">

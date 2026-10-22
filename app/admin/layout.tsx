@@ -46,7 +46,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     /**
      * A real sign-out. The previous handler was
      * `console.log('Logout clicked')` behind a `// TODO`, so the button in the
-     * sidebar cleared no session and navigated nowhere — the only way out of
+     * sidebar cleared no session and navigated nowhere - the only way out of
      * the admin was to clear cookies by hand.
      */
     const handleLogout = () => signOut({ callbackUrl: '/admin/login' });
@@ -122,7 +122,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                             </span>
                             <div className="min-w-0 flex-1">
                                 <p className="truncate text-body-sm font-semibold text-content">{displayName}</p>
-                                <p className="truncate text-[0.75rem] text-content-muted">{user?.email ?? '—'}</p>
+                                <p className="truncate text-[0.75rem] text-content-muted">{user?.email ?? 'Signed in'}</p>
                             </div>
                         </div>
                         <button

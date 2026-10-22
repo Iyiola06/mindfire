@@ -4,7 +4,7 @@ export interface IconProps {
     /** Rendered size in px, applied to both axes. */
     size?: number
     /**
-     * Accessible name. Omit for decorative icons sitting next to visible text —
+     * Accessible name. Omit for decorative icons sitting next to visible text - 
      * the icon is then hidden from assistive tech. Supply it when the icon is
      * the only content of a control.
      */

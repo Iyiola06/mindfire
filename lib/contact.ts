@@ -16,7 +16,7 @@
  * purpose: a dialable link to a guessed number is a control that looks
  * functional and does nothing.
  *
- *   phoneE164: '+2349012345678'   // E.164 — no spaces, leading +, country code
+ *   phoneE164: '+2349012345678'   // E.164 - no spaces, leading +, country code
  *   streetLine: 'Plot 123, Ademola Adetokunbo Crescent, Wuse II'
  */
 export const OFFICE: {
@@ -53,14 +53,14 @@ export const mailtoHref = (subject: string) =>
     `mailto:${OFFICE.email}?subject=${encodeURIComponent(subject)}`;
 
 /**
- * OWNER ACTION REQUIRED — social profiles.
+ * OWNER ACTION REQUIRED - social profiles.
  *
  * The footer previously rendered four social icons pointing at `href="#"`.
  * Every one of them was a control that looked functional and did nothing: a
  * visitor clicking Instagram got a jump to the top of the page.
  *
  * Add the real profile URLs here and each icon appears. Leave an entry out and
- * that icon simply is not rendered — an absent link is honest, a dead one is
+ * that icon simply is not rendered - an absent link is honest, a dead one is
  * not. Do not add a network the business does not actually maintain.
  *
  *   { network: 'instagram', href: 'https://instagram.com/mindfirehomes' },

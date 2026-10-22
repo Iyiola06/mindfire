@@ -9,9 +9,9 @@ import { absoluteUrl, breadcrumbJsonLd, SITE } from '@/lib/seo';
 import { IconClock, IconMail, IconMapPin, IconPhone, IconWhatsApp } from '@/components/icons';
 
 export const metadata: Metadata = {
-    title: 'Contact us — Abuja property advisors',
+    title: 'Contact us: Abuja property advisors',
     description:
-        'Questions about a property, a viewing to arrange, or a development to discuss — contact the Mindfire Homes advisory team in Abuja.',
+        'Questions about a property, a viewing to arrange, or a development to discuss? Contact the Mindfire Homes advisory team in Abuja.',
     alternates: { canonical: '/contact' },
     openGraph: {
         type: 'website',
@@ -74,7 +74,7 @@ export default function ContactPage() {
                 eyebrow="We are here to help"
                 title="Get in touch"
                 align="center"
-                lede={`A question about a property, a viewing to arrange, or a development to discuss — the advisory team will come back to you ${OFFICE.responseTime}.`}
+                lede={`A question about a property, a viewing to arrange, or a development to discuss? The advisory team will come back to you ${OFFICE.responseTime}.`}
             />
 
             <div className="bg-bg pb-section pt-section-sm">
@@ -103,7 +103,7 @@ export default function ContactPage() {
                                     ))}
 
                                     {/* Only rendered once the owner supplies the real
-                                        number — see lib/contact.ts. */}
+                                        number - see lib/contact.ts. */}
                                     {OFFICE.phoneE164 && (
                                         <div className="flex items-start gap-4">
                                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-brand-600/[0.09] text-brand-600">
@@ -162,7 +162,7 @@ export default function ContactPage() {
                                         See it before you commit.
                                     </p>
                                     <p className="mt-1.5 text-body-sm text-content-muted">
-                                        Every enquiry can become an accompanied site visit — land, mid-build, or
+                                        Every enquiry can become an accompanied site visit: land, mid-build, or
                                         finished home.
                                     </p>
                                 </figcaption>

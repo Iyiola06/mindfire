@@ -97,7 +97,7 @@ export interface AdminSessionUser {
  * Every write path calls this. Middleware alone is not sufficient: its matcher
  * has to enumerate paths, it silently stopped covering `/api/properties/[id]`
  * and `/api/blog/[id]` when those routes were added, and it does not run for
- * server actions at all — which is how `sendBulkEmail` came to be callable by
+ * server actions at all - which is how `sendBulkEmail` came to be callable by
  * anyone who could POST to the site.
  */
 export async function getAdmin(): Promise<AdminSessionUser | null> {

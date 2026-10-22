@@ -25,7 +25,7 @@ Every task's requirements implicitly include this section.
 - **No page redesigns.** Shared-component migrations must be visually neutral-or-better on pages not yet redesigned.
 - **Logo:** keep `public/logo.svg`. Do not redraw it.
 - **Material Icons deletion is deferred.** The `<link>` and `.material-icons-outlined` class are removed in sub-project 5, once the final consumer is migrated. Foundation migrates only the shared layer, so the class must keep working for unmigrated pages.
-- **Resolved conflict — the Material Icons `<link>` stays through Foundation.** The spec's verification list says "No `<link>` to `fonts.googleapis.com` remains in `app/layout.tsx`", which collides with the constraint above: 18 files still render Material ligatures, and without the stylesheet they display glyph *names* as literal text across the whole site. Self-hosting the icon font was the obvious escape and it does not exist — `next/font/google` exposes `Inter` (`next/dist/compiled/@next/font/dist/google/index.d.ts:6660`) but has no `Material_Icons` export at all, verified by search. So Foundation removes only the Inter stylesheet and the two `preconnect` hints, and the `fonts.googleapis.com` criterion moves to sub-project 5, where the constraint above already places the deletion. Task 5's test asserts the Inter link is gone, not that the origin is unreferenced.
+- **Resolved conflict - the Material Icons `<link>` stays through Foundation.** The spec's verification list says "No `<link>` to `fonts.googleapis.com` remains in `app/layout.tsx`", which collides with the constraint above: 18 files still render Material ligatures, and without the stylesheet they display glyph *names* as literal text across the whole site. Self-hosting the icon font was the obvious escape and it does not exist - `next/font/google` exposes `Inter` (`next/dist/compiled/@next/font/dist/google/index.d.ts:6660`) but has no `Material_Icons` export at all, verified by search. So Foundation removes only the Inter stylesheet and the two `preconnect` hints, and the `fonts.googleapis.com` criterion moves to sub-project 5, where the constraint above already places the deletion. Task 5's test asserts the Inter link is gone, not that the origin is unreferenced.
 - **Commit after every task.** Co-author trailer: `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 
 ## File Structure
@@ -70,7 +70,7 @@ Every task's requirements implicitly include this section.
 
 ### Task 1: Test harness and measurement baseline
 
-Nothing in this repo can currently be tested or measured. This task creates both, and captures the "before" numbers the brief requires — which must happen before any visual change lands.
+Nothing in this repo can currently be tested or measured. This task creates both, and captures the "before" numbers the brief requires - which must happen before any visual change lands.
 
 **Files:**
 - Create: `vitest.config.ts`
@@ -185,7 +185,7 @@ function run(cmd, cmdArgs) {
     })
   } catch (err) {
     // Lighthouse and axe exit non-zero when they find problems.
-    // That is the expected case for a baseline run — keep the output.
+    // That is the expected case for a baseline run - keep the output.
     return err.stdout ?? ''
   }
 }
@@ -239,7 +239,7 @@ If `npm run build` fails because Supabase env vars are absent, set `NEXT_PUBLIC_
 Create `docs/baseline/README.md` with the Lighthouse category scores and axe violation counts pulled from the JSON, so the "after" comparison has a human-readable reference:
 
 ```markdown
-# Baseline — captured 2026-08-10, before Foundation
+# Baseline - captured 2026-08-10, before Foundation
 
 Measured against commit <SHA> with `npm run measure -- --out docs/baseline`.
 
@@ -316,7 +316,7 @@ describe('token layer', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- tests/tokens.test.ts`
-Expected: FAIL — `--brand-700` not found in `app/globals.css`.
+Expected: FAIL - `--brand-700` not found in `app/globals.css`.
 
 - [ ] **Step 3: Write the token layer**
 
@@ -329,13 +329,13 @@ Replace the whole of `app/globals.css` with:
 
 @layer base {
   :root {
-    /* Brand — RGB channel triplets so Tailwind alpha modifiers work */
+    /* Brand - RGB channel triplets so Tailwind alpha modifiers work */
     --brand-700:   0  84  77;
     --brand-600:   0 105  96;
     --brand-500:   0 137 123;
     --accent-500: 201 138  74;
 
-    /* Neutrals — light theme */
+    /* Neutrals - light theme */
     --bg:         250 250 250;
     --surface:    255 255 255;
     --surface-2:  244 245 246;
@@ -343,7 +343,7 @@ Replace the whole of `app/globals.css` with:
     --text-muted:  90  98 104;
     --hairline:     0   0   0;
 
-    /* Glass — light theme */
+    /* Glass - light theme */
     --glass-tint:        255 255 255;
     --glass-border:      255 255 255;
     --glass-highlight:   255 255 255;
@@ -446,7 +446,7 @@ const config: Config = {
                 'content-muted': 'rgb(var(--text-muted) / <alpha-value>)',
                 hairline: 'rgb(var(--hairline) / <alpha-value>)',
 
-                /* Legacy aliases — kept so unmigrated pages keep rendering.
+                /* Legacy aliases - kept so unmigrated pages keep rendering.
                    Removed in sub-project 5. */
                 primary: {
                     DEFAULT: 'rgb(var(--brand-600) / <alpha-value>)',
@@ -533,7 +533,7 @@ Expected: PASS, 4 tests.
 - [ ] **Step 6: Verify the app still builds and renders**
 
 Run: `npm run build`
-Expected: build succeeds. Then `npm run dev` and confirm `/`, `/properties`, `/about`, `/contact` still render with colours close to before — the legacy aliases now resolve through the new tokens, so primary shifts from `#00897B` to the deeper `#006960` and secondary from amber to bronze. That shift is intended.
+Expected: build succeeds. Then `npm run dev` and confirm `/`, `/properties`, `/about`, `/contact` still render with colours close to before - the legacy aliases now resolve through the new tokens, so primary shifts from `#00897B` to the deeper `#006960` and secondary from amber to bronze. That shift is intended.
 
 - [ ] **Step 7: Commit**
 
@@ -589,7 +589,7 @@ describe('glass materials', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- tests/tokens.test.ts`
-Expected: FAIL — `.glass-subtle` not found.
+Expected: FAIL - `.glass-subtle` not found.
 
 - [ ] **Step 3: Add the glass component layer**
 
@@ -736,7 +736,7 @@ describe('motion', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- tests/tokens.test.ts`
-Expected: FAIL — no `prefers-reduced-motion` block.
+Expected: FAIL - no `prefers-reduced-motion` block.
 
 - [ ] **Step 3: Add the reduced-motion guard**
 
@@ -823,7 +823,7 @@ describe('typography', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- tests/fonts.test.ts`
-Expected: FAIL — `fonts.googleapis.com` is present in `app/layout.tsx`.
+Expected: FAIL - `fonts.googleapis.com` is present in `app/layout.tsx`.
 
 - [ ] **Step 3: Convert to next/font**
 
@@ -869,7 +869,7 @@ export default function RootLayout({
     return (
         <html lang="en" className={`${inter.variable} ${interDisplay.variable}`} suppressHydrationWarning>
             <head>
-                {/* Cannot be self-hosted — next/font/google has no Material_Icons
+                {/* Cannot be self-hosted - next/font/google has no Material_Icons
                     export. 18 files still render these ligatures; sub-project 5
                     deletes this link together with the last consumer. */}
                 <link
@@ -897,7 +897,7 @@ Expected: PASS, 3 tests.
 
 - [ ] **Step 5: Verify no font requests hit the network**
 
-Run `npm run dev`, open `/` with DevTools → Network filtered to `Font`. Expected: Inter served from `/_next/static/media/`, zero requests to `fonts.gstatic.com`, and exactly one `fonts.googleapis.com` request — the Material Icons stylesheet.
+Run `npm run dev`, open `/` with DevTools → Network filtered to `Font`. Expected: Inter served from `/_next/static/media/`, zero requests to `fonts.gstatic.com`, and exactly one `fonts.googleapis.com` request - the Material Icons stylesheet.
 
 - [ ] **Step 6: Commit**
 
@@ -923,9 +923,9 @@ Foundation migrates only the shared layer, so only the glyphs that layer uses ar
 **Interfaces:**
 - Consumes: nothing.
 - Produces:
-  - `Icon` — props `{ size?: number; label?: string; className?: string; children: React.ReactNode }`. Renders `<svg>` with `aria-hidden="true"` when `label` is absent, or `role="img"` + `<title>` when present.
-  - Named components, each accepting `{ size?: number; label?: string; className?: string }`: `IconHeart`, `IconMapPin`, `IconBed`, `IconBath`, `IconArea`, `IconMenu`, `IconClose`, `IconSun`, `IconMoon`, `IconSend`, `IconCheck`, `IconSpinner`, `IconBuilding`.
-  - All exported from `components/icons/index.ts`.
+ - `Icon` - props `{ size?: number; label?: string; className?: string; children: React.ReactNode }`. Renders `<svg>` with `aria-hidden="true"` when `label` is absent, or `role="img"` + `<title>` when present.
+ - Named components, each accepting `{ size?: number; label?: string; className?: string }`: `IconHeart`, `IconMapPin`, `IconBed`, `IconBath`, `IconArea`, `IconMenu`, `IconClose`, `IconSun`, `IconMoon`, `IconSend`, `IconCheck`, `IconSpinner`, `IconBuilding`.
+ - All exported from `components/icons/index.ts`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -978,7 +978,7 @@ describe('glyph components', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- tests/icons.test.tsx`
-Expected: FAIL — cannot resolve `@/components/icons`.
+Expected: FAIL - cannot resolve `@/components/icons`.
 
 - [ ] **Step 3: Write the primitive**
 
@@ -991,7 +991,7 @@ export interface IconProps {
   /** Rendered size in px, applied to both axes. */
   size?: number
   /**
-   * Accessible name. Omit for decorative icons sitting next to visible text —
+   * Accessible name. Omit for decorative icons sitting next to visible text - 
    * the icon is then hidden from assistive tech. Supply it when the icon is
    * the only content of a control.
    */
@@ -1169,7 +1169,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 ### Task 7: Layout contract and navigation
 
-This is the task that structurally removes the mobile header overlap. Three uncoordinated magic numbers — the nav's `py-3`/`py-5` around an `h-12` row, the homepage's `pt-20 -mt-20`, and inner pages' `pt-24` — are replaced by one `--nav-h` token.
+This is the task that structurally removes the mobile header overlap. Three uncoordinated magic numbers - the nav's `py-3`/`py-5` around an `h-12` row, the homepage's `pt-20 -mt-20`, and inner pages' `pt-24` - are replaced by one `--nav-h` token.
 
 **Files:**
 - Modify: `components/layout/PublicLayout.tsx`
@@ -1233,11 +1233,11 @@ describe('PublicLayout navigation', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- tests/shared-components.test.tsx`
-Expected: FAIL — the toggle is named "Toggle dark mode", not "Switch to dark mode".
+Expected: FAIL - the toggle is named "Toggle dark mode", not "Switch to dark mode".
 
 - [ ] **Step 3: Apply the nav height contract**
 
-In `components/layout/PublicLayout.tsx`, replace the `navClass`/`textClass` definitions and the nav element. The nav no longer changes its own padding on scroll — its height is fixed by the token, and only its material changes:
+In `components/layout/PublicLayout.tsx`, replace the `navClass`/`textClass` definitions and the nav element. The nav no longer changes its own padding on scroll - its height is fixed by the token, and only its material changes:
 
 ```tsx
 const solid = isScrolled || !isHome || mobileMenuOpen
@@ -1299,7 +1299,7 @@ Add `id="mobile-nav"` to the drawer `div`, and change its `pt-24` to `pt-nav` so
 Give the logo a consistent treatment. `logo.svg` has an opaque white background, so it needs a contrast-safe container rather than sitting bare on a transparent nav:
 
 ```tsx
-<Link href="/" className="relative z-50 flex items-center gap-3" aria-label="Mindfire Homes — home">
+<Link href="/" className="relative z-50 flex items-center gap-3" aria-label="Mindfire Homes - home">
   <img
     src="/logo.svg"
     alt=""
@@ -1337,7 +1337,7 @@ Point the Discover links at real filtered listings:
 <li><Link href="/properties?type=Commercial" className="transition-colors hover:text-accent">Commercial</Link></li>
 ```
 
-`PropertiesList` already reads `status` from the URL. It does not yet read `type` — that filter arrives in sub-project 4, and until then the Commercial link lands on unfiltered listings rather than a dead `#`.
+`PropertiesList` already reads `status` from the URL. It does not yet read `type` - that filter arrives in sub-project 4, and until then the Commercial link lands on unfiltered listings rather than a dead `#`.
 
 Replace the two dead legal anchors with real routes:
 
@@ -1383,7 +1383,7 @@ Both are placeholder-content pages by design: the brief requires the links to wo
 
 Replace the three newsletter status icons: `refresh` → `<IconSpinner size={20} className="animate-spin" />`, `check` → `<IconCheck size={20} />`, `send` → `<IconSend size={20} />`.
 
-Change the four social `hover:bg-primary` to `hover:bg-brand-600`, and leave their `href="#"` alone — real social URLs are content, not code, and belong to sub-project 2. Add a `title` to each so the placeholder is visible rather than silent:
+Change the four social `hover:bg-primary` to `hover:bg-brand-600`, and leave their `href="#"` alone - real social URLs are content, not code, and belong to sub-project 2. Add a `title` to each so the placeholder is visible rather than silent:
 
 ```tsx
 <a href="#" aria-label="Facebook" title="Social links coming soon" ...>
@@ -1434,7 +1434,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: tokens (Task 2), glass classes (Task 3), icons (Task 6).
-- Produces: `Button` prop `icon` changes type from `string` to `React.ReactNode`. This is a breaking change for any caller passing a Material glyph name; grep confirms there are none — `Button` is currently used without the `icon` prop.
+- Produces: `Button` prop `icon` changes type from `string` to `React.ReactNode`. This is a breaking change for any caller passing a Material glyph name; grep confirms there are none - `Button` is currently used without the `icon` prop.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1486,7 +1486,7 @@ describe('PropertyCard', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- tests/shared-components.test.tsx`
-Expected: FAIL — the favourite button has no accessible name.
+Expected: FAIL - the favourite button has no accessible name.
 
 - [ ] **Step 3: Migrate PropertyCard**
 
@@ -1503,7 +1503,7 @@ Replace the favourite button. It needs a name, and the name must identify *which
 </button>
 ```
 
-The handler stays a no-op — favouriting has no backing store, and inventing one is out of scope. The `aria-label` now describes what the control *will* do, which is honest, and the control is reachable and named.
+The handler stays a no-op - favouriting has no backing store, and inventing one is out of scope. The `aria-label` now describes what the control *will* do, which is honest, and the control is reachable and named.
 
 Remove the truncation. `line-clamp-1` on the name and `truncate` on the address are the "truncated fields" defect:
 
@@ -1519,7 +1519,7 @@ Remove the truncation. `line-clamp-1` on the name and `truncate` on the address 
 
 Swap the three stat icons for `IconBed`, `IconBath`, `IconArea` at `size={16}` with `className="text-brand-600"`, and migrate the container classes from `bg-surface-light dark:bg-surface-dark` / `border-gray-100 dark:border-gray-800` to `bg-surface` / `border-hairline/10`.
 
-Consolidate the price into a single text node. It currently renders the currency sign and the number as two sibling JSX expressions, which splits them across two DOM text nodes — the price is one value and should be one node:
+Consolidate the price into a single text node. It currently renders the currency sign and the number as two sibling JSX expressions, which splits them across two DOM text nodes - the price is one value and should be one node:
 
 ```tsx
 <p className="font-display text-xl font-bold text-brand-600">
@@ -1569,26 +1569,26 @@ primary: 'bg-brand-600 text-white',
 secondary: 'bg-accent-500 text-[rgb(26_26_26)]',
 ```
 
-White on `accent-500` is 2.90:1 — it fails AA, so the secondary badge takes near-black text rather than white. `brand-600` behind white is 6.4:1 and passes.
+White on `accent-500` is 2.90:1 - it fails AA, so the secondary badge takes near-black text rather than white. `brand-600` behind white is 6.4:1 and passes.
 
 - [ ] **Step 6: Move the small-text accent violations off the accent colour**
 
-The spec's accent constraint prohibits `--accent-500` on small text. Six eyebrow labels currently use `text-secondary` at `text-xs`, which resolves to bronze after Task 2 — roughly 2.9:1 on white, still under 4.5:1. All six share the same class string. Change `text-secondary` to `text-content-muted` on exactly these lines:
+The spec's accent constraint prohibits `--accent-500` on small text. Six eyebrow labels currently use `text-secondary` at `text-xs`, which resolves to bronze after Task 2 - roughly 2.9:1 on white, still under 4.5:1. All six share the same class string. Change `text-secondary` to `text-content-muted` on exactly these lines:
 
-- `app/about/page.tsx:22` — "Who We Are"
-- `app/about/page.tsx:78` — "The Mindfire Way"
-- `app/properties/page.tsx:22` — "Redefining Modern Living"
-- `app/page.tsx:64` — "Premium Selection"
-- `app/contact/page.tsx:56` — "We're Here to Help"
-- `app/blog/page.tsx:28` — "Insights & News"
+- `app/about/page.tsx:22` - "Who We Are"
+- `app/about/page.tsx:78` - "The Mindfire Way"
+- `app/properties/page.tsx:22` - "Redefining Modern Living"
+- `app/page.tsx:64` - "Premium Selection"
+- `app/contact/page.tsx:56` - "We're Here to Help"
+- `app/blog/page.tsx:28` - "Insights & News"
 
 Verify with `git grep -n 'text-secondary font-bold text-xs'` that no matches remain.
 
-Leave the other `text-secondary` uses alone — they are permitted by the constraint:
+Leave the other `text-secondary` uses alone - they are permitted by the constraint:
 
-- `app/page.tsx:48`, `app/page.tsx:139`, `:145`, `:149` — large display text.
-- `app/blog/page.tsx:51` — a hover state on a `text-3xl md:text-5xl` heading over a photograph.
-- `app/admin/page.tsx:67` — an icon colour, not text.
+- `app/page.tsx:48`, `app/page.tsx:139`, `:145`, `:149` - large display text.
+- `app/blog/page.tsx:51` - a hover state on a `text-3xl md:text-5xl` heading over a photograph.
+- `app/admin/page.tsx:67` - an icon colour, not text.
 
 - [ ] **Step 7: Run the tests to verify they pass**
 
@@ -1638,7 +1638,7 @@ describe('render blocking', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `npm test -- tests/fonts.test.ts`
-Expected: FAIL — `components/shared/Preloader.tsx` still exists.
+Expected: FAIL - `components/shared/Preloader.tsx` still exists.
 
 - [ ] **Step 3: Confirm nothing else imports it**
 
@@ -1651,7 +1651,7 @@ Expected: no matches outside `components/shared/Preloader.tsx` itself. If any pa
 git rm components/shared/Preloader.tsx
 ```
 
-It was a `z-[9999]` overlay that hid the page until `document.fonts.ready` and `window.load` both resolved — deferring the largest contentful paint by design. Self-hosted fonts remove the reason it existed. No replacement loading treatment is added here; per-route `loading.tsx` belongs to the page sub-projects.
+It was a `z-[9999]` overlay that hid the page until `document.fonts.ready` and `window.load` both resolved - deferring the largest contentful paint by design. Self-hosted fonts remove the reason it existed. No replacement loading treatment is added here; per-route `loading.tsx` belongs to the page sub-projects.
 
 - [ ] **Step 5: Run the test to verify it passes**
 
@@ -1736,7 +1736,7 @@ export default function DesignSystemPage() {
         <p className="mt-2 max-w-2xl text-body-lg text-content-muted">
           Acceptance surface for the Foundation sub-project. Toggle your OS between light and
           dark, enable reduced transparency and reduced motion, and disable{' '}
-          <code>backdrop-filter</code> in DevTools — every state below must stay legible.
+          <code>backdrop-filter</code> in DevTools - every state below must stay legible.
         </p>
 
         <Section title="Glass materials over photography" note="The real test: text legibility over an arbitrary image.">
@@ -1765,7 +1765,7 @@ export default function DesignSystemPage() {
           </div>
         </Section>
 
-        <Section title="Colour" note="accent-500 is for fills, borders, icons ≥24px, and large display text only — never small text.">
+        <Section title="Colour" note="accent-500 is for fills, borders, icons ≥24px, and large display text only - never small text.">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             {[
               ['brand-700', 'bg-brand-700'], ['brand-600', 'bg-brand-600'],
@@ -1786,14 +1786,14 @@ export default function DesignSystemPage() {
             <p className="font-display text-display-lg text-content">Display LG</p>
             <p className="font-display text-display-md text-content">Display MD</p>
             <p className="font-display text-display-sm text-content">Display SM</p>
-            <p className="text-body-lg text-content">Body large — introductory paragraphs.</p>
-            <p className="text-body text-content">Body — default reading size.</p>
-            <p className="text-body-sm text-content-muted">Body small — captions and metadata.</p>
-            <p className="text-label uppercase text-content-muted">Label — eyebrows and field labels</p>
+            <p className="text-body-lg text-content">Body large - introductory paragraphs.</p>
+            <p className="text-body text-content">Body - default reading size.</p>
+            <p className="text-body-sm text-content-muted">Body small - captions and metadata.</p>
+            <p className="text-label uppercase text-content-muted">Label - eyebrows and field labels</p>
           </div>
         </Section>
 
-        <Section title="Buttons — every state">
+        <Section title="Buttons - every state">
           <div className="space-y-4">
             {(['primary', 'secondary', 'outline', 'ghost'] as const).map((variant) => (
               <div key={variant} className="flex flex-wrap items-center gap-3">
@@ -1805,7 +1805,7 @@ export default function DesignSystemPage() {
               </div>
             ))}
             <p className="text-body-sm text-content-muted">
-              Tab through the row above — every control must show a visible focus ring.
+              Tab through the row above - every control must show a visible focus ring.
             </p>
           </div>
         </Section>
@@ -1832,11 +1832,11 @@ export default function DesignSystemPage() {
         <Section title="Motion" note="Hover each tile. Enable reduced motion and confirm they stop moving.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="cursor-pointer rounded-surface bg-surface p-6 shadow-soft transition-all duration-short ease-standard hover:-translate-y-1 hover:shadow-hover">
-              <p className="font-display font-semibold text-content">duration-short — 200ms</p>
+              <p className="font-display font-semibold text-content">duration-short - 200ms</p>
               <p className="text-body-sm text-content-muted">Controls, hover, focus. 180–240ms band.</p>
             </div>
             <div className="cursor-pointer rounded-surface bg-surface p-6 shadow-soft transition-all duration-spatial ease-spring hover:-translate-y-2 hover:shadow-elevated">
-              <p className="font-display font-semibold text-content">duration-spatial — 500ms</p>
+              <p className="font-display font-semibold text-content">duration-spatial - 500ms</p>
               <p className="text-body-sm text-content-muted">Sheets, gallery, page transitions. 400–600ms band.</p>
             </div>
           </div>
@@ -1876,7 +1876,7 @@ Run `npm run dev`, open `/design-system`, and confirm each item:
 - DevTools → Rendering → emulate `prefers-reduced-transparency: reduce` → all glass renders solid, nothing becomes unreadable.
 - DevTools → Rendering → emulate `prefers-reduced-motion: reduce` → hover tiles no longer animate.
 - In DevTools, add `backdrop-filter: none !important` to `.glass-subtle, .glass-regular, .glass-elevated, .glass-dark` → all four stay legible.
-- Tab through the buttons — every one shows a visible focus ring.
+- Tab through the buttons - every one shows a visible focus ring.
 - At 375px, nothing overflows horizontally.
 
 - [ ] **Step 4: Run axe against the showcase**
@@ -1957,7 +1957,7 @@ Any failure is a bug to fix in this task, not a note to defer.
 Append to `docs/baseline/README.md`:
 
 ```markdown
-## After Foundation — <date>
+## After Foundation - <date>
 
 Measured at commit <SHA> with `npm run measure -- --out docs/baseline/after-foundation`.
 
@@ -1996,4 +1996,4 @@ Carried forward so they are not rediscovered:
 - **`PropertiesList` and `PublicLayout` both write `document.body.style.overflow`.** Task 7 fixed the layout side by saving and restoring the previous value. Sub-project 4 must apply the same pattern to `PropertiesList`.
 - **The homepage still has `pt-20 -mt-20`.** Task 7 exempts `/` from the `pt-nav` offset for exactly this reason. Sub-project 3 removes the hack and rebuilds the hero as `min-h-[100svh]`.
 - **Social links and the Commercial listing filter remain placeholders.** Sub-projects 2 and 4 respectively.
-- **`/privacy` and `/terms` contain placeholder copy.** Real legal text is needed before launch — a content task, not an engineering one.
+- **`/privacy` and `/terms` contain placeholder copy.** Real legal text is needed before launch - a content task, not an engineering one.

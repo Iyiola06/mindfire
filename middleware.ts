@@ -6,7 +6,7 @@ import { getToken } from 'next-auth/jwt'
  *
  * The previous version matched `/api/properties`, `/api/leads/:path*`, and
  * `/api/blog` but then tested each path against the list
- * `['/admin', '/api/properties/create', '/api/blog/create']` — routes that do
+ * `['/admin', '/api/properties/create', '/api/blog/create']` - routes that do
  * not exist. Nothing under `/api` ever satisfied that test, so every write
  * endpoint ran unauthenticated, and `/api/upload` (which holds the Supabase
  * service-role key and bypasses RLS) was never matched at all.
@@ -16,7 +16,7 @@ import { getToken } from 'next-auth/jwt'
  * allowlist. Public reads that live under a protected prefix are named
  * explicitly in PUBLIC_READS.
  *
- * This is a redirect/short-circuit layer, not the authorisation boundary — the
+ * This is a redirect/short-circuit layer, not the authorisation boundary - the
  * route handlers and server actions call `requireAdmin()` themselves. Edge
  * middleware alone cannot protect server actions, and a matcher is one forgotten
  * entry away from a hole.

@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 type RevealProps<T extends React.ElementType> = {
     /** Element to render. Defaults to a div; pass `section`, `li`, `article`. */
     as?: T;
-    /** Stagger within a group, in milliseconds. Kept small — this is emphasis. */
+    /** Stagger within a group, in milliseconds. Kept small - this is emphasis. */
     delay?: number;
     children: React.ReactNode;
     className?: string;
@@ -20,8 +20,8 @@ type RevealProps<T extends React.ElementType> = {
  *    up is disorienting, and re-running the transition on every pass is work
  *    for no gain.
  * 2. The initial hidden state is applied *after* mount, not during render. A
- *    server-rendered `opacity: 0` that never receives its observer callback —
- *    JS disabled, an error earlier in the bundle, a crawler — would leave the
+ *    server-rendered `opacity: 0` that never receives its observer callback - 
+ *    JS disabled, an error earlier in the bundle, a crawler - would leave the
  *    page permanently blank. Rendering visible first means the worst failure
  *    is a missing animation.
  * 3. `prefers-reduced-motion` short-circuits the whole mechanism rather than
@@ -51,7 +51,7 @@ export function Reveal<T extends React.ElementType = 'div'>({
             return;
         }
 
-        // Already on screen at mount — above the fold. Arm and release in the
+        // Already on screen at mount - above the fold. Arm and release in the
         // same frame pair so the entrance still plays rather than being
         // skipped, but nothing is ever left hidden.
         setArmed(true);

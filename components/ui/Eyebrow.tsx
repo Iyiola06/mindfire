@@ -4,7 +4,7 @@ interface EyebrowProps {
     children: React.ReactNode;
     /**
      * `muted` is the default and the only one safe at any size. `brand` is for
-     * eyebrows that need to carry the section — it sits on brand-500, which
+     * eyebrows that need to carry the section - it sits on brand-500, which
      * clears AA at this weight on both themes' page backgrounds. `inverse` is
      * for eyebrows over dark photography or the dark footer.
      */
@@ -23,7 +23,7 @@ const TONES = {
 /**
  * The wide-tracked uppercase label above a section heading.
  *
- * Extracted because the tracking, weight, and size travel together — every
+ * Extracted because the tracking, weight, and size travel together - every
  * page had its own hand-rolled copy of the same four utilities, and they had
  * already drifted (`font-bold` on contact, `font-semibold` everywhere else).
  */

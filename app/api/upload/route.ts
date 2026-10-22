@@ -56,7 +56,7 @@ export async function POST(request: Request) {
             ? requestedBucket
             : 'properties'
 
-        // Determine extension from filename — this is always reliable
+        // Determine extension from filename - this is always reliable
         const fileExt = file.name.split('.').pop()?.toLowerCase() || ''
 
         if (!(ALLOWED_EXTENSIONS as readonly string[]).includes(fileExt)) {

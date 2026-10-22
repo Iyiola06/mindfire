@@ -5,7 +5,7 @@ interface PageHeaderProps {
     eyebrow: string;
     title: string;
     lede?: React.ReactNode;
-    /** Rendered under the lede — CTAs, a breadcrumb, a filter row. */
+    /** Rendered under the lede - CTAs, a breadcrumb, a filter row. */
     children?: React.ReactNode;
     /** Centres the block. Off by default: listing and article pages read
         better left-aligned, where the eye has a single starting column. */
@@ -22,7 +22,7 @@ interface PageHeaderProps {
  * under the floating nav.
  *
  * It cancels `main`'s `pt-nav` with `-mt-nav` and re-applies it inside, so the
- * wash runs behind the nav capsule rather than starting below it — the glass
+ * wash runs behind the nav capsule rather than starting below it - the glass
  * needs something to be glass over.
  */
 export const PageHeader: React.FC<PageHeaderProps> = ({

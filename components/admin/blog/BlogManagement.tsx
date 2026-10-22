@@ -388,7 +388,7 @@ export default function BlogManagement({ initialPosts }: { initialPosts: BlogPos
                                         required
                                         value={formData.excerpt}
                                         onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                                        placeholder="One or two sentences — this is the search-result description as well as the card summary."
+                                        placeholder="One or two sentences. This is the search-result description as well as the card summary."
                                         className={FIELD}
                                     />
                                     <p className="mt-1.5 text-[0.75rem] text-content-muted">
@@ -448,7 +448,7 @@ export default function BlogManagement({ initialPosts }: { initialPosts: BlogPos
                                         className="h-4 w-4 rounded border-hairline/30 text-brand-600 focus:ring-brand-600"
                                     />
                                     <span className="text-body-sm font-medium text-content">
-                                        Published — visible on the public journal
+                                        Published: visible on the public journal
                                     </span>
                                 </label>
                             </form>

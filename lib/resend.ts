@@ -5,7 +5,7 @@ import { Resend } from 'resend';
  *
  * `new Resend(undefined)` throws "Missing API key". Building the client at
  * import time therefore meant that any module importing this one crashed on a
- * deploy without `RESEND_API_KEY` — including at build time, when Next
+ * deploy without `RESEND_API_KEY` - including at build time, when Next
  * collects page data for `/api/contact`, and at runtime for every route that
  * transitively imported it.
  *

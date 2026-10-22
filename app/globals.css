@@ -18,11 +18,11 @@
     --brand-600:   0 105  96;
     --brand-500:   0 137 123;
 
-    /* Warm bronze. Fills, borders, and icons >=24px only — at small text
+    /* Warm bronze. Fills, borders, and icons >=24px only - at small text
        sizes it is 2.9:1 on white and fails AA. Use --text-muted there. */
     --accent-500: 201 138  74;
 
-    /* Neutrals — light theme */
+    /* Neutrals - light theme */
     --bg:         250 250 250;
     --surface:    255 255 255;
     --surface-2:  244 245 246;
@@ -30,7 +30,7 @@
     --text-muted:  90  98 104;
     --hairline:     0   0   0;
 
-    /* Glass — light theme */
+    /* Glass - light theme */
     --glass-tint:        255 255 255;
     --glass-border:      255 255 255;
     --glass-highlight:   255 255 255;
@@ -203,7 +203,7 @@
    --------------------------------------------------------------------------
    Four named levels sharing one rule body; each instance sets its own
    --glass-* locals. Levels pair a translucent tint with a blur, a saturation
-   boost, a hairline border, and — for the heavier levels — an inner highlight
+   boost, a hairline border, and - for the heavier levels - an inner highlight
    that reads as a lit top edge.
 
    Stacking rule: no glass surface may be a descendant of another glass
@@ -250,7 +250,7 @@
 
   /* The floating nav capsule. Lighter tint and a stronger blur than
      glass-subtle because it sits over the hero wash and then over arbitrary
-     page content as the visitor scrolls — the material has to hold on both.
+     page content as the visitor scrolls - the material has to hold on both.
      The inner highlight is what stops it reading as flat translucent grey. */
   .glass-capsule {
     --glass-alpha: .66;

@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url)
         const category = searchParams.get('category')
 
-        // Unpublished posts are drafts. Asking for them requires a session —
+        // Unpublished posts are drafts. Asking for them requires a session - 
         // otherwise `?published=false` hands every draft to anyone who asks.
         let publishedOnly = searchParams.get('published') !== 'false'
         if (!publishedOnly && !(await getAdmin())) publishedOnly = true

@@ -75,7 +75,7 @@ export async function generateMetadata({
 
 /** What Mindfire does for every listing. Stated as process rather than as a
     per-property claim, because the schema has no title-type or search-date
-    column — asserting a specific title for a specific property would be
+    column - asserting a specific title for a specific property would be
     inventing data. The documents themselves are shared on request. */
 const ASSURANCES = [
     {
@@ -127,7 +127,7 @@ export default async function PropertyDetailsPage({
      * describes something the listing does not have.
      *
      * The listing is modelled as a `Product` wrapping the `Residence`, because
-     * `Residence` alone has no `offers` — and the price and availability are
+     * `Residence` alone has no `offers` - and the price and availability are
      * the two things a search result should carry for a property that is for
      * sale. Availability maps from the same `status` string the page renders,
      * so the badge and the structured data cannot disagree.
@@ -217,7 +217,7 @@ export default async function PropertyDetailsPage({
                     <header className="mb-9 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                         <div>
                             {isSold ? (
-                                <Chip variant="outline" className="mb-4">Sold — shown for reference</Chip>
+                                <Chip variant="outline" className="mb-4">Sold, shown for reference</Chip>
                             ) : (
                                 <Eyebrow tone="brand">{property.status}</Eyebrow>
                             )}
@@ -240,7 +240,7 @@ export default async function PropertyDetailsPage({
                     </header>
 
                     {/* Gallery. When the record has no extra images the main
-                        photograph runs full width — the previous version padded
+                        photograph runs full width - the previous version padded
                         the grid with four identical empty placeholder tiles. */}
                     <div
                         className={`mb-12 grid gap-2 overflow-hidden rounded-showcase border border-hairline/[0.06] shadow-ambient sm:gap-3 ${
@@ -254,7 +254,7 @@ export default async function PropertyDetailsPage({
                         >
                             <img
                                 src={property.image}
-                                alt={`${property.name} — exterior view from the approach`}
+                                alt={`${property.name}, exterior view from the approach`}
                                 className="h-full w-full object-cover"
                                 fetchPriority="high"
                             />
@@ -265,7 +265,7 @@ export default async function PropertyDetailsPage({
                                 <div key={img} className="relative hidden md:block">
                                     <img
                                         src={img}
-                                        alt={`${property.name} — interior and grounds, view ${i + 2}`}
+                                        alt={`${property.name}, interior and grounds, view ${i + 2}`}
                                         className="h-full w-full object-cover"
                                         loading="lazy"
                                     />

@@ -5,14 +5,14 @@
  * photographed by the team. They live in `public/hero/` and `public/projects/`
  * as WebP with all metadata (including any GPS tags) stripped at conversion.
  *
- * OWNER ACTION AVAILABLE — the source files are phone and WhatsApp exports,
+ * OWNER ACTION AVAILABLE - the source files are phone and WhatsApp exports,
  * 650–1280px on the long edge. That is enough for gallery tiles but soft on a
  * large retina hero. Dropping the camera originals in under the same file
  * names sharpens every placement without a code change.
  *
  * Alt text and captions describe what is in the frame and nothing more. No
  * photograph is attributed to a named estate or district, because that
- * mapping has not been supplied — add it here when it is.
+ * mapping has not been supplied - add it here when it is.
  */
 
 export interface StagePhoto {
@@ -122,7 +122,7 @@ export const BUILD_STAGES: BuildStage[] = [
     },
     {
         title: 'Finishing',
-        body: 'Rendering, cladding, roofing, and joinery — the stage where specifications either hold or slip, and where we spend the most time on site.',
+        body: 'Rendering, cladding, roofing, and joinery: the stage where specifications either hold or slip, and where we spend the most time on site.',
         photos: [
             {
                 src: '/projects/finishing-townhouse-facade.webp',

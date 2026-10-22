@@ -12,7 +12,7 @@ const contactSchema = z.object({
 })
 
 /**
- * POST /api/contact — public contact submission.
+ * POST /api/contact - public contact submission.
  *
  * This route previously validated the payload, wrote it to `console.log` under
  * a `// TODO: Implement email sending`, and returned
@@ -21,7 +21,7 @@ const contactSchema = z.object({
  *
  * It now does what the response claims: the enquiry is stored as a lead, so it
  * appears in the admin, and the team is emailed. A failed notification does not
- * fail the request — the row is already safe, and telling a visitor their
+ * fail the request - the row is already safe, and telling a visitor their
  * message failed when it did not is the worse error.
  */
 export async function POST(request: NextRequest) {

@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const now = new Date();
 
     /**
-     * `/design-system` is deliberately absent — it is an internal acceptance
+     * `/design-system` is deliberately absent - it is an internal acceptance
      * page and carries `robots: noindex`. Listing a noindexed URL in a sitemap
      * is a conflicting signal that Search Console reports as an error.
      */
@@ -38,8 +38,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 url: absoluteUrl(`/properties/${property.id}`),
                 lastModified: property.updatedAt ? new Date(property.updatedAt) : now,
                 changeFrequency: 'weekly' as const,
-                // A sold listing stays in the index — it is evidence of track
-                // record — but it should not compete with what is available.
+                // A sold listing stays in the index - it is evidence of track
+                // record - but it should not compete with what is available.
                 priority: property.status === 'Sold' ? 0.4 : 0.8,
             }),
         );

@@ -23,8 +23,8 @@ interface Lead {
 const STATUSES = ['New', 'Contacted', 'Pending Review', 'Scheduled Viewing', 'Closed'] as const;
 
 /**
- * Static class strings per status. Built at runtime before —
- * `text-${stat.color}-600`, `bg-${stat.color}-50` — which Tailwind cannot see,
+ * Static class strings per status. Built at runtime before - 
+ * `text-${stat.color}-600`, `bg-${stat.color}-50` - which Tailwind cannot see,
  * so every status pill and every stat chip on this page rendered with no
  * colour at all. `primary` was also interpolated into `bg-primary-50`, a class
  * that has never existed in this config.
@@ -189,7 +189,7 @@ export default function LeadsManagement({ initialLeads }: { initialLeads: Lead[]
                                         )}
                                     </td>
                                     <td className="whitespace-nowrap px-6 py-4 text-body-sm font-medium text-content">
-                                        {lead.budget || '—'}
+                                        {lead.budget || 'Not given'}
                                     </td>
                                     <td className="whitespace-nowrap px-6 py-4 text-body-sm text-content-muted">
                                         {new Date(lead.createdAt).toLocaleDateString('en-NG', {

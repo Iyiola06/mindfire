@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 }
 
 /**
- * OWNER ACTION REQUIRED — legal review.
+ * OWNER ACTION REQUIRED - legal review.
  *
  * These terms state what is already true of the site as built. They have not
  * been reviewed by a lawyer and should be before launch, particularly the

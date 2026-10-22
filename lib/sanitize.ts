@@ -5,16 +5,16 @@
  * ---------------
  * `app/blog/[id]/page.tsx` renders `post.content` through
  * `dangerouslySetInnerHTML`. That value comes from the `blog_posts` table, so
- * anything able to write a row — a compromised admin session, a permissive RLS
- * policy, a direct database write — becomes stored XSS on a public page that
+ * anything able to write a row - a compromised admin session, a permissive RLS
+ * policy, a direct database write - becomes stored XSS on a public page that
  * every visitor loads. Rendering the body as plain text would close the hole
  * but would also throw away the article formatting, so instead everything
  * outside a small allowlist is removed.
  *
  * REPLACE THIS WHEN DEPENDENCIES CAN BE INSTALLED
  * -----------------------------------------------
- * This is a string-level allowlist, not a parser. It is deliberately strict —
- * anything it does not positively recognise is dropped — but a real DOM-based
+ * This is a string-level allowlist, not a parser. It is deliberately strict - 
+ * anything it does not positively recognise is dropped - but a real DOM-based
  * sanitiser handles malformed and deliberately-obfuscated markup better than a
  * regex ever will. Swap in `isomorphic-dompurify` and delete this file:
  *
@@ -56,8 +56,8 @@ const ALLOWED_TAGS = new Set([
     'span', 'div',
 ]);
 
-/** Attributes allowed per tag. Everything else — including every `on*` handler,
-    `style`, and `srcset` — is discarded. */
+/** Attributes allowed per tag. Everything else - including every `on*` handler,
+    `style`, and `srcset` - is discarded. */
 const ALLOWED_ATTRS: Record<string, Set<string>> = {
     a: new Set(['href', 'title']),
     img: new Set(['src', 'alt', 'title', 'width', 'height', 'loading']),
@@ -117,7 +117,7 @@ export function sanitizeHtml(input: string): string {
 
     let html = input;
 
-    // Comments first — they can hide markup from later passes.
+    // Comments first - they can hide markup from later passes.
     html = html.replace(/<!--[\s\S]*?-->/g, '');
 
     // Dangerous elements, with their content. The unclosed-tag alternative
@@ -152,7 +152,7 @@ export function sanitizeHtml(input: string): string {
  */
 export function renderArticleBody(content: string): string {
     const clean = sanitizeHtml(content);
-    // Already block-formatted — leave the author's structure alone.
+    // Already block-formatted - leave the author's structure alone.
     if (/<(p|h[2-6]|ul|ol|blockquote|pre|table|figure|div)\b/i.test(clean)) return clean;
     return clean
         .split(/\n{2,}/)

@@ -18,7 +18,7 @@ type Sort = (typeof SORTS)[number];
     key stops a casing difference from silently emptying the grid. */
 const norm = (v: string) => v.trim().toLowerCase();
 
-/** The listing has no `type` column — property type lives in the name and tags,
+/** The listing has no `type` column - property type lives in the name and tags,
     which is where a search for "Duplex" has to look. */
 const matchesType = (p: Property, type: string) => {
     const q = norm(type);
@@ -50,7 +50,7 @@ function PropertiesListContent({ initialProperties }: { initialProperties: Prope
                 if (value) next.set(key, value);
                 else next.delete(key);
             }
-            // scroll: false — replacing a filter should not throw the reader
+            // scroll: false - replacing a filter should not throw the reader
             // back to the top of the results they are reading.
             router.replace(next.toString() ? `/properties?${next}` : '/properties', {
                 scroll: false,
@@ -60,7 +60,7 @@ function PropertiesListContent({ initialProperties }: { initialProperties: Prope
     );
 
     // Saves and restores the previous value rather than hardcoding 'unset', so
-    // this and PublicLayout — which writes the same property — cannot fight.
+    // this and PublicLayout - which writes the same property - cannot fight.
     useEffect(() => {
         if (!showFilters) return;
         const previous = document.body.style.overflow;
@@ -241,7 +241,7 @@ function PropertiesListContent({ initialProperties }: { initialProperties: Prope
             )}
 
             {/* The sheet is glass on mobile where it floats over content, and a
-                plain panel on desktop where it sits in the page flow — glass
+                plain panel on desktop where it sits in the page flow - glass
                 over an opaque background would only muddy it. */}
             <aside
                 role="dialog"

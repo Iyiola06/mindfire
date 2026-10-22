@@ -47,8 +47,8 @@ export default async function AdminDashboard() {
     /**
      * Real enquiries per day for the last fortnight.
      *
-     * The chart previously rendered a hardcoded seven-point array — Mon 12,
-     * Tue 19, and so on — under the heading "Lead Generation Overview". It
+     * The chart previously rendered a hardcoded seven-point array - Mon 12,
+     * Tue 19, and so on - under the heading "Lead Generation Overview". It
      * looked like reporting and was decoration, which is worse than no chart
      * at all on a page someone makes decisions from.
      */
@@ -102,7 +102,7 @@ export default async function AdminDashboard() {
             volumeUSD > 0 ? formatVolume(volumeUSD, '$') : null,
         ]
             .filter(Boolean)
-            .join(' + ') || '—';
+            .join(' + ') || 'None';
 
     const leadsThisWindow = series.reduce((sum, d) => sum + d.leads, 0);
 

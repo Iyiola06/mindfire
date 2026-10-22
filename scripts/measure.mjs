@@ -30,7 +30,7 @@ function run(cmd, cmdArgs) {
         })
     } catch (err) {
         // Lighthouse and axe exit non-zero when they find problems.
-        // That is the expected case for a baseline run — keep the output.
+        // That is the expected case for a baseline run - keep the output.
         return err.stdout ?? ''
     }
 }

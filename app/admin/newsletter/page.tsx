@@ -50,7 +50,7 @@ export default function NewsletterAdminPage() {
                     Newsletter
                 </h1>
                 <p className="mt-2 max-w-[42rem] text-body text-content-muted">
-                    One email to everyone on the subscriber list. There is no send queue and no undo —
+                    One email to everyone on the subscriber list. There is no send queue and no undo, so
                     check the preview below before you send.
                 </p>
             </header>
@@ -64,7 +64,7 @@ export default function NewsletterAdminPage() {
                         <IconCheck size={18} className="mt-0.5 shrink-0 text-brand-600" />
                         <span>
                             Sent to {result.sent} subscriber{result.sent === 1 ? '' : 's'}.
-                            {result.failed > 0 && ` ${result.failed} failed — see the server log.`}
+                            {result.failed > 0 && ` ${result.failed} failed. See the server log.`}
                         </span>
                     </p>
                 )}
@@ -109,7 +109,7 @@ export default function NewsletterAdminPage() {
                             placeholder="<p>Hello,</p>"
                         />
                         <p className="mt-2 text-[0.75rem] text-content-muted">
-                            Basic HTML — &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt;, &lt;a&gt;, &lt;br&gt;.
+                            Basic HTML: &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt;, &lt;a&gt;, &lt;br&gt;.
                         </p>
                     </div>
 

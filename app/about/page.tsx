@@ -10,7 +10,7 @@ import { BUILD_STAGES, INTERIOR_PORTRAIT } from '@/lib/media';
 import { absoluteUrl, breadcrumbJsonLd, SITE } from '@/lib/seo';
 
 export const metadata: Metadata = {
-    title: 'About us — Abuja property advisors',
+    title: 'About us: Abuja property advisors',
     description:
         'How Mindfire Homes works: titles checked with the land registry before listing, documented specifications, accompanied site visits, and payment terms agreed in writing.',
     alternates: { canonical: '/about' },
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 /**
  * Company facts. The founding year is the owner's own figure (2016).
  *
- * OWNER ACTION AVAILABLE — every entry must be something the business can
+ * OWNER ACTION AVAILABLE - every entry must be something the business can
  * evidence if a buyer asks. Add counts (homes handed over, estates delivered)
  * here only once they can be backed with records; leave them out rather than
  * filling the band with round numbers.
@@ -40,10 +40,10 @@ const MILESTONES: { value: string; label: string }[] = [
 ];
 
 /**
- * OWNER ACTION REQUIRED — team.
+ * OWNER ACTION REQUIRED - team.
  *
- * The previous version listed four people — "Marcus Reynolds", "Elena
- * Rodriguez", "David Chen", "Sarah Jenkins" — with stock avatars from
+ * The previous version listed four people - "Marcus Reynolds", "Elena
+ * Rodriguez", "David Chen", "Sarah Jenkins" - with stock avatars from
  * pravatar.cc. They are not real staff, so they have been removed: a buyer
  * choosing an advisor on the strength of an invented biography is a real harm.
  *
@@ -62,7 +62,7 @@ const HOW_WE_WORK = [
     },
     {
         title: 'We put the documents in your hands',
-        body: 'Search results, survey plan, deed of assignment, and the payment schedule are shared in full on request — not summarised, and not held back until you have committed.',
+        body: 'Search results, survey plan, deed of assignment, and the payment schedule are shared in full on request. Not summarised, and not held back until you have committed.',
     },
     {
         title: 'We only list where infrastructure exists',
@@ -97,7 +97,7 @@ export default function AboutPage() {
                 eyebrow="Who we are"
                 title="Property advice you can check."
                 align="center"
-                lede="Since 2016, Mindfire Homes has sold residential and investment property in Abuja. What distinguishes the work is not the adjectives — it is that every claim we make about a property is backed by a document we will show you."
+                lede="Since 2016, Mindfire Homes has sold residential and investment property in Abuja. What distinguishes the work is not the adjectives. It is that every claim we make about a property is backed by a document we will show you."
             />
 
             {/* Position */}
@@ -129,7 +129,7 @@ export default function AboutPage() {
                             <p className="max-w-[42rem]">
                                 We built this business around answering those questions before a buyer is
                                 asked for money. Every property here has been visited by someone on the
-                                team, and its documentation checked, before it appears on the site — and the
+                                team, and its documentation checked, before it appears on the site, and the
                                 evidence for both is yours on request.
                             </p>
                         </div>
@@ -161,7 +161,7 @@ export default function AboutPage() {
                             What we do on every property.
                         </h2>
                         <p className="mt-4 text-body-lg text-content-muted">
-                            Not values on a wall — the five steps that happen before a listing reaches you,
+                            Not values on a wall: the five steps that happen before a listing reaches you,
                             and that you can hold us to.
                         </p>
                     </Reveal>
@@ -187,7 +187,7 @@ export default function AboutPage() {
                 </div>
             </section>
 
-            {/* Our work — the build sequence, in Mindfire's own photographs. */}
+            {/* Our work - the build sequence, in Mindfire's own photographs. */}
             <section id="our-work" className="scroll-mt-nav bg-bg py-section">
                 <div className="mx-auto max-w-content px-gutter">
                     <Reveal className="mb-[clamp(2.5rem,5vw,4rem)] max-w-[40rem]">
@@ -197,7 +197,7 @@ export default function AboutPage() {
                         </h2>
                         <p className="mt-4 text-body-lg text-content-muted">
                             Photographs from our own sites, not stock. This is what the work looks like at
-                            each stage — and every stage can be visited.
+                            each stage, and every stage can be visited.
                         </p>
                     </Reveal>
 
@@ -245,7 +245,7 @@ export default function AboutPage() {
                 </div>
             </section>
 
-            {/* Team — renders only once real people are supplied. */}
+            {/* Team - renders only once real people are supplied. */}
             {TEAM.length > 0 && (
                 <section className="bg-bg py-section">
                     <div className="mx-auto max-w-content px-gutter">

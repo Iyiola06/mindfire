@@ -67,7 +67,7 @@ describe('glass materials', () => {
         // missed out of a fallback list it stays transparent exactly where a
         // reduced-transparency user most needs it not to be.
         // Anchored to the start of a line so the prose in the comment above
-        // the fallbacks — which names `@supports not` in a sentence — is not
+        // the fallbacks - which names `@supports not` in a sentence - is not
         // mistaken for a fourth block.
         const fallbackBlocks = css
             .split(/^@supports not|^@media \(prefers-reduced-transparency|^@media \(prefers-contrast/m)
@@ -116,10 +116,10 @@ describe('reveal-on-scroll', () => {
 
     it('resolves to the settled state under reduced motion', () => {
         // Nothing revealed this way carries meaning, so a reduced-motion user
-        // must simply see the finished layout — never an element left at
+        // must simply see the finished layout - never an element left at
         // opacity 0 because its observer was skipped.
-        // There is more than one reduced-motion block — the global duration
-        // collapse is a separate rule — so find the one that owns `.reveal`
+        // There is more than one reduced-motion block - the global duration
+        // collapse is a separate rule - so find the one that owns `.reveal`
         // rather than assuming a file order.
         const block = css
             .split(/^@media \(prefers-reduced-motion/m)

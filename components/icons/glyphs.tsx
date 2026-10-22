@@ -123,7 +123,7 @@ export const IconArrowRight: React.FC<IconProps> = (p) => (
     </Icon>
 )
 
-/** Capital growth. Used at 28px in the investment section — above the 24px
+/** Capital growth. Used at 28px in the investment section - above the 24px
     floor that lets it carry the accent colour. */
 export const IconTrendingUp: React.FC<IconProps> = (p) => (
     <Icon {...p}>
@@ -233,8 +233,8 @@ export const IconWhatsApp: React.FC<IconProps> = (p) => (
 /* ==========================================================================
    Admin glyphs
    --------------------------------------------------------------------------
-   The admin surface rendered Material Icons ligatures — `<span
-   class="material-icons-outlined">delete_outline</span>` — which meant a
+   The admin surface rendered Material Icons ligatures - `<span
+   class="material-icons-outlined">delete_outline</span>` - which meant a
    render-blocking request to fonts.googleapis.com, a flash of the literal word
    "delete_outline" before the font loaded, and glyphs that could not inherit
    `currentColor` reliably at small sizes. These are the replacements.

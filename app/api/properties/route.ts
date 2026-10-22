@@ -9,7 +9,7 @@ import { z } from 'zod'
  * `.positive()` made them impossible to create through this endpoint.
  *
  * The optional block below exists because the previous schema listed only the
- * eleven scalar columns, and `parse()` strips everything it does not declare —
+ * eleven scalar columns, and `parse()` strips everything it does not declare - 
  * so a property created here silently lost its description, gallery,
  * amenities, and floor plans.
  */

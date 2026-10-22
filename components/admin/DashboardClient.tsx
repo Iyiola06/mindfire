@@ -38,7 +38,7 @@ export interface SeriesPoint {
 /**
  * Static class strings, looked up by key.
  *
- * The previous version built them at runtime — `bg-${stat.color}-50`,
+ * The previous version built them at runtime - `bg-${stat.color}-50`,
  * `text-${item.color}-600`. Tailwind scans source text for complete class
  * names, so none of those were ever emitted into the stylesheet: every stat
  * chip and every activity marker on this page rendered unstyled.

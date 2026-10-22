@@ -7,7 +7,7 @@ import React from 'react'
  * drawing: third-party logos are filled paths at fixed proportions, not
  * 1.75px-stroke line icons, so they do not share the `Icon` wrapper.
  *
- * Rendered only for networks present in `SOCIAL_LINKS` — see lib/contact.ts.
+ * Rendered only for networks present in `SOCIAL_LINKS` - see lib/contact.ts.
  */
 const Brand: React.FC<{
     size?: number

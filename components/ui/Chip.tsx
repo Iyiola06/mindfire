@@ -3,7 +3,7 @@ import React from 'react';
 interface ChipProps {
     children: React.ReactNode;
     /**
-     * `outline` is the specification chip — "2 bedrooms", "4,200 sq ft" — a
+     * `outline` is the specification chip - "2 bedrooms", "4,200 sq ft" - a
      * hairline pill that states a fact. `solid` fills with the page surface
      * for chips that sit over photography. `accent` is the featured marker.
      * `dark` is the status marker over photography.
@@ -22,7 +22,7 @@ const VARIANTS = {
 } as const;
 
 /**
- * The pill that carries a single fact — a property spec, a status, a category.
+ * The pill that carries a single fact - a property spec, a status, a category.
  *
  * Distinct from `Badge`, which is the small uppercase status marker inherited
  * from the admin tables. This one is body-sized and reads as content.

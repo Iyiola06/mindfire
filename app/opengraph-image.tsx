@@ -10,7 +10,7 @@ import { SITE } from '@/lib/seo'
  * exists.
  */
 export const runtime = 'edge'
-export const alt = `${SITE.name} — premium property in Abuja`
+export const alt = `${SITE.name}: premium property in Abuja`
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 

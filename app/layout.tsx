@@ -6,7 +6,7 @@ import GoogleAnalytics from '@/components/shared/GoogleAnalytics'
 import { BASE_URL, SITE } from '@/lib/seo'
 
 /**
- * Self-hosted through next/font — the files are served from our own origin, so
+ * Self-hosted through next/font - the files are served from our own origin, so
  * the render-blocking request to fonts.googleapis.com and the font-swap layout
  * shift both disappear.
  *
@@ -35,15 +35,15 @@ const interDisplay = Inter({
  * ignores. With it, each page can declare `alternates.canonical: '/about'` and
  * get an absolute URL for free.
  *
- * The title template means a page sets only its own subject — "Properties for
- * sale in Abuja" — and the brand suffix is appended once, here. The home page
+ * The title template means a page sets only its own subject - "Properties for
+ * sale in Abuja" - and the brand suffix is appended once, here. The home page
  * opts out through `title.default`, because "Mindfire Homes | Mindfire Homes"
  * is what a template without a default produces.
  */
 export const metadata: Metadata = {
     metadataBase: new URL(BASE_URL),
     title: {
-        default: `${SITE.name} — premium property in Abuja`,
+        default: `${SITE.name}: premium property in Abuja`,
         template: `%s | ${SITE.name}`,
     },
     description: SITE.description,
@@ -53,20 +53,20 @@ export const metadata: Metadata = {
     creator: SITE.name,
     publisher: SITE.name,
     alternates: { canonical: '/' },
-    /* No `keywords`. The previous value — "real estate, property, homes,
-       apartments, houses, buy, rent" — is generic, has been ignored by Google
+    /* No `keywords`. The previous value - "real estate, property, homes,
+       apartments, houses, buy, rent" - is generic, has been ignored by Google
        since 2009, and described a business in no particular country. */
     openGraph: {
         type: 'website',
         siteName: SITE.name,
         locale: SITE.locale,
         url: BASE_URL,
-        title: `${SITE.name} — premium property in Abuja`,
+        title: `${SITE.name}: premium property in Abuja`,
         description: SITE.description,
     },
     twitter: {
         card: 'summary_large_image',
-        title: `${SITE.name} — premium property in Abuja`,
+        title: `${SITE.name}: premium property in Abuja`,
         description: SITE.description,
     },
     robots: {

@@ -20,12 +20,12 @@ import { IconArrowRight } from '@/components/icons';
 export const metadata: Metadata = {
     title: 'Premium property in Abuja, with the title checked first',
     description:
-        'Mindfire Homes curates legally verified homes and investment opportunities across Abuja — documented titles, inspected construction, and payment terms agreed in writing before you commit.',
+        'Mindfire Homes curates legally verified homes and investment opportunities across Abuja, with documented titles, inspected construction, and payment terms agreed in writing before you commit.',
     alternates: { canonical: '/' },
     openGraph: {
         type: 'website',
         url: absoluteUrl('/'),
-        title: `${SITE.name} — premium property in Abuja`,
+        title: `${SITE.name}: premium property in Abuja`,
         description:
             'Legally verified homes and investment opportunities in Abuja, with documented titles and payment terms agreed in writing.',
     },
@@ -48,7 +48,7 @@ const CREDIBILITY = [
 const INVESTMENT_CASE = [
     {
         title: 'Location before everything',
-        body: 'We list in districts with existing road access, power, and water — infrastructure that is already delivered rather than promised in a brochure.',
+        body: 'We list in districts with existing road access, power, and water: infrastructure that is already delivered rather than promised in a brochure.',
     },
     {
         title: 'Documentation checked first',
@@ -60,7 +60,7 @@ const INVESTMENT_CASE = [
     },
     {
         title: 'Terms that fit the purchase',
-        body: 'Payment plans are set out in writing before commitment — deposit, milestones, and duration, with no charge that appears later.',
+        body: 'Payment plans are set out in writing before commitment, covering deposit, milestones, and duration, with no charge that appears later.',
     },
 ];
 
@@ -127,7 +127,7 @@ export default async function HomePage() {
                     </h1>
 
                     <p className="mx-auto mt-6 max-w-[44rem] text-[clamp(1rem,1.6vw,1.25rem)] leading-[1.6] text-content-muted">
-                        Mindfire Homes curates legally verified residences and investment opportunities —
+                        Mindfire Homes curates legally verified residences and investment opportunities, with
                         documented titles, inspected construction, and payment terms agreed in writing
                         before you commit.
                     </p>
@@ -234,7 +234,7 @@ export default async function HomePage() {
                                 <div className="relative aspect-[4/3] overflow-hidden rounded-surface">
                                     <img
                                         src={headline.image || FEATURE_ELEVATION.src}
-                                        alt={`${headline.name} — exterior view from the approach`}
+                                        alt={`${headline.name}, exterior view from the approach`}
                                         className="h-full w-full object-cover"
                                         loading="lazy"
                                     />
@@ -286,7 +286,7 @@ export default async function HomePage() {
                             )}
                         </>
                     ) : (
-                        /* An empty response is a real state, not an error — the
+                        /* An empty response is a real state, not an error - the
                            section stays intentional rather than collapsing. */
                         <Reveal className="rounded-showcase border border-hairline/[0.06] bg-surface p-12 text-center shadow-ambient">
                             <p className="font-display text-display-sm font-semibold text-content">
@@ -313,7 +313,7 @@ export default async function HomePage() {
                         </h2>
                         <p className="mt-4 max-w-[38rem] text-body-lg text-content-muted">
                             Property in Abuja rewards diligence over speed. These are the four things we
-                            confirm on your behalf — and the evidence for each is available on request.
+                            confirm on your behalf, and the evidence for each is available on request.
                         </p>
 
                         <ol className="mt-10 flex flex-col gap-6">
@@ -364,7 +364,7 @@ export default async function HomePage() {
                                 Built, not just sold.
                             </h2>
                             <p className="mt-4 text-body-lg text-content-muted">
-                                From walking the land to handing over the keys — our own photographs, from our
+                                From walking the land to handing over the keys: our own photographs, from our
                                 own projects.
                             </p>
                         </div>

@@ -34,8 +34,8 @@ describe('PublicLayout navigation', () => {
 
     it('links the footer legal pages somewhere real', () => {
         render(<PublicLayout><div>content</div></PublicLayout>)
-        // Two links carry this name — the newsletter consent line and the
-        // legal row — and both must resolve to the real page. A dead `#` in
+        // Two links carry this name - the newsletter consent line and the
+        // legal row - and both must resolve to the real page. A dead `#` in
         // either is the failure this guards against.
         const privacy = screen.getAllByRole('link', { name: /privacy policy/i })
         expect(privacy.length).toBeGreaterThan(0)

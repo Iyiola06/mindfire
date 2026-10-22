@@ -46,11 +46,11 @@ const COLOURS: ReadonlyArray<readonly [string, string]> = [
 ]
 
 const RADII: ReadonlyArray<readonly [string, string, string]> = [
-    ['control', 'rounded-control', '0.75rem — inputs, small tiles'],
-    ['surface', 'rounded-surface', '1.25rem — photo mounts inside a card'],
-    ['panel', 'rounded-panel', '1.5rem — modals, dialogs'],
-    ['showcase', 'rounded-showcase', '1.875rem — cards, feature panels'],
-    ['pill', 'rounded-pill', '999px — every button and chip'],
+    ['control', 'rounded-control', '0.75rem: inputs, small tiles'],
+    ['surface', 'rounded-surface', '1.25rem: photo mounts inside a card'],
+    ['panel', 'rounded-panel', '1.5rem: modals, dialogs'],
+    ['showcase', 'rounded-showcase', '1.875rem: cards, feature panels'],
+    ['pill', 'rounded-pill', '999px: every button and chip'],
 ]
 
 const SHADOWS: ReadonlyArray<readonly [string, string, string]> = [
@@ -92,7 +92,7 @@ export default function DesignSystemPage() {
                 <p className="mt-4 max-w-2xl text-body-lg text-content-muted">
                     The acceptance surface. Toggle your OS between light and dark, enable reduced
                     transparency and reduced motion, and disable <code>backdrop-filter</code> in
-                    DevTools — every state below must stay legible.
+                    DevTools. Every state below must stay legible.
                 </p>
 
                 <Section
@@ -114,7 +114,7 @@ export default function DesignSystemPage() {
                     </div>
                 </Section>
 
-                <Section title="Colour" note="accent-500 is for fills, borders, icons ≥24px, and large display text only — never small text.">
+                <Section title="Colour" note="accent-500 is for fills, borders, icons ≥24px, and large display text only, never small text.">
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
                         {COLOURS.map(([name, cls]) => (
                             <div key={name}>
@@ -131,11 +131,11 @@ export default function DesignSystemPage() {
                         <p className="font-display text-display-lg font-bold tracking-tight text-content">Display LG</p>
                         <p className="font-display text-display-md font-bold tracking-tight text-content">Display MD</p>
                         <p className="font-display text-display-sm font-semibold tracking-tight text-content">Display SM</p>
-                        <p className="text-body-lg text-content">Body large — introductory paragraphs.</p>
-                        <p className="text-body text-content">Body — default reading size.</p>
-                        <p className="text-body-sm text-content-muted">Body small — captions and metadata.</p>
-                        <p className="text-eyebrow font-semibold uppercase text-content-muted">Eyebrow — section openers</p>
-                        <p className="text-label font-semibold uppercase text-content-muted">Label — form fields</p>
+                        <p className="text-body-lg text-content">Body large: introductory paragraphs.</p>
+                        <p className="text-body text-content">Body: default reading size.</p>
+                        <p className="text-body-sm text-content-muted">Body small: captions and metadata.</p>
+                        <p className="text-eyebrow font-semibold uppercase text-content-muted">Eyebrow: section openers</p>
+                        <p className="text-label font-semibold uppercase text-content-muted">Label: form fields</p>
                     </div>
                     <p className="mt-4 max-w-[46rem] text-body-sm text-content-muted">
                         Eyebrow and label are not interchangeable. The eyebrow&rsquo;s 0.3em tracking is
@@ -167,7 +167,7 @@ export default function DesignSystemPage() {
                     </div>
                 </Section>
 
-                <Section title="Buttons — every state">
+                <Section title="Buttons: every state">
                     <div className="space-y-4">
                         {(['primary', 'secondary', 'outline', 'glass', 'ghost'] as const).map((variant) => (
                             <div key={variant} className="flex flex-wrap items-center gap-3">
@@ -179,11 +179,11 @@ export default function DesignSystemPage() {
                             </div>
                         ))}
                         <div className="flex flex-wrap items-center gap-3">
-                            <ButtonLink href="/design-system">ButtonLink — navigates</ButtonLink>
+                            <ButtonLink href="/design-system">ButtonLink: navigates</ButtonLink>
                             <ButtonLink href="/design-system" variant="outline">Secondary link</ButtonLink>
                         </div>
                         <p className="text-body-sm text-content-muted">
-                            Tab through the rows above — every control must show a visible focus ring. A
+                            Tab through the rows above. Every control must show a visible focus ring. A
                             control that navigates is a <code>ButtonLink</code>; a control that acts is a{' '}
                             <code>Button</code>.
                         </p>
@@ -216,14 +216,14 @@ export default function DesignSystemPage() {
                     </div>
                 </Section>
 
-                <Section title="Motion" note="Hover each tile. Enable reduced motion and confirm they stop moving — including the scroll reveals on the public pages.">
+                <Section title="Motion" note="Hover each tile. Enable reduced motion and confirm they stop moving, including the scroll reveals on the public pages.">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="cursor-pointer rounded-showcase bg-surface p-6 shadow-ambient transition-all duration-short ease-standard hover:-translate-y-1 hover:shadow-lift">
-                            <p className="font-display font-semibold text-content">duration-short — 200ms</p>
+                            <p className="font-display font-semibold text-content">duration-short: 200ms</p>
                             <p className="text-body-sm text-content-muted">Controls, hover, focus. 180–240ms band.</p>
                         </div>
                         <div className="cursor-pointer rounded-showcase bg-surface p-6 shadow-ambient transition-all duration-spatial ease-spring hover:-translate-y-2 hover:shadow-elevated">
-                            <p className="font-display font-semibold text-content">duration-spatial — 500ms</p>
+                            <p className="font-display font-semibold text-content">duration-spatial: 500ms</p>
                             <p className="text-body-sm text-content-muted">Sheets, gallery, page transitions. 400–600ms band.</p>
                         </div>
                     </div>

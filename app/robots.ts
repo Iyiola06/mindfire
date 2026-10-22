@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
                  * `/design-system` is an internal acceptance page; it also
                  * carries `robots: noindex`, and this stops it being crawled at
                  * all. The API routes return JSON, and `/admin` is behind a
-                 * session — a crawler following a link there gets a redirect to
+                 * session - a crawler following a link there gets a redirect to
                  * a sign-in screen, which is wasted crawl budget either way.
                  */
                 disallow: ['/admin', '/api/', '/design-system'],

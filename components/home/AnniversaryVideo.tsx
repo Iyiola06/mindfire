@@ -15,8 +15,8 @@ interface AnniversaryVideoProps {
  * The embed iframe pulls roughly a megabyte of player script before anyone has
  * asked to watch, which on Nigerian mobile data is the difference between the
  * page feeling instant and not. Until the visitor presses play this is one
- * local image and a button; the iframe — from the no-cookie domain, so nothing
- * is set on a visitor who never plays — mounts on the press and autoplays,
+ * local image and a button; the iframe - from the no-cookie domain, so nothing
+ * is set on a visitor who never plays - mounts on the press and autoplays,
  * because the press was the request.
  *
  * The poster is our own photograph rather than YouTube's thumbnail: it is

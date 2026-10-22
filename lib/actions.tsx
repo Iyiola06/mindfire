@@ -9,13 +9,13 @@ import { EmailTemplate } from '@/components/email/EmailTemplate'
 
 /**
  * Server actions are a public HTTP surface. Anything exported from this file
- * can be invoked by anyone who can POST to the site — middleware does not run
+ * can be invoked by anyone who can POST to the site - middleware does not run
  * for action invocations, and there is no route to protect.
  *
  * Only `createLead` and `subscribeToNewsletter` are meant to be public. Every
  * other action in this file writes to, deletes from, or emails on behalf of
  * the business, so each one opens with this guard. Before it existed,
- * `sendBulkEmail` — which mails the entire subscriber list — carried the
+ * `sendBulkEmail` - which mails the entire subscriber list - carried the
  * comment "In a real app, verify admin session here" and no check.
  */
 async function guard(): Promise<{ success: false; error: string } | null> {
@@ -318,7 +318,7 @@ export async function subscribeToNewsletter(email: string) {
             return { success: true, message: 'Already subscribed' }
         }
         // Logged server-side, generic to the caller. `error.message` can name
-        // tables, columns, and constraints — that belongs in the log, not in a
+        // tables, columns, and constraints - that belongs in the log, not in a
         // response to an anonymous form post.
         console.error('Error subscribing to newsletter:', error)
         return { success: false, error: 'We could not complete that subscription' }

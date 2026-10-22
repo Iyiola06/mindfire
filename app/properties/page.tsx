@@ -17,7 +17,7 @@ export const metadata: Metadata = {
         url: absoluteUrl('/properties'),
         title: `Properties for sale in Abuja | ${SITE.name}`,
         description:
-            'Verified homes, apartments, and land across Abuja — titles checked and documentation shared before you commit.',
+            'Verified homes, apartments, and land across Abuja, with titles checked and documentation shared before you commit.',
     },
 };
 
@@ -35,7 +35,7 @@ export default async function PropertiesPage() {
     /**
      * `ItemList` for the listing grid. It is what lets a search engine
      * understand this page as a set of properties rather than as one document
-     * that happens to mention several — and it is capped at the first 20 so
+     * that happens to mention several - and it is capped at the first 20 so
      * the payload stays proportionate.
      */
     const itemListJsonLd = {

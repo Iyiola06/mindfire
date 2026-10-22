@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 }
 
 /**
- * OWNER ACTION REQUIRED — legal review.
+ * OWNER ACTION REQUIRED - legal review.
  *
  * The text below describes what this codebase actually does with personal
  * data, which is more than the previous single paragraph said, but it is not a

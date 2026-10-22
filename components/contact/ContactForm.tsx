@@ -53,7 +53,7 @@ export const ContactForm = () => {
                 setIsSuccess(true);
                 setFormData({ name: '', email: '', phone: '', subject: SUBJECTS[0], message: '' });
             } else {
-                // The form keeps its values — a failed send must not cost the
+                // The form keeps its values - a failed send must not cost the
                 // visitor their typing.
                 setError(res.error ?? 'We could not send your message. Please try again.');
             }
@@ -96,7 +96,7 @@ export const ContactForm = () => {
                 Send a message
             </h2>
             <p className="mb-8 text-body-sm text-content-muted">
-                We reply {OFFICE.responseTime}. No newsletters, no follow-up lists — just an answer.
+                We reply {OFFICE.responseTime}. No newsletters, no follow-up lists. Just an answer.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-6">

@@ -85,7 +85,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
     const published = formatDate(post);
 
-    /** Only fields the row actually holds are emitted — no invented rating to
+    /** Only fields the row actually holds are emitted - no invented rating to
         chase a rich result. The publisher is a reference to the organisation
         node on the home page rather than a second, duplicate description of
         the same business. */
@@ -159,7 +159,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                             {post.title}
                         </h1>
 
-                        {/* Author only — the previous version captioned every
+                        {/* Author only - the previous version captioned every
                             writer "Real Estate Expert", a credential nothing in
                             the record supports. The share and bookmark buttons
                             were also removed: neither was wired to anything. */}
@@ -187,7 +187,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         </p>
                     )}
 
-                    {/* Body is allowlist-sanitised before it reaches the DOM —
+                    {/* Body is allowlist-sanitised before it reaches the DOM - 
                         see lib/sanitize.ts. It arrives from the database, so it
                         is untrusted input on a public page. */}
                     <div

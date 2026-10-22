@@ -8,16 +8,16 @@ import { Eyebrow } from '@/components/ui/Eyebrow';
 import { absoluteUrl, breadcrumbJsonLd, SITE } from '@/lib/seo';
 
 export const metadata: Metadata = {
-    title: 'Services — estate development, land, construction, and title perfection',
+    title: 'Services: estate development, land, construction, and title perfection',
     description:
         'Mindfire Homes is a full-cycle real estate company: estate development, land banking and sales, building and construction, investment advisory, documentation and title perfection, and facility management.',
     alternates: { canonical: '/services' },
     openGraph: {
         type: 'website',
         url: absoluteUrl('/services'),
-        title: `Services — ${SITE.name}`,
+        title: `Services | ${SITE.name}`,
         description:
-            'From acquiring the land to managing the finished estate — one company, accountable at every stage.',
+            'From acquiring the land to managing the finished estate: one company, accountable at every stage.',
     },
 };
 
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 const SERVICES = [
     {
         title: 'Estate development',
-        body: 'We acquire, design, and develop serviced estates — planned so that the infrastructure is part of the product, not a promise for later.',
+        body: 'We acquire, design, and develop serviced estates, planned so that the infrastructure is part of the product, not a promise for later.',
         includes: ['Road networks and drainage', 'Electricity', 'Estate security'],
         image: {
             src: '/hero/estate-courtyard.webp',
@@ -56,7 +56,7 @@ const SERVICES = [
     },
     {
         title: 'Property investment advisory',
-        body: 'We guide clients to secure assets, not liabilities — to buy where value appreciates, not where stories end.',
+        body: 'We guide clients to secure assets, not liabilities, and to buy where value appreciates, not where stories end.',
         includes: ['Location and appreciation analysis', 'Accompanied site inspections', 'Payment plans set out in writing'],
         image: {
             src: '/projects/land-site-inspection.webp',
@@ -65,7 +65,7 @@ const SERVICES = [
     },
     {
         title: 'Documentation and title perfection',
-        body: 'We handle the difficult part — so that the asset you pay for is truly, provably yours.',
+        body: 'We handle the difficult part, so that the asset you pay for is truly, provably yours.',
         includes: ['Land registry search', 'Verification', 'Registration and title perfection'],
         image: {
             src: '/projects/handover-gated-duplex.webp',
@@ -102,7 +102,7 @@ export default function ServicesPage() {
                 eyebrow="What we do"
                 title="Full-cycle real estate, from land to after-sales."
                 align="center"
-                lede="Since 2016, Mindfire Homes has done the hard work behind every property — acquisition, due diligence, documentation, infrastructure, and development — so you can invest with confidence and live with pride."
+                lede="Since 2016, Mindfire Homes has done the hard work behind every property (acquisition, due diligence, documentation, infrastructure, and development) so you can invest with confidence and live with pride."
             />
 
             <section className="bg-bg pb-section pt-section-sm">

@@ -24,7 +24,7 @@ const config: Config = {
                     DEFAULT: 'rgb(var(--brand-600) / <alpha-value>)',
                 },
                 /* Fills, borders, and icons >=24px only. Below 24px this is
-                   2.9:1 on white and fails AA — use content-muted there. */
+                   2.9:1 on white and fails AA - use content-muted there. */
                 accent: {
                     500: 'rgb(var(--accent-500) / <alpha-value>)',
                     DEFAULT: 'rgb(var(--accent-500) / <alpha-value>)',
@@ -36,7 +36,7 @@ const config: Config = {
                 'content-muted': 'rgb(var(--text-muted) / <alpha-value>)',
                 hairline: 'rgb(var(--hairline) / <alpha-value>)',
 
-                /* Legacy aliases — kept so unmigrated pages keep rendering.
+                /* Legacy aliases - kept so unmigrated pages keep rendering.
                    `PropertiesList`, about, contact, blog, and every admin
                    component still reference bg-primary, text-secondary,
                    bg-surface-light, and text-text-muted-dark. These names are
@@ -87,7 +87,7 @@ const config: Config = {
                 'label': ['0.75rem', { lineHeight: '1.4', letterSpacing: '0.06em' }],
                 /* Section eyebrows only. The wide tracking is the loudest
                    single signal in the new design language, and it is wrong
-                   for form labels — those keep `label`. */
+                   for form labels - those keep `label`. */
                 'eyebrow': ['0.75rem', { lineHeight: '1.4', letterSpacing: '0.3em' }],
                 'eyebrow-sm': ['0.6875rem', { lineHeight: '1.4', letterSpacing: '0.22em' }],
             },
@@ -110,7 +110,7 @@ const config: Config = {
                 control: '0.75rem',
                 surface: '1.25rem',
                 panel: '1.5rem',
-                /* The largest container radius — featured panels and the hero
+                /* The largest container radius - featured panels and the hero
                    stage plates. Below `showcase` the long shadows read as a
                    drop shadow on a box; at this radius they read as lift. */
                 showcase: '1.875rem',
@@ -122,7 +122,7 @@ const config: Config = {
                 hover: '0 8px 24px rgb(0 0 0 / 0.12)',
                 elevated: '0 24px 48px -12px rgb(0 0 0 / 0.18)',
                 /* Long-throw shadows. The negative spread is what keeps them
-                   from darkening the ground directly under the element — the
+                   from darkening the ground directly under the element - the
                    shadow is cast well below and to no side, which is what
                    makes a 30px-radius panel look like it is floating. */
                 lift: '0 24px 60px -20px rgb(15 25 25 / 0.4)',

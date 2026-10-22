@@ -10,12 +10,12 @@ Mindfire Homes is a Next.js 15 / React 19 / Tailwind 3.4 real-estate site backed
 
 The full redesign brief spans a token system, a schema migration, four public page rebuilds, an admin rebuild, a motion layer, and a measured performance/accessibility program. That is too large for one spec. It is decomposed into six sub-projects, built in dependency order:
 
-1. **Foundation** — this document. Token layer, glass materials, motion primitives, typography, icon system, layout contract, showcase page, measurement harness.
-2. **Data & content truth** — schema migration for missing property fields; Nigerian content pass; removal of hardcoded and invented values.
-3. **Homepage** — hero, glass search panel, editorial sections.
-4. **Listings & property detail** — filter bar and bottom sheet, cards, gallery, sticky booking panel, sold-property conversion path, advisor block.
-5. **Admin** — dashboard, property manager, leads, blog, newsletter.
-6. **Performance & accessibility verification** — measured before/after at six breakpoints.
+1. **Foundation** - this document. Token layer, glass materials, motion primitives, typography, icon system, layout contract, showcase page, measurement harness.
+2. **Data & content truth** - schema migration for missing property fields; Nigerian content pass; removal of hardcoded and invented values.
+3. **Homepage** - hero, glass search panel, editorial sections.
+4. **Listings & property detail** - filter bar and bottom sheet, cards, gallery, sticky booking panel, sold-property conversion path, advisor block.
+5. **Admin** - dashboard, property manager, leads, blog, newsletter.
+6. **Performance & accessibility verification** - measured before/after at six breakpoints.
 
 Sub-projects 3–5 depend on Foundation. Sub-project 2 is independent of Foundation and may proceed in parallel. Sub-project 6 requires all others complete, but its baseline measurement runs **before** Foundation lands.
 
@@ -62,7 +62,7 @@ All tokens are CSS custom properties defined in `app/globals.css` under `:root` 
   --brand-700:   0  84  77;
   --brand-600:   0 105  96;   /* primary actions */
   --brand-500:   0 137 123;   /* hover, light fills */
-  --accent-500: 201 138  74;  /* warm bronze — decoration, borders, fills only */
+  --accent-500: 201 138  74;  /* warm bronze - decoration, borders, fills only */
 
   /* Neutrals */
   --bg:         250 250 250;
@@ -84,7 +84,7 @@ colors: {
 }
 ```
 
-**Accent constraint:** `--accent-500` at 14px on white is below 4.5:1. It is permitted for fills, borders, icons ≥24px, and large display text only. Eyebrow labels — currently amber across every page — move to `--text-muted`. This is enforced by review, not by tooling.
+**Accent constraint:** `--accent-500` at 14px on white is below 4.5:1. It is permitted for fills, borders, icons ≥24px, and large display text only. Eyebrow labels - currently amber across every page - move to `--text-muted`. This is enforced by review, not by tooling.
 
 ### Glass materials
 
@@ -110,8 +110,8 @@ Each level defines a paired `--glass-fallback-*` opaque color. Two guards collap
 
 `next/font/local` or `next/font/google` with `display: 'swap'`, subset to `latin`, self-hosted. Two roles from one family:
 
-- `--font-display` — headings. Tighter tracking, optical sizing where the variable axis allows.
-- `--font-text` — body and UI.
+- `--font-display` - headings. Tighter tracking, optical sizing where the variable axis allows.
+- `--font-text` - body and UI.
 
 Both currently resolve to Inter. The current config aliases `display` and `sans` to identical stacks, producing no hierarchy; this separates them at the token level so the distinction is real and adjustable.
 
@@ -146,34 +146,34 @@ CSS-only. No animation library.
 
 ### Icon system
 
-`components/icons/` — one component per glyph, built on a 24px grid, `currentColor` fill/stroke, `aria-hidden="true"` by default with an opt-in `title` prop for standalone icon buttons.
+`components/icons/` - one component per glyph, built on a 24px grid, `currentColor` fill/stroke, `aria-hidden="true"` by default with an opt-in `title` prop for standalone icon buttons.
 
 The audit found 82 Material Icons uses across 18 files. Deduplicated, these resolve to 43 distinct static glyph names plus 20 names supplied from data arrays (with overlap between the two sets), reached through 12 dynamic `{expression}` call sites. The set to build is therefore roughly 50 glyphs, confirmed by enumeration during implementation rather than estimated.
 
-Foundation builds the components and migrates the shared layer — `PublicLayout`, `Button`, `PropertyCard`, `Badge`. Page-level migrations happen in each page's own sub-project. The Material Icons `<link>` and the `.material-icons-outlined` CSS class are deleted only once the final consumer is migrated, in sub-project 5.
+Foundation builds the components and migrates the shared layer - `PublicLayout`, `Button`, `PropertyCard`, `Badge`. Page-level migrations happen in each page's own sub-project. The Material Icons `<link>` and the `.material-icons-outlined` CSS class are deleted only once the final consumer is migrated, in sub-project 5.
 
 ### Showcase page
 
-`app/design-system/page.tsx` — not linked from public navigation, `noindex`. Renders every material level over light, dark, and photographic backgrounds; every component state (default, hover, active, focus-visible, disabled, loading, error); the type scale; the spacing scale; the motion durations; and the fallback rendering with `backdrop-filter` disabled. This is the acceptance surface for the whole system and the reference for sub-projects 3–5.
+`app/design-system/page.tsx` - not linked from public navigation, `noindex`. Renders every material level over light, dark, and photographic backgrounds; every component state (default, hover, active, focus-visible, disabled, loading, error); the type scale; the spacing scale; the motion durations; and the fallback rendering with `backdrop-filter` disabled. This is the acceptance surface for the whole system and the reference for sub-projects 3–5.
 
 ## Files
 
 **Created**
-- `app/globals.css` — rewritten from 38 lines to the full token layer
-- `components/icons/*` — icon component set + barrel export
-- `app/design-system/page.tsx` — showcase
-- `scripts/measure.mjs` — Lighthouse + axe harness
-- `docs/baseline/*.json` — captured baseline results
+- `app/globals.css` - rewritten from 38 lines to the full token layer
+- `components/icons/*` - icon component set + barrel export
+- `app/design-system/page.tsx` - showcase
+- `scripts/measure.mjs` - Lighthouse + axe harness
+- `docs/baseline/*.json` - captured baseline results
 
 **Modified**
-- `tailwind.config.ts` — `var()` bridge, type scale, spacing scale, radii, shadows
-- `app/layout.tsx` — `next/font`, remove both Google Fonts `<link>`s
-- `components/layout/PublicLayout.tsx` — nav height contract, glass nav, logo lockup, labeled controls
-- `components/ui/Button.tsx`, `components/ui/Badge.tsx` — token migration, icon prop becomes a component
-- `components/shared/PropertyCard.tsx` — token migration, labeled favorite control, no truncation of name/address
+- `tailwind.config.ts` - `var()` bridge, type scale, spacing scale, radii, shadows
+- `app/layout.tsx` - `next/font`, remove both Google Fonts `<link>`s
+- `components/layout/PublicLayout.tsx` - nav height contract, glass nav, logo lockup, labeled controls
+- `components/ui/Button.tsx`, `components/ui/Badge.tsx` - token migration, icon prop becomes a component
+- `components/shared/PropertyCard.tsx` - token migration, labeled favorite control, no truncation of name/address
 
 **Deleted**
-- `components/shared/Preloader.tsx` — and its mount in `app/layout.tsx`. It is a `z-[9999]` full-screen overlay gated on `document.fonts.ready` and `window.load`, which directly defers LCP. Self-hosted fonts remove the reason it existed. No replacement loading treatment is added; per-route `loading.tsx` is a page-sub-project concern.
+- `components/shared/Preloader.tsx` - and its mount in `app/layout.tsx`. It is a `z-[9999]` full-screen overlay gated on `document.fonts.ready` and `window.load`, which directly defers LCP. Self-hosted fonts remove the reason it existed. No replacement loading treatment is added; per-route `loading.tsx` is a page-sub-project concern.
 
 ## Verification
 
@@ -197,5 +197,5 @@ Breakpoints under test throughout: 375, 390, 768, 1024, 1440, 1920.
 ## Risks
 
 - **Migrating shared components mid-flight.** `PublicLayout`, `Button`, `Badge`, and `PropertyCard` are consumed by pages that have not yet been redesigned. Their token migration must be visually neutral-or-better on unredesigned pages, not merely correct in isolation.
-- **Icon count.** ~50 distinct glyphs is meaningful hand-work. If enumeration during implementation shows the set is materially larger, the fallback is to bring in `lucide-react` for admin-only glyphs — a decision to raise, not to make silently.
+- **Icon count.** ~50 distinct glyphs is meaningful hand-work. If enumeration during implementation shows the set is materially larger, the fallback is to bring in `lucide-react` for admin-only glyphs - a decision to raise, not to make silently.
 - **Accent contrast enforcement.** The `--accent-500` small-text prohibition is convention, not machinery. Axe will catch violations on rendered pages, which is the backstop.

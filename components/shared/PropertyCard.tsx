@@ -39,8 +39,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             </div>
           )}
           {/* The label names the property because a listings grid renders many
-              of these. The handler stays a no-op — favouriting has no backing
-              store yet — so the label describes what it will do. */}
+              of these. The handler stays a no-op - favouriting has no backing
+              store yet - so the label describes what it will do. */}
           <button
             type="button"
             aria-label={`Add ${property.name} to favourites`}
@@ -52,7 +52,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         </div>
 
         <div className="flex flex-1 flex-col px-3 pb-2 pt-5">
-          {/* No line-clamp on the name, no truncate on the address — both were
+          {/* No line-clamp on the name, no truncate on the address - both were
               hiding the information a buyer is scanning for. */}
           <h3 className="font-display text-body-lg font-semibold tracking-tight text-content transition-colors duration-short group-hover:text-brand-600">
             {property.name}

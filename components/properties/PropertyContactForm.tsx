@@ -50,7 +50,7 @@ export const PropertyContactForm = ({
                 setIsSuccess(true);
                 setFormData({ name: '', phone: '', email: '', preferredDate: '' });
             } else {
-                // The form keeps its values — a failed send must not cost the
+                // The form keeps its values - a failed send must not cost the
                 // visitor their typing.
                 setError('We could not send that request. Please try again, or call us directly.');
             }
@@ -70,7 +70,7 @@ export const PropertyContactForm = ({
                 </h2>
                 <p className="mt-3 text-body text-content-muted">
                     We keep sold listings online for reference. Similar properties in the same area come up
-                    regularly — we can send you the next ones that match.
+                    regularly, and we can send you the next ones that match.
                 </p>
                 <Link
                     href="/properties?status=For+Sale"
@@ -97,7 +97,7 @@ export const PropertyContactForm = ({
                 <h2 className="font-display text-display-sm font-semibold text-content">Request received</h2>
                 <p className="mt-3 text-body text-content-muted">
                     An advisor will contact you {OFFICE.responseTime} to confirm a time. This is a request,
-                    not a confirmed appointment — we will agree the slot with you first.
+                    not a confirmed appointment. We will agree the slot with you first.
                 </p>
                 <button
                     type="button"

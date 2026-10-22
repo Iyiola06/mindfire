@@ -7,7 +7,7 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 /**
  * Every control in the system is a pill. The height is fixed per size rather
  * than derived from padding so a button, a link-button, and an input-adjacent
- * submit all line up on the same baseline — the old padding-only sizing drifted
+ * submit all line up on the same baseline - the old padding-only sizing drifted
  * by a couple of pixels wherever the font metrics differed.
  *
  * `sm` is 40px, below the 44px touch floor, and is for pointer-dense admin
@@ -46,7 +46,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
      * rather than a Material ligature name.
      */
     icon?: React.ReactNode;
-    /** Places the glyph after the label — for "continue"-style affordances. */
+    /** Places the glyph after the label - for "continue"-style affordances. */
     iconPosition?: 'start' | 'end';
     fullWidth?: boolean;
 }
@@ -82,7 +82,7 @@ interface ButtonLinkProps extends Omit<React.ComponentProps<typeof Link>, 'class
  *
  * Before this existed, twelve call-and-response copies of the primary-button
  * utility string lived across the page files, and they had already drifted in
- * radius, height, and shadow. A CTA that navigates is an anchor — it is not a
+ * radius, height, and shadow. A CTA that navigates is an anchor - it is not a
  * button with an onClick that calls router.push.
  */
 export const ButtonLink: React.FC<ButtonLinkProps> = ({
