@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { HeroSearch } from '@/components/home/HeroSearch';
 import { HeroStage, type StageFeature } from '@/components/home/HeroStage';
+import { AnniversaryVideo } from '@/components/home/AnniversaryVideo';
 import { PropertyCard } from '@/components/shared/PropertyCard';
 import { Reveal } from '@/components/motion/Reveal';
 import { Badge } from '@/components/ui/Badge';
@@ -11,7 +12,7 @@ import { ButtonLink } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { supabase } from '@/lib/supabase';
-import { BUILD_STAGES, FEATURE_ELEVATION, INTERIOR_PORTRAIT } from '@/lib/media';
+import { BUILD_STAGES, FEATURE_ELEVATION, HERO_STAGE, INTERIOR_PORTRAIT } from '@/lib/media';
 import { absoluteUrl, ORGANISATION_JSON_LD, SITE } from '@/lib/seo';
 import type { Property } from '@/types';
 import { IconArrowRight } from '@/components/icons';
@@ -31,6 +32,9 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = 'force-dynamic';
+
+/** The 10th-anniversary film on YouTube (youtu.be/Irxu0Kw1VXA). */
+const ANNIVERSARY_VIDEO_ID = 'Irxu0Kw1VXA';
 
 /** Process, not statistics. Each line is something the business does and can be
     held to, so nothing here needs a number we cannot evidence. */
@@ -164,6 +168,38 @@ export default async function HomePage() {
                         </li>
                     ))}
                 </Reveal>
+            </section>
+
+            {/* ── Ten years. The anniversary film, behind a click-to-play
+                poster so the player only loads for visitors who ask for it. */}
+            <section aria-labelledby="anniversary-heading" className="bg-bg pt-section">
+                <div className="mx-auto grid max-w-content items-center gap-[clamp(2rem,5vw,4.5rem)] px-gutter lg:grid-cols-5">
+                    <Reveal className="lg:col-span-2">
+                        <Eyebrow tone="brand">#MindfireAt10</Eyebrow>
+                        <h2
+                            id="anniversary-heading"
+                            className="mt-3 font-display text-[clamp(1.875rem,4.2vw,3.375rem)] font-bold leading-[1.05] tracking-[-0.03em] text-content"
+                        >
+                            Ten years of redefining modern living.
+                        </h2>
+                        <p className="mt-4 text-body-lg text-content-muted">
+                            A decade of land secured, titles perfected, estates built, and keys handed over.
+                            Thank you to every client, partner, and team member who believed. The next ten
+                            starts now.
+                        </p>
+                        <p className="mt-6 font-display text-body-lg font-semibold text-content">
+                            Secure assets, not excuses.
+                        </p>
+                    </Reveal>
+
+                    <Reveal delay={100} className="lg:col-span-3">
+                        <AnniversaryVideo
+                            videoId={ANNIVERSARY_VIDEO_ID}
+                            title="Mindfire Homes at 10"
+                            poster={HERO_STAGE.front}
+                        />
+                    </Reveal>
+                </div>
             </section>
 
             {/* ── Featured ─────────────────────────────────────────────────── */}
