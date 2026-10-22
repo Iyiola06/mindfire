@@ -20,6 +20,7 @@ import {
 
 const NAV_LINKS = [
   { href: '/properties', label: 'Properties' },
+  { href: '/services', label: 'Services' },
   { href: '/blog', label: 'Journal' },
   { href: '/about', label: 'About' },
 ];
@@ -282,8 +283,8 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
                 <Wordmark size="lg" tone="inverse" />
               </div>
               <p className="mb-6 max-w-[34ch] text-body-sm leading-relaxed text-white/65">
-                Residential and investment property in Abuja, with the title checked and the
-                documentation in your hands before you commit.
+                Redefining modern living since 2016. Residential and investment property in Abuja,
+                with the title checked and the documentation in your hands before you commit.
               </p>
 
               {/* Social icons render only for profiles that exist. The previous
@@ -327,6 +328,7 @@ export const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children
               <h2 className="mb-5 font-display text-body-lg font-bold">Company</h2>
               <ul className="space-y-3 text-body-sm text-white/70">
                 <li><Link href="/about" className="transition-colors hover:text-white">About us</Link></li>
+                <li><Link href="/services" className="transition-colors hover:text-white">Services</Link></li>
                 <li><Link href="/blog" className="transition-colors hover:text-white">Journal</Link></li>
                 <li><Link href="/contact" className="transition-colors hover:text-white">Contact</Link></li>
                 <li>

@@ -60,8 +60,9 @@ export const metaDescription = (text: string | null | undefined, max = 155) => {
  *
  * `RealEstateAgent` rather than the generic `Organization`: it is the specific
  * type for this business and carries `areaServed`. Only fields the codebase can
- * actually evidence are included — there is no aggregate rating, no founding
- * date, and no telephone until `OFFICE.phoneE164` is filled in.
+ * actually evidence are included — there is no aggregate rating and no
+ * telephone until `OFFICE.phoneE164` is filled in. The founding year is the
+ * owner's own figure.
  */
 export const ORGANISATION_JSON_LD = {
     '@context': 'https://schema.org',
@@ -73,6 +74,7 @@ export const ORGANISATION_JSON_LD = {
     image: absoluteUrl(SITE.ogImage),
     description: SITE.description,
     email: OFFICE.email,
+    foundingDate: '2016',
     ...(OFFICE.phoneE164 ? { telephone: OFFICE.phoneE164 } : {}),
     address: {
         '@type': 'PostalAddress',

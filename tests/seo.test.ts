@@ -54,6 +54,10 @@ describe('organisation structured data', () => {
         expect(ORGANISATION_JSON_LD).not.toHaveProperty('aggregateRating')
     })
 
+    it('states the founding year the owner supplied', () => {
+        expect(ORGANISATION_JSON_LD.foundingDate).toBe('2016')
+    })
+
     it('carries a stable @id that other nodes can reference', () => {
         expect(ORGANISATION_JSON_LD['@id']).toBe(`${BASE_URL}/#organisation`)
     })

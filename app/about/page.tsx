@@ -24,20 +24,20 @@ export const metadata: Metadata = {
 };
 
 /**
- * OWNER ACTION REQUIRED — company facts.
+ * Company facts. The founding year is the owner's own figure (2016).
  *
- * The previous version of this page stated "Founded in 2015", "10+ Years
- * Experience", and "$500M Sales Volume". None of those figures exist anywhere
- * in this codebase or its data, so they have been removed rather than carried
- * forward. Supply the real values here and the milestones band renders itself.
- *
- * Every entry must be something the business can evidence if a buyer asks.
- * Leave the array empty rather than filling it with round numbers.
- *
- *   { value: '2015', label: 'Year founded' },
- *   { value: '84', label: 'Homes handed over' },
+ * OWNER ACTION AVAILABLE — every entry must be something the business can
+ * evidence if a buyer asks. Add counts (homes handed over, estates delivered)
+ * here only once they can be backed with records; leave them out rather than
+ * filling the band with round numbers.
  */
-const MILESTONES: { value: string; label: string }[] = [];
+const FOUNDED = 2016;
+
+const MILESTONES: { value: string; label: string }[] = [
+    { value: String(FOUNDED), label: 'Year founded' },
+    // Derived, so the band does not go stale every January.
+    { value: String(new Date().getFullYear() - FOUNDED), label: 'Years in business' },
+];
 
 /**
  * OWNER ACTION REQUIRED — team.
@@ -97,7 +97,7 @@ export default function AboutPage() {
                 eyebrow="Who we are"
                 title="Property advice you can check."
                 align="center"
-                lede="Mindfire Homes sells residential and investment property in Abuja. What distinguishes the work is not the adjectives — it is that every claim we make about a property is backed by a document we will show you."
+                lede="Since 2016, Mindfire Homes has sold residential and investment property in Abuja. What distinguishes the work is not the adjectives — it is that every claim we make about a property is backed by a document we will show you."
             />
 
             {/* Position */}
